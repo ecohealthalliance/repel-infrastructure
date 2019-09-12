@@ -1,0 +1,12 @@
+default:
+  before_script:
+    - ansible-galaxy install -r requirements.yml
+
+provision-s3-buckets:
+  image: lexauw/ansible-alpine
+  script:
+    - ansible-playbok s3-buckets.yml
+  cache:
+    - .imported_roles
+  only: web  #trigger this manually
+
