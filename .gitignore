@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.vault
+*.key
+*.pem
+*.retry
+.imported_roles
