@@ -6,10 +6,13 @@
   tasks:
     - name: Create wahis raw data bucket
       s3_bucket:
+        aws_access_key: "{{AWS_ACCESS_KEY_ID}}"
+        aws_secret_key: "{{AWS_SECRET_ACCESS_KEY}}"
         name: wahis-raw-data
         state: present
         tags:
           project: repel
+          manager: Noam Ross
 
 #
 # # Create a simple s3 bucket on Ceph Rados Gateway
