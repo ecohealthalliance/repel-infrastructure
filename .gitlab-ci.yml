@@ -9,5 +9,6 @@ provision-s3-buckets:
   cache:
     paths:
       - .imported_roles
-  only: web  #trigger this manually
+  only:
+    - web  #trigger this manually
 
