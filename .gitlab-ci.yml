@@ -6,7 +6,6 @@ provision-s3-buckets:
   image: lexauw/ansible-alpine
   script:
     - echo $ANSIBLE_VAULT_PASSWORD_FILE
-    - cat $ANSIBLE_VAULT_PASSWORD_FILE
     - ansible-config dump | grep VAULT
     - ansible-playbook s3-buckets.yml
   cache:
