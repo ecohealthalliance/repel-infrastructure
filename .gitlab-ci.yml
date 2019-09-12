@@ -7,6 +7,7 @@ provision-s3-buckets:
   script:
     - ansible-playbok s3-buckets.yml
   cache:
-    - .imported_roles
+    paths:
+      - .imported_roles
   only: web  #trigger this manually
 
