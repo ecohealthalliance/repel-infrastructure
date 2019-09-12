@@ -5,7 +5,7 @@ default:
 provision-s3-buckets:
   image: lexauw/ansible-alpine
   script:
-    - ansible-playbok s3-buckets.yml
+    - ansible-playbook s3-buckets.yml
   cache:
     paths:
       - .imported_roles
