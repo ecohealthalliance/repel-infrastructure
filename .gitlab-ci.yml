@@ -1,12 +1,36 @@
+stages:
+  - prebuild
+  - provisions
+
 default:
+  stage: prebuild
+  image: lexauw/ansible-alpine
   before_script:
     - ansible-galaxy install -r requirements.yml
-
-provision-s3-buckets:
-  image: lexauw/ansible-alpine
-  script:
-    - ansible-playbook s3-buckets.yml
   cache:
     paths:
       - .imported_roles
   when: manual
+
+##provision-s3-buckets:
+#  script:
+#    - ansible-playbook s3-buckets.yml
+
+build-postgres-image:
+  stage: prebuild
+  image: docker:stable
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull $CI_REGISTRY_IMAGE/postgis:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:postgis --tag $CI_REGISTRY_IMAGE/postgis:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE/postgis:latest .
+    - docker push $CI_REGISTRY_IMAGE/postgis:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/postgis:latest
+  when: always
+
+#provision-postgres-server:
+#  stage: provision
+#  script:
+#    - ansible-playbook ec2-postgis-server.yml
+#  dependencies:
+#    - build-postgres-image
