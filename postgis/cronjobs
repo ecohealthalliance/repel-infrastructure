@@ -1,0 +1,2 @@
+@reboot sleep 10 && /usr/bin/docker-compose -f /home/tobin/workspace/code/docker/postgis/postgres11-postgis2.5/docker-compose.yml up -d
+@daily docker exec postgres11-postgis2.5 /opt/pgbackup.sh

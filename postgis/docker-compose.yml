@@ -1,0 +1,20 @@
+version: '2'
+
+services:
+  postgres:
+    image: "registry.gitlab.com/ecohealthalliance/repel-infrastructure/postgis:latest"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+#      - ./backups:/opt/backups
+    networks:
+      - postgres_conn
+    ports:
+      - '5432:5432'
+    env_file: .env
+
+volumes:
+  pgdata:
+
+networks:
+  postgres_conn:
+    driver: bridge
