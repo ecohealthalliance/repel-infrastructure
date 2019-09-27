@@ -26,6 +26,7 @@ build-postgres-image:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - cd postgis
     - docker pull $CI_REGISTRY_IMAGE/postgis:latest || true
     - docker build --cache-from $CI_REGISTRY_IMAGE:postgis --tag $CI_REGISTRY_IMAGE/postgis:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE/postgis:latest .
     - docker push $CI_REGISTRY_IMAGE/postgis:$CI_COMMIT_SHA
