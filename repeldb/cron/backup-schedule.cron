@@ -1,0 +1,5 @@
+# Run the backups at 11pm each night
+ 0 23 * * * /backup-db-to-aws.sh
+ 05 23 * * * /export-csv-to-aws.sh
+
+# We need a blank line here for it to be a valid cron file

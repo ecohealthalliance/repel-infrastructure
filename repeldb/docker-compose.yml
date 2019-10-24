@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  postgres:
+    image: repel-postgres
+    build:
+      context: './postgres'
+    image: repel-postgres
+    volumes:
+       - ./postgres/init:/docker-entrypoint-initdb.d
+       - ./postgres/pgconf:/pgconf
+       - ./backups:/backups
+    command: postgres -c config_file=/pgconf/postgresql.conf
+    ports:
+      - '22023:5432'
+    env_file: .env
+    restart: on-failure
+  cron:
+    image: repel-cron
+    build:
+      context: './cron'
+    links:
+    - postgres:postgres
+    env_file: .env
+    restart: on-failure
+    depends_on:
+      - postgres
+  scraper:
+    image: repel-scraper
+    build:
+      context: './scraper'
+    links:
+    - postgres:postgres
+    env_file: .env
+    restart: on-failure
+    depends_on:
+      - postgres
+

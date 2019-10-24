@@ -7,3 +7,6 @@
 *.pem
 *.retry
 .imported_roles
+repeldb/backups
+repeldb/pgdata
+*.xz
