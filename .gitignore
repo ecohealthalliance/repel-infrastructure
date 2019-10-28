@@ -11,3 +11,5 @@ repeldb/backups
 repeldb/pgdata
 *.xz
 repeldb/.env
+.gitsecret/keys/random_seed
+!*.secret
