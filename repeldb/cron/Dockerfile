@@ -1,4 +1,4 @@
-FROM repel-postgres
+FROM registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-postgres
 MAINTAINER noam.ross@gmail.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
