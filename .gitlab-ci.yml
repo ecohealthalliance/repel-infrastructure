@@ -1,6 +1,6 @@
 stages:
   - prebuild
-  - provisions
+  - provision
 
 #default:
 #  stage: prebuild
@@ -18,7 +18,9 @@ stages:
 
 build-postgres-image:
   stage: prebuild
-  image: docker:19.03.1
+  image:
+    name: docker/compose:1.22.0
+    entrypoint: ["/bin/sh", "-c"]
   services:
     - docker:19.03.1-dind
   variables:
@@ -26,11 +28,7 @@ build-postgres-image:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - cd postgis
-    - docker pull $CI_REGISTRY_IMAGE/postgis:latest || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE/postgis:latest --tag $CI_REGISTRY_IMAGE/postgis:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE/postgis:latest .
-    - docker push $CI_REGISTRY_IMAGE/postgis:$CI_COMMIT_SHA
-    - docker push $CI_REGISTRY_IMAGE/postgis:latest
+    - cd repeldb && docker-compose build .
   when: always
 
 #provision-postgres-server:
