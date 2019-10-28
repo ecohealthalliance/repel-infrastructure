@@ -45,7 +45,7 @@ build-postgres-image:
     DOCKER_HOST: tcp://docker:2375/
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - echo $GIT_ENCRYPT_KEY64 | base64 -D -i - -o git_crypt_key.key && git-crypt unlock git_crypt_key.key
+    - echo $GIT_ENCRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
   script:
     - cd repeldb && docker-compose build
   when: always
