@@ -2,10 +2,9 @@ version: '3'
 
 services:
   postgres:
-    image: repel-postgres
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-postgres
     build:
       context: './postgres'
-    image: repel-postgres
     volumes:
        - ./postgres/init:/docker-entrypoint-initdb.d
        - ./postgres/pgconf:/pgconf
@@ -16,7 +15,7 @@ services:
     env_file: .env
     restart: on-failure
   cron:
-    image: repel-cron
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-cron
     build:
       context: './cron'
     links:
@@ -26,7 +25,7 @@ services:
     depends_on:
       - postgres
   scraper:
-    image: repel-scraper
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
     build:
       context: './scraper'
     links:
