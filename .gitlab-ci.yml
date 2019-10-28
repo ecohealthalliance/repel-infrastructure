@@ -26,7 +26,7 @@ build-postgres-image:
   variables:
     DOCKER_HOST: tcp://docker:2375/
   before_script:
-    - echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" | tee -a /etc/apt/sources.list
+    - echo "deb https://dl.bintray.com/sobolevn/deb git-secret main" >> /etc/apt/sources.list
     - wget -qO - https://api.bintray.com/users/sobolevn/keys/gpg/public.key | apt-key add -
     - apt-get update && apt-get install -y gawk git-secret
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
