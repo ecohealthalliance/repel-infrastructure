@@ -10,3 +10,4 @@
 repeldb/backups
 repeldb/pgdata
 *.xz
+repeldb/.env
