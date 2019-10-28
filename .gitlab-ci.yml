@@ -1,7 +1,7 @@
 stages:
   - prebuild
   - build
-  - provisions
+  - deploy
 
 #default:
 #  stage: prebuild
@@ -36,16 +36,15 @@ build-docker-builder:
       - "prebuild/"
   when: always
 
-
 build-postgres-image:
-  stage: prebuild
+  stage: build
   image: $CI_REGISTRY_IMAGE/prebuild:latest
   services:
     - docker:18.09-dind
   variables:
     DOCKER_HOST: tcp://docker:2375/
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
     - docker-compose build
   when: always
