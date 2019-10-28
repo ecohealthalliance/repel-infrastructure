@@ -33,7 +33,7 @@ build-docker-builder:
     - docker push $CI_REGISTRY_IMAGE/prebuild:latest
   only:
     changes:
-      - "prebuild/"
+      - prebuild/*
   when: always
 
 build-postgres-image:
