@@ -19,7 +19,7 @@ stages:
 build-postgres-image:
   stage: prebuild
   image:
-    name: docker/compose:1.22.0
+    name: docker/compose:1.25.0-rc4-debian
     entrypoint: ["/bin/sh", "-c"]
   services:
     - docker:19.03.1-dind
