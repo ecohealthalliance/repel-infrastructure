@@ -1,6 +1,6 @@
 stages:
   - prebuild
-  - provision
+  - provisions
 
 #default:
 #  stage: prebuild
@@ -18,19 +18,17 @@ stages:
 
 build-postgres-image:
   stage: prebuild
-  image:
-    name: docker/compose:1.25.0-rc4-debian
-    entrypoint: ["/bin/bash", "-c"]
+  image: tmaier/docker-compose:18.09
   services:
-    - docker:19.03.1-dind
+    - docker:18.09-dind
   variables:
     DOCKER_HOST: tcp://docker:2375/
   before_script:
-    - apt-get install git-crypt
-    - git-crypt unlock $GIT_CRYPT_KEY
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - cd repeldb && docker-compose build .
+    - apt-get install git-crypt
+    - git-crypt unlock
+    - docker-compose build
   when: always
 
 #provision-postgres-server:
