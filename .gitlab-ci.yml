@@ -61,8 +61,4 @@ deploy-app:
   script:
     - set -a; source repeldb/.env; set +a
     - sshpass -p "${DEPLOYMENT_SERVER_PASS}" scp -p "${DEPLOYMENT_SERVER_SSH_PORT}" -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no . :~/${DEPLOYMENT_SERVER_DIR}
-    - sshpass -p "${DEPLOYMENT_SERVER_PASS}" ssh -p "${DEPLOYMENT_SERVER_SSH_PORT}" -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no ${DEPLOYMENT_SERVER_USER}@${DEPLOYMENT_SERVER_URL} "echo ${$DEPLOYMENT_SERVER_PASS} | sudo -S ls && docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}; cd ${DEPLOYMENT_SERVER_DIR}; sudo docker-compose pull; sudo docker-compose up -d;""
-#  script:
-#    - ansible-playbook ec2-postgis-server.yml
-#  dependencies:
-#    - build-postgres-image
+    - sshpass -p "${DEPLOYMENT_SERVER_PASS}" ssh -p "${DEPLOYMENT_SERVER_SSH_PORT}" -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no ${DEPLOYMENT_SERVER_USER}@${DEPLOYMENT_SERVER_URL} "echo ${$DEPLOYMENT_SERVER_PASS} | sudo -S ls && docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}; cd ${DEPLOYMENT_SERVER_DIR}; sudo docker-compose pull; sudo docker-compose up -d;"
