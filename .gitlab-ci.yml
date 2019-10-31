@@ -49,7 +49,6 @@ build-postgres-image:
     - echo $GIT_ENCRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
   script:
     - cd repeldb
-    - docker-compose pull || true
     - docker-compose build
     - docker-compose push
   when: always
