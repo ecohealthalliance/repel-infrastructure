@@ -5,6 +5,7 @@ services:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-postgres
     build:
       context: './postgres'
+      cache_from: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-postgres
     volumes:
        - ./postgres/init:/docker-entrypoint-initdb.d
        - ./postgres/pgconf:/pgconf
@@ -18,6 +19,7 @@ services:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-cron
     build:
       context: './cron'
+      cache_from: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-cron
     links:
     - postgres:postgres
     env_file: .env
@@ -28,6 +30,7 @@ services:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
     build:
       context: './scraper'
+      cache_from: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
     links:
     - postgres:postgres
     env_file: .env
