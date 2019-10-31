@@ -19,6 +19,7 @@ RUN apk --update add \
    py-pip \
    python-dev \
    libffi-dev \
+   sshpass \
    && rm -rf /var/cache/apk/*
 
 RUN pip install "docker-compose${COMPOSE_VERSION:+==}${COMPOSE_VERSION}"
