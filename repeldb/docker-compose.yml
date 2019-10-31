@@ -8,7 +8,6 @@ services:
     volumes:
        - ./postgres/init:/docker-entrypoint-initdb.d
        - ./postgres/pgconf:/pgconf
-       - ./backups:/backups
     command: postgres -c config_file=/pgconf/postgresql.conf
     ports:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
