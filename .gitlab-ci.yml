@@ -18,28 +18,9 @@ stages:
 #  script:
 #    - ansible-playbook s3-buckets.yml
 
-build-docker-builder:
-  stage: prebuild
-  image: docker:19.03.1
-  services:
-    - docker:19.03.1-dind
-  variables:
-    DOCKER_HOST: tcp://docker:2375/
-  before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-  script:
-    - docker pull $CI_REGISTRY_IMAGE/prebuild:latest || true
-    - docker build --build-arg GITHUB_PAT=$GITHUB_PAT --build-arg PKG_COMMIT=$PKG_COMMIT --cache-from $CI_REGISTRY_IMAGE/prebuild:latest --tag $CI_REGISTRY_IMAGE/prebuild:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE/prebuild:latest prebuild
-    - docker push $CI_REGISTRY_IMAGE/prebuild:$CI_COMMIT_SHA
-    - docker push $CI_REGISTRY_IMAGE/prebuild:latest
-  only:
-    changes:
-      - prebuild/*
-  when: always
-
 build-postgres-image:
   stage: build
-  image: $CI_REGISTRY_IMAGE/prebuild:latest
+  image: ecohealthalliance/docker-compose-git-crypt
   services:
     - docker:19.03.1-dind
   variables:
@@ -61,7 +42,7 @@ build-postgres-image:
 
 deploy-app:
   stage: deploy
-  image: $CI_REGISTRY_IMAGE/prebuild:latest
+  image: ecohealthalliance/docker-compose-git-crypt
   when: manual
   services:
     - docker:19.03.1-dind
