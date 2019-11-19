@@ -13,7 +13,7 @@ suppressMessages(suppressWarnings(suppressPackageStartupMessages({
   library(assertthat)
 })))
 
-`%||%`` <- function(a, b) if (is.null(a)) return(b) else return(a)
+`%||%` <- function(a, b) if (is.null(a)) return(b) else return(a)
 
 message("Getting list of countries")
 base_page <- read_html("http://www.oie.int/wahis_2/public/wahid.php/Countryinformation/Countryhome")
@@ -24,12 +24,13 @@ countries <- base_page %>%
   map(~list(country=.["label"], code = .["value"])) %>%
   transpose() %>%
   as_tibble() %>%
-  unnest() %>%
+  unnest(cols = c(country, code)) %>%
   filter(code != "0")
 
 country_calls <- countries %>%
   mutate(form = map(code, ~list(this_country_code = ., detailed="1")),
-         url = paste0("https://www.oie.int/wahis_2/public/wahid.php/Countryinformation/reporting/reporthistory?", code))
+         url = paste0("https://www.oie.int/wahis_2/public/wahid.php/Countryinformation/reporting/reporthistory?", code)) %>%
+  sample_frac(1)
 
 message("Fetching list of annual reports for each country asynchronously")
 country_resps <- map_curl(
@@ -37,7 +38,8 @@ country_resps <- map_curl(
   .handle_form = country_calls$form,
   .host_con = 6L,
   .timeout = 20*60L,
-  .handle_opts = list(low_speed_limit = 100, low_speed_time = 30)
+  .handle_opts = list(low_speed_limit = 100, low_speed_time = 30),
+  .retry = 3
 )
 
 message("Mushing them together")
@@ -55,9 +57,9 @@ report_rab <- function(resp) {
       code = code,
       status_code = resp$status_code,
       year = as.integer(stri_trim_both(tr[[1]][[1]])),
-      semester1 = names(tr[[3]])[2] == "a",
-      semester2 = names(tr[[5]])[2] == "a",
-      semester0 = names(tr[[7]])[2] == "a"
+      `1` = names(tr[[3]])[2] == "a",
+      `2` = names(tr[[5]])[2] == "a",
+      `0` = names(tr[[7]])[2] == "a"
     )
   })
   if (nrow(out) == 0) {
@@ -93,34 +95,42 @@ all_tab <- all_tab %>%
 all_tab <- left_join(countries, all_tab, by = "code") %>%
   complete(country, year) %>%
   arrange(country, year) %>%
-  select(country, code, year, status_code, semester1, semester2, semester0)
+  select(country, code, year, status_code, `1`, `2`, `0`) %>%
+  pivot_longer(cols = matches("(1|2|0)"), names_to = "semester", values_to = "reported") %>%
+  mutate(datettime_checked_reported = Sys.time())
 
-message("Uploading", nrow(all_tab), "records to database.")
+message("Uploading ", nrow(all_tab), " records to database.")
 
-library(easydb)
-ec <- db_connect(drv = RPostgres::Postgres(),
-                 host = "aegypti.ecohealthalliance.org", #Sys.getenv("POSTGRES_HOST"),
-                 port = 22023, #Sys.getenv("POSTGRES_PORT"),
-                 user = Sys.getenv("POSTGRES_USER"),
-                 password = Sys.getenv("POSTGRES_PASSWORD"),
-                 dbname = Sys.getenv("POSTGRES_DB")
 
-)
+#if (interactive() && Sys.getenv("RSTUDIO") == "1") {
+  base::readRenviron(".env")
+  conn <- dbConnect(
+    RPostgres::Postgres(),
+    host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
+    port = Sys.getenv("POSTGRES_EXTERNAL_PORT"),
+    user = Sys.getenv("POSTGRES_USER"),
+    password = Sys.getenv("POSTGRES_PASSWORD"),
+    dbname = Sys.getenv("POSTGRES_DB")
+  )
+#   if (require("connections")) {
+#     connections::connection_view(conn, name = "repel", connection_code = "repel")
+#   }
+# } else {
+#   conn <- dbConnect(
+#     RPostgres::Postgres(),
+#     host = Sys.getenv("POSTGRES_HOST"),
+#     port = Sys.getenv("POSTGRES_PORT"),
+#     user = Sys.getenv("POSTGRES_USER"),
+#     password = Sys.getenv("POSTGRES_PASSWORD"),
+#     dbname = Sys.getenv("POSTGRES_DB")
+#   )
+# }
 
-conn <- dbConnect(
-  RPostgres::Postgres(),
-  host = Sys.getenv("POSTGRES_HOST"),
-  port = Sys.getenv("POSTGRES_PORT"),
-  user = Sys.getenv("POSTGRES_USER"),
-  password = Sys.getenv("POSTGRES_PASSWORD"),
-  dbname = Sys.getenv("POSTGRES_DB")
-)
-
-if (dbExistsTable(conn, "annual_reports_reported")) {
-  dbRemoveTable(conn, "annual_reports_reported")
+if (dbExistsTable(conn, "annual_reports_status")) {
+  dbRemoveTable(conn, "annual_reports_status")
 }
 
-dbWriteTable(conn, "annual_reports_reported",  all_tab)
+dbWriteTable(conn, "annual_reports_status",  all_tab)
 
 dbDisconnect(conn)
 message("Done collecting list of annual reports.")

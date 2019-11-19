@@ -1,4 +1,4 @@
 # Run country-list scraper once per week on early Saturday morning.
- 5 4 * * 6 /scrape-list-of-annual-reports.R
+ 5 4 * * 6 /scrape-list-of-annual-reports.R && /scrape-annual-reports.R
 
 # We need a blank line here for it to be a valid cron file
