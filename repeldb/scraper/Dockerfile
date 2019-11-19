@@ -16,8 +16,11 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
  && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
  && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
-RUN installGithub.r noamross/scrapetools
 RUN install2.r -s curl rvest xml2 stringi RPostgres DBI
+
+ARG GITHUB_PAT
+ENV GITHUB_PAT=${GITHUB_PAT}
+RUN installGithub.r ecohealthalliance/wahis noamross/scrapetools
 
 COPY . /
 
