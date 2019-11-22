@@ -21,8 +21,8 @@ suppressMessages(suppressWarnings(suppressPackageStartupMessages({
 message("Connect to database")
 
 # This block is nice for allowsing both interactive and deployment use
-if (interactive() && Sys.getenv("RSTUDIO") == "1") {
-  base::readRenviron(".env")
+if ((Sys.getenv("REPEL_TEST") == "1") || (interactive() && Sys.getenv("RSTUDIO") == "1")) {
+  base::readRenviron(here::here("repeldb", ".env"))
   conn <- dbConnect(
     RPostgres::Postgres(),
     host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
@@ -55,7 +55,7 @@ annual_reports_status <- tbl(conn, "annual_reports_status") %>%
 annual_reports_metadata <- tbl(conn, "annual_reports_metadata")  %>%
   distinct(country, report_year, report_months) %>%
   collect() %>%
-  mutate(semester = recode(report_months, "Jan-Dec" = "semester0", "Jan-Jun" = "semester1", "Jul-Dec" = "semester2")) %>%
+  mutate(semester = recode(report_months, "Jan-Dec" = "0", "Jan-Jun" = "1", "Jul-Dec" = "2")) %>%
   arrange(country, report_year, semester) %>%
   select(-report_months) %>%
   mutate(in_database = TRUE)
