@@ -1,6 +1,5 @@
 # this is run one time to populate the DB, from here is it updated in the pipeline
 
-setwd(here::here("repeldb"))
 suppressMessages(suppressWarnings(suppressPackageStartupMessages({
   library(tidyverse)
   library(xml2)
@@ -14,7 +13,7 @@ suppressMessages(suppressWarnings(suppressPackageStartupMessages({
 })))
 
 # DB connect
-base::readRenviron(".env")
+base::readRenviron(here::here("repeldb", ".env"))
 conn <- dbConnect(
   RPostgres::Postgres(),
   host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
@@ -30,10 +29,10 @@ conn <- dbConnect(
 # See https://ecohealthalliance.github.io/eha-ma-handbook/11-cloud-computing-services.html
 # For credentials setup
 
-wahis:::pull_aws(bucket = "wahis-data", object = "data-processed.tar.xz", dir = "db-data-entry") # pushed up in wahis/inst/process_annual_reports.r
+wahis:::pull_aws(bucket = "wahis-data", object = "data-processed.tar.xz", dir = here::here("repeldb/db-data-entry")) # pushed up in wahis/inst/process_annual_reports.r
 
 # Add to db
-files <- fs::dir_ls(path = "db-data-entry/data-processed/db", regexp = "annual_reports")
+files <- fs::dir_ls(path = here::here("repeldb/db-data-entry/data-processed/db"), regexp = "annual_reports")
 arkdb::unark(files, db_con = conn, overwrite = TRUE,
              streamable_table = streamable_readr_csv(), lines = 50000L, col_types = cols(.default = col_character()))
 

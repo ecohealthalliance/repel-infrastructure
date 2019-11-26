@@ -21,8 +21,8 @@ suppressMessages(suppressWarnings(suppressPackageStartupMessages({
 message("Connect to database")
 
 # This block is nice for allowsing both interactive and deployment use
-if (interactive() && Sys.getenv("RSTUDIO") == "1") {
-  base::readRenviron(".env")
+if ((Sys.getenv("REPEL_TEST") == "1") || (interactive() && Sys.getenv("RSTUDIO") == "1")) {
+  base::readRenviron(here::here("repeldb", ".env"))
   conn <- dbConnect(
     RPostgres::Postgres(),
     host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
