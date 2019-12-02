@@ -113,11 +113,14 @@ annual_report_tables <- wahis::transform_annual_reports(report_resps) %>%
 
 iwalk(annual_report_tables,
       ~update_sql_table(conn,  .y, .x,
-                        c("country", "report_year", "report_months"))
+                        c("country_iso3c", "report_year", "report_months"))
 )
 
 # update ingest log
 update_sql_table(conn, "annual_reports_ingest_status_log", ingest_status_log, c("code", "report_year", "semester"))
+
+dbDisconnect(conn)
+message("Done updating annual reports.")
 
 
 # status
