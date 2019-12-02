@@ -37,3 +37,6 @@ arkdb::unark(files, db_con = conn, overwrite = TRUE,
              streamable_table = streamable_readr_csv(), lines = 50000L, col_types = cols(.default = col_character()))
 
 
+files <- fs::dir_ls(path = here::here("repeldb/db-data-entry/data-processed/db"), regexp = "outbreak_reports")
+arkdb::unark(files, db_con = conn, overwrite = TRUE,
+             streamable_table = streamable_readr_csv(), lines = 50000L, col_types = cols(.default = col_character()))
