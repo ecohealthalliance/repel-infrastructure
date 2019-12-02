@@ -55,26 +55,12 @@ annual_reports_status <- tbl(conn, "annual_reports_status") %>%
 
 ingest_log <- dbReadTable(conn, "annual_reports_ingest_status_log") %>% mutate(in_database = as.logical(in_database))
 
-# annual_reports_metadata <- tbl(conn, "annual_reports_metadata")  %>%
-#   distinct(country, report_year, report_months) %>%
-#   collect() %>%
-#   mutate(semester = recode(report_months, "Jan-Dec" = "semester0", "Jan-Jun" = "semester1", "Jul-Dec" = "semester2")) %>%
-#   arrange(country, report_year, semester) %>%
-#   select(-report_months) %>%
-#   mutate(in_database = TRUE)
-
 reports_to_get <- left_join(annual_reports_status, ingest_log, by = c("code", "report_year", "semester")) %>%
   mutate(in_database = coalesce(in_database, FALSE)) %>%
   filter(reported & !in_database) %>%
-  mutate(semester = substr(semester, nchar(semester), nchar(semester))) %>%
   mutate(url = glue("https://www.oie.int/wahis_2/public/wahid.php/Reviewreport/semestrial/review?year={report_year}&semester={semester}&wild=0&country={code}&this_country_code={code}&detailed=1"),
        filename = glue("{country}_{report_year}_sem{semester}.html")) %>%
-#  sample_n(10) %>% # selecting a random sample is useful for testing
   sample_frac(1)
-
-
-# update annual report status with existing errors
-
 
 # Pulling reports ----------------------------
 message("Pulling ", nrow(reports_to_get), " reports")
@@ -121,14 +107,7 @@ update_sql_table <- function(conn, table, updates, id_fields, verbose = TRUE) {
   return(removed)
 }
 
-reports_to_update <- reports_to_get %>%
-  mutate(year = report_year) %>%
-  select(colnames(tbl(conn, "annual_reports_status"))) %>%
-  mutate(datetime_fetched = Sys.time(),
-         fetched_status = map_chr(report_resps, "ingest_status"))
-
-removed <- update_sql_table(conn, "annual_reports_status", reports_to_update, c("country", "code", "year", "semester"))
-
+# tables
 annual_report_tables <- wahis::transform_annual_reports(report_resps) %>%
   keep(~nrow(.) > 0) # This could probably be handled inside transform_annual_reports
 
@@ -139,4 +118,19 @@ iwalk(annual_report_tables,
 
 # update ingest log
 update_sql_table(conn, "annual_reports_ingest_status_log", ingest_status_log, c("code", "report_year", "semester"))
+
+
+# status
+# reports_to_update <- reports_to_get %>%
+#   mutate(year = report_year) %>%
+#   select(colnames(tbl(conn, "annual_reports_status"))) %>%
+#   mutate(datetime_fetched = Sys.time(),
+#          fetched_status = map_chr(report_resps, "ingest_status"))
+#
+#
+#
+# removed <- update_sql_table(conn, "annual_reports_status", reports_to_update, c("country", "code", "year", "semester"))
+
+
+
 
