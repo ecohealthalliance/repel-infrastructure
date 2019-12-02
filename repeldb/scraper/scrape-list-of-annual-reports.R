@@ -103,15 +103,15 @@ message("Uploading ", nrow(all_tab), " records to database.")
 
 
 #if (interactive() && Sys.getenv("RSTUDIO") == "1") {
-  base::readRenviron(".env")
-  conn <- dbConnect(
-    RPostgres::Postgres(),
-    host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
-    port = Sys.getenv("POSTGRES_EXTERNAL_PORT"),
-    user = Sys.getenv("POSTGRES_USER"),
-    password = Sys.getenv("POSTGRES_PASSWORD"),
-    dbname = Sys.getenv("POSTGRES_DB")
-  )
+base::readRenviron(here::here("repeldb", ".env"))
+conn <- dbConnect(
+  RPostgres::Postgres(),
+  host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
+  port = Sys.getenv("POSTGRES_EXTERNAL_PORT"),
+  user = Sys.getenv("POSTGRES_USER"),
+  password = Sys.getenv("POSTGRES_PASSWORD"),
+  dbname = Sys.getenv("POSTGRES_DB")
+)
 #   if (require("connections")) {
 #     connections::connection_view(conn, name = "repel", connection_code = "repel")
 #   }
