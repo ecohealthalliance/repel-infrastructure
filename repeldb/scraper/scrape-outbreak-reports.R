@@ -26,7 +26,7 @@ report_ids <- weekly_pg %>%
 current_pages <- dbReadTable(conn, "outbreak_reports_summary") %>% mutate(id = as.integer(id)) %>% pull(id)
 
 reports_to_get <- tibble(id = setdiff(report_ids, current_pages)) %>%
-  mutate(url =  paste0("https://www.oie.int/wahis_2/public/wahid.php/Reviewreport/Review?page_refer=MapFullEventReport&reportid=", id))
+  mutate(url =  paste0("https://www.oie.int/wahis_2/public/wahid.php/Reviewreport/Review?reportid=", id))
 
 # Pulling reports ----------------------------
 message("Pulling ", nrow(reports_to_get), " reports")
