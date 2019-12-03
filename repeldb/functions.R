@@ -34,9 +34,16 @@ wahis_db_connect <- function(){
 # There might be a better way using SQL UPDATE.  It returns the fields that were
 # removed.
 #TODO: This works with characters, but change so it works with other types
-update_sql_table <- function(conn, table, updates, id_fields, verbose = TRUE) {
+
+update_sql_table <- function(conn, table, updates, id_fields, fill_col_na = FALSE, verbose = TRUE) {
   sql_table <- tbl(conn, table)
-  assert_that(identical(sort(colnames(sql_table)), sort(colnames(updates))))
+  if(!fill_col_na){
+    assert_that(identical(sort(colnames(sql_table)), sort(colnames(updates))))
+  }else{
+    add_cols <- setdiff(colnames(sql_table), colnames(updates))
+    updates[,add_cols] <- NA
+    assert_that(identical(sort(colnames(sql_table)), sort(colnames(updates))))
+  }
   criteria <- distinct(select(updates, id_fields))
   selector <- paste0("(", do.call(paste, c(imap(criteria, ~paste0("", .y, " = \'", .x, "\'")), sep = " AND ")), ")", collapse = " OR ")
   removed <- DBI::dbGetQuery(conn, glue("DELETE FROM {table} WHERE {selector} RETURNING * ;"))

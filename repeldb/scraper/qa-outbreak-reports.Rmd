@@ -1,0 +1,58 @@
+---
+title: "QA Wahis Outbreak Reports"
+author: "EcoHealth Alliance"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(DT)
+library(DBI)
+
+# connect to database
+base::readRenviron(here::here("repeldb", ".env"))
+conn <- dbConnect(
+  RPostgres::Postgres(),
+  host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
+  port = Sys.getenv("POSTGRES_EXTERNAL_PORT"),
+  user = Sys.getenv("POSTGRES_USER"),
+  password = Sys.getenv("POSTGRES_PASSWORD"),
+  dbname = Sys.getenv("POSTGRES_DB")
+)
+
+# function to make dt
+make_dt <- function(dat){
+  dat %>%
+    datatable(class = "row-border", escape = FALSE, rownames = FALSE, extensions = "Buttons", 
+              options = list(
+                columnDefs = list(list(className = 'dt-center', targets = 0:(dim(.)[2] - 1))),
+                pageLength = 5,
+                scrollX = TRUE,
+                dom = 'Bfrtip',
+                buttons = c('csv')
+              )
+    )
+}
+```
+
+```{r outbreak-summary}
+outbreak_summary <- dbReadTable(conn, "outbreak_reports_summary") 
+
+```
+##Reports that are missing immediate report
+```{r missing-immediate}
+outbreak_summary %>%
+  filter(is.na(immediate_report)) %>%
+  select(id, country, title, report_type, date_of_start_of_the_event ) %>%
+  make_dt()
+```
+
+
+
+```{r disconnect}
+dbDisconnect(conn)
+```
+
