@@ -14,14 +14,7 @@ library(DBI)
 
 # connect to database
 base::readRenviron(here::here("repeldb", ".env"))
-conn <- dbConnect(
-  RPostgres::Postgres(),
-  host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
-  port = Sys.getenv("POSTGRES_EXTERNAL_PORT"),
-  user = Sys.getenv("POSTGRES_USER"),
-  password = Sys.getenv("POSTGRES_PASSWORD"),
-  dbname = Sys.getenv("POSTGRES_DB")
-)
+conn <- wahis_db_connect()
 
 # function to make dt
 make_dt <- function(dat){
