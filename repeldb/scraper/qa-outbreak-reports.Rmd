@@ -35,7 +35,7 @@ make_dt <- function(dat){
 outbreak_events <- dbReadTable(conn, "outbreak_reports_events") 
 outbreak_log <- dbReadTable(conn, "outbreak_reports_ingest_status_log") 
 outbreak_detail <- dbReadTable(conn, "outbreak_reports_outbreaks")
-outbreak_summary <- dbReadTable(conn, "outbreak_reports_outbreaks_summmary")
+outbreak_summary <- dbReadTable(conn, "outbreak_reports_outbreaks_summary")
 
 ```
 
