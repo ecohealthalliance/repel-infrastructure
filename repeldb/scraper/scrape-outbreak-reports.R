@@ -2,8 +2,8 @@
 
 # A script get the list of available annual reports on WAHIS
 
-source(here::here("repeldb", "packages.R"))
-source(here::here("repeldb", "functions.R"))
+source(here::here("repeldb", "scraper", "packages.R"))
+source(here::here("repeldb", "scraper","functions.R"))
 
 # Connect to database ----------------------------
 message("Connect to database")
@@ -43,7 +43,17 @@ report_resps <- map_curl(
 report_resps <- map_if(report_resps, is.null,
                        function(x) list(ingest_status = "failed to fetch"))
 
-# Updating databae  ----------------------------
+# Update ingest log -------------------------------------------------------
+
+ingest_status_log <- reports_to_get %>%
+  select(code, report_year, semester) %>%
+  mutate(ingest_status = map_chr(report_resps, ~.x$ingest_status)) %>%
+  mutate(in_database = ingest_status == "available") %>%
+  mutate(ingest_error = ifelse(!in_database, ingest_status, NA)) %>%
+  select(-ingest_status)
+
+
+# Updating database  ----------------------------
 message("Updating database")
 
 # tables

@@ -2,8 +2,8 @@
 
 # A script get the list of available annual reports on WAHIS
 
-source(here::here("repeldb", "packages.R"))
-source(here::here("repeldb", "functions.R"))
+source(here::here("repeldb", "scraper", "packages.R"))
+source(here::here("repeldb", "scraper","functions.R"))
 
 message("Getting list of countries")
 base_page <- read_html("http://www.oie.int/wahis_2/public/wahid.php/Countryinformation/Countryhome")

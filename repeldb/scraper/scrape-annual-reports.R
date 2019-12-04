@@ -2,8 +2,8 @@
 
 # A script get the list of available annual reports on WAHIS
 
-source(here::here("repeldb", "packages.R"))
-source(here::here("repeldb", "functions.R"))
+source(here::here("repeldb", "scraper", "packages.R"))
+source(here::here("repeldb", "scraper","functions.R"))
 
 # Connect to database ----------------------------
 message("Connect to database")
