@@ -19,7 +19,12 @@ conn <- wahis_db_connect()
 # reported but failed 
 ingest_missing <- dbReadTable(conn, "annual_reports_ingest_status_log") %>% 
   mutate(in_database = as.logical(in_database)) %>%
-  filter(!in_database) %>%
+  filter(!in_database) 
+
+errors_to_check <- ingest_missing %>%
+  filter(str_detect(ingest_error, "ingestion error:"))
+
+ingest_missing <- ingest_missing %>%
   select(-ingest_error) %>%
   rename(country_iso3c = code)
 
@@ -45,6 +50,12 @@ make_dt <- function(dat){
               )
     )
 }
+```
+
+## Ingest errors that should be checked (error produced unexepectedly in ingest_annual_reports())
+```{r errors}
+errors_to_check %>%
+  make_dt()
 ```
 
 ```{r animal_diseases}
