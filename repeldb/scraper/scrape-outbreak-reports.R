@@ -23,7 +23,9 @@ report_ids <- weekly_pg %>%
   as.numeric() %>%
   sort(decreasing=TRUE)
 
-current_pages <- dbReadTable(conn, "outbreak_reports_summary") %>% mutate(id = as.integer(id)) %>% pull(id)
+current_pages <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
+  mutate(id = as.integer(id)) %>%
+  filter(in_database == TRUE)
 
 reports_to_get <- tibble(id = setdiff(report_ids, current_pages)) %>%
   mutate(url =  paste0("https://www.oie.int/wahis_2/public/wahid.php/Reviewreport/Review?reportid=", id))
@@ -46,7 +48,7 @@ report_resps <- map_if(report_resps, is.null,
 # Update ingest log -------------------------------------------------------
 
 ingest_status_log <- reports_to_get %>%
-  select(code, report_year, semester) %>%
+  select(id) %>%
   mutate(ingest_status = map_chr(report_resps, ~.x$ingest_status)) %>%
   mutate(in_database = ingest_status == "available") %>%
   mutate(ingest_error = ifelse(!in_database, ingest_status, NA)) %>%
@@ -64,6 +66,9 @@ iwalk(outbreak_report_tables,
       ~update_sql_table(conn,  .y, .x,
                         c("id"), fill_col_na = TRUE)
 )
+
+# ingest log
+update_sql_table(conn, "outbreak_reports_ingest_status_log", ingest_status_log, c("id"))
 
 dbDisconnect(conn)
 message("Done updating outbreak reports.")
