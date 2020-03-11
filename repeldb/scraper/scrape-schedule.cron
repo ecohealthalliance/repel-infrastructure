@@ -1,4 +1,5 @@
-# Run country-list scraper once per week on early Saturday morning.
+# Run annual report scraper once per week on early Saturday morning.
  5 4 * * 6 /scrape-list-of-annual-reports.R && /scrape-annual-reports.R
-
+# Run run outbreak report scraper daily
+ 5 0 * * * /scrape-outbreak-reports.R
 # We need a blank line here for it to be a valid cron file

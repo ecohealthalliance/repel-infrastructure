@@ -2,18 +2,8 @@
 
 # A script get the list of available annual reports on WAHIS
 
-suppressMessages(suppressWarnings(suppressPackageStartupMessages({
-  library(tidyverse)
-  library(xml2)
-  library(rvest)
-  library(stringi)
-  library(RPostgres)
-  library(scrapetools)
-  library(DBI)
-  library(assertthat)
-})))
-
-`%||%` <- function(a, b) if (is.null(a)) return(b) else return(a)
+source(here::here("repeldb", "scraper", "packages.R"))
+source(here::here("repeldb", "scraper","functions.R"))
 
 message("Getting list of countries")
 base_page <- read_html("http://www.oie.int/wahis_2/public/wahid.php/Countryinformation/Countryhome")
@@ -101,30 +91,7 @@ all_tab <- left_join(countries, all_tab, by = "code") %>%
 
 message("Uploading ", nrow(all_tab), " records to database.")
 
-
-#if (interactive() && Sys.getenv("RSTUDIO") == "1") {
-  base::readRenviron(".env")
-  conn <- dbConnect(
-    RPostgres::Postgres(),
-    host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
-    port = Sys.getenv("POSTGRES_EXTERNAL_PORT"),
-    user = Sys.getenv("POSTGRES_USER"),
-    password = Sys.getenv("POSTGRES_PASSWORD"),
-    dbname = Sys.getenv("POSTGRES_DB")
-  )
-#   if (require("connections")) {
-#     connections::connection_view(conn, name = "repel", connection_code = "repel")
-#   }
-# } else {
-#   conn <- dbConnect(
-#     RPostgres::Postgres(),
-#     host = Sys.getenv("POSTGRES_HOST"),
-#     port = Sys.getenv("POSTGRES_PORT"),
-#     user = Sys.getenv("POSTGRES_USER"),
-#     password = Sys.getenv("POSTGRES_PASSWORD"),
-#     dbname = Sys.getenv("POSTGRES_DB")
-#   )
-# }
+conn <- wahis_db_connect()
 
 if (dbExistsTable(conn, "annual_reports_status")) {
   dbRemoveTable(conn, "annual_reports_status")

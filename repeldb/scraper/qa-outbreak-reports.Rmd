@@ -1,0 +1,90 @@
+---
+title: "QA Wahis Outbreak Reports"
+author: "EcoHealth Alliance"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(DT)
+library(DBI)
+
+# connect to database
+base::readRenviron(here::here("repeldb", ".env"))
+conn <- wahis_db_connect()
+
+# function to make dt
+make_dt <- function(dat){
+  dat %>%
+    datatable(class = "row-border", escape = FALSE, rownames = FALSE, extensions = "Buttons", 
+              options = list(
+                columnDefs = list(list(className = 'dt-center', targets = 0:(dim(.)[2] - 1))),
+                pageLength = 5,
+                scrollX = TRUE,
+                dom = 'Bfrtip',
+                buttons = c('csv')
+              )
+    )
+}
+```
+
+```{r outbreak}
+outbreak_events <- dbReadTable(conn, "outbreak_reports_events") 
+outbreak_log <- dbReadTable(conn, "outbreak_reports_ingest_status_log") 
+outbreak_detail <- dbReadTable(conn, "outbreak_reports_outbreaks")
+outbreak_summary <- dbReadTable(conn, "outbreak_reports_outbreaks_summary")
+
+```
+
+## Ingest errors that should be checked (error produced unexpectedly in ingest_outbreak_reports())
+```{r errors}
+outbreak_log %>% 
+  filter(str_detect(ingest_error, "ingestion error:")) %>%
+  make_dt()
+```
+
+
+## Reports that are missing immediate report
+```{r missing-immediate}
+outbreak_events %>%
+  filter(is.na(immediate_report)) %>%
+  select(id, country, disease, report_type, date_of_start_of_the_event ) %>%
+  make_dt()
+```
+
+## cases where reported summary does not match calculated summary (most cases are due to symbols in reported values, which needs to be fixed)
+```{r check-summary-livestock}
+sumna <- function(x) {
+  if(all(is.na(x))) NA else sum(x, na.rm = TRUE)
+}
+
+outbreak_summary_calculated <- outbreak_detail %>%
+  as_tibble() %>%
+  select(id, species, susceptible, cases, deaths, killed_and_disposed_of, slaughtered) %>%
+  mutate_at(vars(-species, -id), as.integer) %>%
+  group_by(id, species) %>%
+  summarize_all(sumna) %>%
+  ungroup() %>%
+  pivot_longer(cols = c(susceptible, cases, deaths, killed_and_disposed_of, slaughtered), names_to = "metric", values_to = "value_calculated") 
+
+outbreak_summary_reported <- outbreak_summary %>%
+  as_tibble() %>%
+  select(id, species, total_susceptible, total_cases, total_deaths, total_killed_and_disposed_of, total_slaughtered) %>%
+  pivot_longer(cols = c(total_susceptible, total_cases, total_deaths, total_killed_and_disposed_of, total_slaughtered), names_to = "metric", values_to = "value_reported") %>%
+  mutate(metric = str_remove(metric, "total_")) 
+
+left_join(outbreak_summary_calculated, outbreak_summary_reported) %>%
+  filter(value_calculated != value_reported) %>%
+  make_dt()
+
+```
+
+## to add - look at aquatic species (mortality) - requires more cleaning and maybe should be a separate table
+
+```{r disconnect}
+dbDisconnect(conn)
+```
+
