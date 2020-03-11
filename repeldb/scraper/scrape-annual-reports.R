@@ -10,37 +10,34 @@ message("Connect to database")
 conn <- wahis_db_connect()
 
 # Scrape list of all annual reports ----------------------------
-annual_report_list <- scrape_annual_report_list()
+annual_reports_status <- scrape_annual_report_list()
 
 # Update db with latest annual reports list
 if (dbExistsTable(conn, "annual_reports_status")) {
   dbRemoveTable(conn, "annual_reports_status")
 }
-dbWriteTable(conn, "annual_reports_status",  annual_report_list)
+dbWriteTable(conn, "annual_reports_status",  annual_reports_status)
 message("Done collecting list of annual reports.")
 
 # Finding unfetched reports in database ----------------------------
 message("Finding unfetched reports in database")
-# annual_reports_status <- tbl(conn, "annual_reports_status") %>%
-#   collect() %>%
-#   mutate(report_year = as.character(report_year))
 
 # Get ingest status log produces by ingest function (if it exists)
 if (dbExistsTable(conn, "annual_reports_ingest_status_log")) {
 ingest_log <- dbReadTable(conn, "annual_reports_ingest_status_log") %>%
   mutate(in_database = as.logical(in_database))
-
 } else {
-
+ingest_log <- tibble("code" = character(), "report_year" = character(), "semester" = character(), "in_database" = logical())
 }
 
+# Make list of reports not in DB
 reports_to_get <- left_join(annual_reports_status, ingest_log, by = c("code", "report_year", "semester")) %>%
   mutate(in_database = coalesce(in_database, FALSE)) %>%
   filter(reported & !in_database) %>%
   mutate(url = glue("https://www.oie.int/wahis_2/public/wahid.php/Reviewreport/semestrial/review?year={report_year}&semester={semester}&wild=0&country={code}&this_country_code={code}&detailed=1")) %>%
   sample_frac(1)
 
-# Pulling reports ----------------------------
+# Pulling unfetched reports ----------------------------
 message("Pulling ", nrow(reports_to_get), " reports")
 
 report_resps <- map_curl(
@@ -55,7 +52,6 @@ report_resps <- map_curl(
 report_resps <- map_if(report_resps, is.null,
                           function(x) list(ingest_status = "failed to fetch"))
 
-
 # Update ingest log -------------------------------------------------------
 
 ingest_status_log <- reports_to_get %>%
@@ -65,11 +61,10 @@ ingest_status_log <- reports_to_get %>%
   mutate(ingest_error = ifelse(!in_database, ingest_status, NA)) %>%
   select(-ingest_status)
 
-
 # Updating database  ----------------------------
 message("Updating database")
 
-# tables
+# All annual report tables
 annual_report_tables <- wahis::transform_annual_reports(report_resps) %>%
   keep(~nrow(.) > 0) # This could probably be handled inside transform_annual_reports
 
@@ -78,7 +73,7 @@ iwalk(annual_report_tables,
                         c("country_iso3c", "report_year", "report_months"))
 )
 
-# ingest log
+# Ingest log
 update_sql_table(conn, "annual_reports_ingest_status_log", ingest_status_log, c("code", "report_year", "semester"))
 
 dbDisconnect(conn)
