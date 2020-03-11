@@ -1,0 +1,13 @@
+suppressMessages(suppressWarnings(suppressPackageStartupMessages({
+  library(tidyverse)
+  library(xml2)
+  library(rvest)
+  library(stringi)
+  library(RPostgres)
+  library(scrapetools)
+  library(DBI)
+  library(assertthat)
+  library(arkdb)
+  library(wahis)
+  library(glue)
+})))

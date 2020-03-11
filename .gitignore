@@ -12,3 +12,5 @@ repeldb/pgdata
 *.xz
 .gitsecret/keys/random_seed
 !*.secret
+repeldb/db-data-entry/data-processed/*
+!repeldb/db-data-entry/data-processed/.gitkeep

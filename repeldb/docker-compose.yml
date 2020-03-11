@@ -27,9 +27,11 @@ services:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
     build:
       context: './scraper'
-    links:
-    - postgres:postgres
+      args:
+        - GITHUB_PAT=${GITHUB_PAT}
     env_file: .env
+    links:
+      - postgres:postgres
     restart: on-failure
     depends_on:
       - postgres

@@ -1,7 +1,7 @@
 # this is run one time to populate the DB, from here is it updated in the pipeline
 
-source(here::here("scraper", "packages.R"))
-source(here::here("scraper","functions.R"))
+source(here::here("repeldb", "scraper", "packages.R"))
+source(here::here("repeldb", "scraper","functions.R"))
 
 # DB connect
 conn <- wahis_db_connect()
