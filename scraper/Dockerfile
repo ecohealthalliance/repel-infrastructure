@@ -22,7 +22,7 @@ ARG GITHUB_PAT
 ENV GITHUB_PAT=${GITHUB_PAT}
 RUN installGithub.r ecohealthalliance/wahis noamross/scrapetools
 
-COPY . /home/rstudio/repel-infrastructure/repeldb/scraper/
+COPY . /home/rstudio/repel-infrastructure/scraper/
 
 ENTRYPOINT []
-CMD ["/home/rstudio/start.sh"]
+CMD ["/home/rstudio/repel-infrastructure/scraper/start.sh"]
