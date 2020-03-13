@@ -14,7 +14,17 @@ library(DBI)
 
 # connect to database
 base::readRenviron(here::here("repeldb", ".env"))
-conn <- wahis_db_connect()
+#conn <- wahis_db_connect()
+
+# temporary
+conn <- dbConnect(
+  RPostgres::Postgres(),
+  host = "localhost",
+  port = 22053,
+  user = "postgres",
+  password = "supersecretpassword",
+  dbname = "repel"
+)
 
 # reported but failed 
 ingest_missing <- dbReadTable(conn, "annual_reports_ingest_status_log") %>% 
@@ -31,7 +41,7 @@ ingest_missing <- ingest_missing %>%
 # not reported
 report_missing <- dbReadTable(conn, "annual_reports_status") %>%
   filter(!reported) %>%
-  select(country_iso3c = code, report_year = year, semester, in_database = reported) %>%
+  select(country_iso3c = code, report_year, semester, in_database = reported) %>%
   mutate(report_year = as.character(report_year))
 
 # all missing
@@ -52,7 +62,7 @@ make_dt <- function(dat){
 }
 ```
 
-## Ingest errors that should be checked (error produced unexepectedly in ingest_annual_reports())
+### Ingest errors that should be checked (error produced unexepectedly in ingest_annual_reports())
 ```{r errors}
 errors_to_check %>%
   make_dt()
@@ -65,7 +75,7 @@ animal_diseases <- dbReadTable(conn, "annual_reports_animal_diseases") %>%
   mutate_at(.vars = c("new_outbreaks", "total_outbreaks"), ~as.integer(.)) 
 ```
 
-## Cases where there are more new outbreaks than total outbreaks
+### Cases where there are more new outbreaks than total outbreaks
 ```{r animal_diseases2}
 animal_diseases %>%
   drop_na(new_outbreaks, total_outbreaks) %>%
@@ -73,7 +83,7 @@ animal_diseases %>%
   make_dt()
 ```
 
-## Diseases listed with more than one status
+### Diseases listed with more than one status
 ```{r animal_diseases3}
 ## Listed with more than one status
 animal_diseases %>%
@@ -110,8 +120,8 @@ animal_diseases_check <- full_join(animal_diseases_sem, animal_diseases_ann, by 
 
 ```
 
-## In semester but not annual (exludes missing/error reports)
-### note that many of these may be due to name mismatches (eg "highly_path_avian_influenza" in AFG 2006 sem 0 versus "highly_pathogenic_avian_influenza" in sem 2)
+### In semester but not annual (exludes missing/error reports)
+#### note that many of these may be due to name mismatches (eg "highly_path_avian_influenza" in AFG 2006 sem 0 versus "highly_pathogenic_avian_influenza" in sem 2)
 ```{r animal_diseases5}
 missing_ann <- animal_diseases_check %>% 
   filter(is.na(occurrence.ann)) %>%
@@ -129,7 +139,7 @@ anti_join(missing_ann, status_missing_ann, by = c("country_iso3c", "report_year"
   make_dt()
 ```
 
-## In annual but not semester (all are disease absent or never reported...)
+### In annual but not semester (all are disease absent or never reported...)
 ```{r animal_diseases6}
 missing_sem <- animal_diseases_check %>% 
   filter(is.na(occurrence.sem)) %>%
@@ -164,7 +174,7 @@ anti_join(missing_sem, status_missing_sem, by = c("country_iso3c", "report_year"
 
 ```
 
-## Cases where the new outbreaks in the annual report do not match the sum of the new outbreak in the semester reports (some due to name mismatches or missing/error reports (see one_or_more_report_missing))
+### Cases where the new outbreaks in the annual report do not match the sum of the new outbreak in the semester reports (some due to name mismatches or missing/error reports (see one_or_more_report_missing))
 ```{r animal_diseases8}
 unique_na <- function(x){
   if(all(is.na(x))) return(NA)
