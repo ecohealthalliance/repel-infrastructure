@@ -1,5 +1,5 @@
 # Run annual report scraper once per week on early Saturday morning.
- 5 4 * * 6 /scrape-annual-reports.R
+ 5 4 * * 6 /home/rstudio/scrape-annual-reports.R
 # Run run outbreak report scraper daily
- 5 0 * * * /scrape-outbreak-reports.R
+ 5 0 * * * /home/rstudio/scrape-outbreak-reports.R
 # We need a blank line here for it to be a valid cron file

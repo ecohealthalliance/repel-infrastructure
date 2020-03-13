@@ -1,9 +1,12 @@
 #!/bin/bash
 
-export PGUSER=$POSTGRES_USER
-export PGPASSWORD=$POSTGRES_PASSWORD
-export PGPORT=$POSTGRES_PORT
-export PGHOST=$POSTGRES_HOST
-export PGDATABASE=$POSTGRES_DB
+# RStudio doesn't read in all environment vars, so this makes them visible to
+# R processes
+env >> /usr/local/lib/R/etc/Renviron.site
 
-supercronic scrape-schedule.cron
+if [ $REPEL_TEST == "1" ]; then
+  rm -r /home/rstudio/kitematic
+  exec /init
+else
+  exec supercronic /home/rstudio/scrape-schedule.cron
+fi
