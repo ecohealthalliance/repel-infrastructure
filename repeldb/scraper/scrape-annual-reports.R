@@ -1,11 +1,12 @@
 #!/usr/bin/env Rscript
 
-#TODO don't do this:
-setwd("/Users/emmamendelsohn/r_projects/repel-infrastructure/repeldb/scraper")
-
 # A script get the list of available annual reports on WAHIS
-source(here::here("repeldb", "scraper", "packages.R"))
-source(here::here("repeldb", "scraper","functions.R"))
+
+# source(here::here("packages.R"))
+# source(here::here("functions.R"))
+
+source(here::here("repeldb/scraper/packages.R"))
+source(here::here("repeldb/scraper/functions.R"))
 
 # Connect to database ----------------------------
 message("Connect to database")
@@ -82,7 +83,7 @@ dbDisconnect(conn)
 message("Done updating annual reports.")
 
 
-# QA data -----------------------------------------------------------------
+# Generate QA report ------------------------------------------------------
 assert_that(dbExistsTable(conn, "annual_reports_ingest_status_log"))
 assert_that(dbExistsTable(conn, "annual_reports_status"))
 assert_that(dbExistsTable(conn, "annual_reports_animal_diseases"))
@@ -92,4 +93,3 @@ safely(rmarkdown::render, quiet = FALSE)(
   output_file = paste0("annual-report-qa.html"),
   output_dir = "qa-reports"
 )
-
