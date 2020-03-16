@@ -21,15 +21,17 @@ services:
     restart: on-failure
     depends_on:
       - postgres
-#  scraper:
-#    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
-#    build:
-#      context: './scraper'
-#      args:
-#        - GITHUB_PAT=${GITHUB_PAT}
-#    env_file: .env
-#    links:
-#      - postgres:postgres
-#    restart: on-failure
-#    depends_on:
-#      - postgres
+  scraper:
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
+    build:
+      context: './scraper'
+      args:
+        - GITHUB_PAT=${GITHUB_PAT}
+    env_file: .env
+    ports:
+      - 8787:8787
+    links:
+      - postgres:postgres
+    restart: on-failure
+    depends_on:
+      - postgres
