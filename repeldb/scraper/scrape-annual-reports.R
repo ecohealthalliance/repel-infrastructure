@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 
-# A script get the list of available annual reports on WAHIS
-
 # source(here::here("packages.R"))
 # source(here::here("functions.R"))
 

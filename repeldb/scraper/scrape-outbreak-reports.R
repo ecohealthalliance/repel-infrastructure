@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 
-# A script get the list of available annual reports on WAHIS
-
 source(here::here("repeldb", "scraper", "packages.R"))
 source(here::here("repeldb", "scraper","functions.R"))
 
@@ -13,13 +11,20 @@ conn <- wahis_db_connect()
 message("Finding unfetched reports in database")
 
 # Update db with latest outbreak reports list
-report_ids <- scrape_outbreak_report_list()
+new_ids <- scrape_outbreak_report_list()
 
-current_pages <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
+current_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
   mutate(id = as.integer(id)) %>%
-  filter(in_database == TRUE)
+  filter(in_database == TRUE) %>%
+  pull(id)
 
-reports_to_get <- tibble(id = setdiff(report_ids, current_pages)) %>%
+# new IDs only go back ~ 1 yr. Check that there is no gap in coverage. If there is, then add all integers between last report in DB and oldest report in new IDs.
+if(min(new_ids) > max(current_ids)) {
+
+  report_ids <- c(report_ids, seq(max(current_ids), min(new_ids)))
+}
+
+reports_to_get <- tibble(id = setdiff(new_ids, current_ids)) %>%
   mutate(url =  paste0("https://www.oie.int/wahis_2/public/wahid.php/Reviewreport/Review?reportid=", id))
 
 # Pulling reports ----------------------------
@@ -46,7 +51,6 @@ ingest_status_log <- reports_to_get %>%
   mutate(ingest_error = ifelse(!in_database, ingest_status, NA)) %>%
   select(-ingest_status)
 
-
 # Updating database  ----------------------------
 message("Updating database")
 
@@ -64,4 +68,16 @@ update_sql_table(conn, "outbreak_reports_ingest_status_log", ingest_status_log, 
 
 dbDisconnect(conn)
 message("Done updating outbreak reports.")
+
+# Generate QA report ------------------------------------------------------
+assert_that(dbExistsTable(conn, "outbreak_reports_events"))
+assert_that(dbExistsTable(conn, "outbreak_reports_ingest_status_log"))
+assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks"))
+assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks_summary"))
+
+safely(rmarkdown::render, quiet = FALSE)(
+  "qa-outbreak-reports.Rmd",
+  output_file = paste0("outbreak-report-qa.html"),
+  output_dir = "qa-reports"
+)
 
