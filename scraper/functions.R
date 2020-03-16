@@ -3,29 +3,19 @@
 # Connect to WAHIS Database
 wahis_db_connect <- function(){
 
-  if ((Sys.getenv("REPEL_TEST") == "1") || (interactive() && Sys.getenv("RSTUDIO") == "1")) {
-    base::readRenviron(here::here("repeldb", ".env"))
-    conn <- dbConnect(
-      RPostgres::Postgres(),
-      host = Sys.getenv("DEPLOYMENT_SERVER_URL"),
-      port = Sys.getenv("POSTGRES_EXTERNAL_PORT"),
-      user = Sys.getenv("POSTGRES_USER"),
-      password = Sys.getenv("POSTGRES_PASSWORD"),
-      dbname = Sys.getenv("POSTGRES_DB")
+  base::readRenviron(here::here("repeldb", ".env"))
+  conn <- dbConnect(
+    RPostgres::Postgres(),
+    host = Sys.getenv("SCRAPER_HOST"),
+    port = Sys.getenv("SCRAPER_PORT"),
+    user = Sys.getenv("SCRAPER_USER"),
+    password = Sys.getenv("SCRAPER_PASSWORD"),
+    dbname = Sys.getenv("SCRAPER_DBNAME")
     )
-    if (require("connections")) {
-      connections::connection_view(conn, name = "repel", connection_code = "repel")
-    }
-  } else {
-    conn <- dbConnect(
-      RPostgres::Postgres(),
-      host = Sys.getenv("POSTGRES_HOST"),
-      port = Sys.getenv("POSTGRES_PORT"),
-      user = Sys.getenv("POSTGRES_USER"),
-      password = Sys.getenv("POSTGRES_PASSWORD"),
-      dbname = Sys.getenv("POSTGRES_DB")
-    )
+  if (require("connections")) {
+    connections::connection_view(conn, name = "repel", connection_code = "repel")
   }
+
   return(conn)
 }
 

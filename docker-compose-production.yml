@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  postgres:
+    ports:
+      - '${POSTGRES_EXTERNAL_PORT}:5432'
+  cron:
+    environment:
+      - BACKUP_FLAG=no
+  scraper:
+      ports:
+        - 8787:8787  
+    environment:
+      - SCRAPER_HOST=${DEPLOYMENT_SERVER_URL}
+      - SCRAPER_PORT=${POSTGRES_EXTERNAL_PORT}
+      - SCRAPER_USER=${POSTGRES_USER}
+      - SCRAPER_PASSWORD=${POSTGRES_PASSWORD}
+      - SCRAPER_DBNAME=${POSTGRES_DB}

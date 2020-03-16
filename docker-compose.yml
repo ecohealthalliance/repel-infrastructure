@@ -28,8 +28,6 @@ services:
       args:
         - GITHUB_PAT=${GITHUB_PAT}
     env_file: .env
-    ports:
-      - 8787:8787
     links:
       - postgres:postgres
     restart: on-failure
