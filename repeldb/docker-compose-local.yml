@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  postgres:
+    ports:
+      - '${POSTGRES_EXTERNAL_PORT}:5432'
+  cron:
+    environment:
+      - BACKUP_FLAG=no
+#  scraper:
+#    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
+#    build:
+#      context: './scraper'
+#      args:
+#        - GITHUB_PAT=${GITHUB_PAT}
+#    env_file: .env
+#    links:
+#      - postgres:postgres
+#    restart: on-failure
+#    depends_on:
+#      - postgres

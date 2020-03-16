@@ -9,8 +9,6 @@ services:
        - ./postgres/init:/docker-entrypoint-initdb.d
        - ./postgres/pgconf:/pgconf
     command: postgres -c config_file=/pgconf/postgresql.conf
-    ports:
-      - '${POSTGRES_EXTERNAL_PORT}:5432'
     env_file: .env
     restart: on-failure
   cron:
@@ -23,16 +21,15 @@ services:
     restart: on-failure
     depends_on:
       - postgres
-  scraper:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
-    build:
-      context: './scraper'
-      args:
-        - GITHUB_PAT=${GITHUB_PAT}
-    env_file: .env
-    links:
-      - postgres:postgres
-    restart: on-failure
-    depends_on:
-      - postgres
-
+#  scraper:
+#    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
+#    build:
+#      context: './scraper'
+#      args:
+#        - GITHUB_PAT=${GITHUB_PAT}
+#    env_file: .env
+#    links:
+#      - postgres:postgres
+#    restart: on-failure
+#    depends_on:
+#      - postgres
