@@ -16,13 +16,13 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
  && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
  && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
-RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT
+RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env
 
 ARG GITHUB_PAT
 ENV GITHUB_PAT=${GITHUB_PAT}
 RUN installGithub.r ecohealthalliance/wahis noamross/scrapetools
 
-COPY . /
+COPY . /home/rstudio/repel-infrastructure/scraper/
 
 ENTRYPOINT []
-CMD ["/start.sh"]
+CMD ["/home/rstudio/repel-infrastructure/scraper/start.sh"]
