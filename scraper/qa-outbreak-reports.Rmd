@@ -14,7 +14,7 @@ library(DBI)
 library(wahis)
 
 # connect to database
-base::readRenviron(here::here("repeldb", ".env"))
+base::readRenviron(here::here(".env"))
 conn <- wahis_db_connect()
 
 # function to make dt

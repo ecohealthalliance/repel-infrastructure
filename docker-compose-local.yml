@@ -17,7 +17,8 @@ services:
       - SCRAPER_PASSWORD=${POSTGRES_PASSWORD}
       - SCRAPER_DBNAME=${POSTGRES_DB}
     volumes:
-      - ~/.ssh:/root/.ssh:ro
-      - ~/.Renviron:/root/.Renviron:ro
-      - ~/.gitconfig:/root/.gitconfig:ro
-      - ~/.gnupg:/root/.gnupg:ro
+      - ~/.ssh:/home/rstudio/.ssh
+      - ~/.Renviron:/home/rstudio/.Renviron
+      - ~/.gitconfig:/home/rstudio/.gitconfig
+      - ~/.gnupg:/home/rstudio/.gnupg
+      - $PWD/:/home/rstudio/repel-infrastructure

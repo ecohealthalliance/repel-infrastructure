@@ -1,9 +1,9 @@
 `%||%` <- function(a, b) if (is.null(a)) return(b) else return(a)
-
+# test
 # Connect to WAHIS Database
 wahis_db_connect <- function(){
 
-  base::readRenviron(here::here("repeldb", ".env"))
+  base::readRenviron(here::here(".env"))
   conn <- dbConnect(
     RPostgres::Postgres(),
     host = Sys.getenv("SCRAPER_HOST"),

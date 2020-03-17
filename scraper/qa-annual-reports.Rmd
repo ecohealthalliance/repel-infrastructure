@@ -13,7 +13,7 @@ library(DT)
 library(DBI)
 
 # connect to database
-base::readRenviron(here::here("repeldb", ".env"))
+base::readRenviron(here::here(".env"))
 conn <- wahis_db_connect()
 
 # reported but failed 
