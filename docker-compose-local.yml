@@ -16,6 +16,7 @@ services:
       - SCRAPER_USER=${POSTGRES_USER}
       - SCRAPER_PASSWORD=${POSTGRES_PASSWORD}
       - SCRAPER_DBNAME=${POSTGRES_DB}
+      - USER=${USER}
     volumes:
       - ~/.ssh:/home/rstudio/.ssh
       - ~/.Renviron:/home/rstudio/.Renviron

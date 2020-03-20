@@ -3,7 +3,7 @@
 # Connect to WAHIS Database
 wahis_db_connect <- function(){
 
-  base::readRenviron(here::here(".env"))
+  base::readRenviron("../.env")
   conn <- dbConnect(
     RPostgres::Postgres(),
     host = Sys.getenv("SCRAPER_HOST"),
