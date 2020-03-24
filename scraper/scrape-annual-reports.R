@@ -66,8 +66,7 @@ ingest_status_log <- reports_to_get %>%
 message("Updating database")
 
 # All annual report tables
-annual_report_tables <- wahis::transform_annual_reports(report_resps) %>%
-  keep(~nrow(.) > 0) # This could probably be handled inside transform_annual_reports
+annual_report_tables <- wahis::transform_annual_reports(report_resps)
 
 iwalk(annual_report_tables,
       ~update_sql_table(conn,  .y, .x,

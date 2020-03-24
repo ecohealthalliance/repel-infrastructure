@@ -55,8 +55,7 @@ ingest_status_log <- reports_to_get %>%
 message("Updating database")
 
 # tables
-outbreak_report_tables <- wahis::transform_outbreak_reports(report_resps) %>%
-  keep(~nrow(.) > 0) # This could probably be handled inside transform_annual_reports
+outbreak_report_tables <- wahis::transform_outbreak_reports(report_resps) =
 
 iwalk(outbreak_report_tables,
       ~update_sql_table(conn,  .y, .x,
