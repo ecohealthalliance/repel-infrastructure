@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:3.6.0
+FROM rocker/tidyverse:3.6.2
 MAINTAINER noam.ross@gmail.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,7 +16,7 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
  && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
  && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
-RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env
+RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env connections
 
 ARG GITHUB_PAT
 ENV GITHUB_PAT=${GITHUB_PAT}

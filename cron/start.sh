@@ -6,4 +6,7 @@ export PGPORT=$POSTGRES_PORT
 export PGHOST=$POSTGRES_HOST
 export PGDATABASE=$POSTGRES_DB
 
-supercronic backup-schedule.cron
+if [ "$BACKUP_FLAG" == "yes" ]
+then
+    supercronic backup-schedule.cron
+fi
