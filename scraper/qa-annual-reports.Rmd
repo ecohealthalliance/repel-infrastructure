@@ -13,8 +13,8 @@ library(DT)
 library(DBI)
 
 # connect to database
-base::readRenviron(here::here("repeldb", ".env"))
-#conn <- wahis_db_connect()
+base::readRenviron(here::here(".env"))
+conn <- wahis_db_connect()
 
 # reported but failed 
 ingest_missing <- dbReadTable(conn, "annual_reports_ingest_status_log") %>% 
