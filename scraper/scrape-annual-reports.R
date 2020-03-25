@@ -1,10 +1,7 @@
 #!/usr/bin/env Rscript
 
-# source(here::here("packages.R"))
-# source(here::here("functions.R"))
-
-source(here::here("repeldb/scraper/packages.R"))
-source(here::here("repeldb/scraper/functions.R"))
+source(here::here("packages.R"))
+source(here::here("functions.R"))
 
 # Connect to database ----------------------------
 message("Connect to database")

@@ -16,16 +16,6 @@ library(DBI)
 base::readRenviron(here::here("repeldb", ".env"))
 #conn <- wahis_db_connect()
 
-# temporary
-conn <- dbConnect(
-  RPostgres::Postgres(),
-  host = "localhost",
-  port = 22053,
-  user = "postgres",
-  password = "supersecretpassword",
-  dbname = "repel"
-)
-
 # reported but failed 
 ingest_missing <- dbReadTable(conn, "annual_reports_ingest_status_log") %>% 
   mutate(in_database = as.logical(in_database)) %>%
