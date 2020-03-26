@@ -8,7 +8,7 @@ library(future)
 library(furrr)
 
 # Connect to database ----------------------------
-  message("Connect to database")
+message("Connect to database")
 conn <- wahis_db_connect()
 
 #Remove old tables ----------------------------
@@ -22,7 +22,13 @@ filenames <- list.files(here::here("data-raw/wahis-raw-annual-reports"),
                         pattern = "*.html",
                         full.names = TRUE)
 
+# Set up parallel plan  --------------------------------------------------------
+plan(multiprocess) # This takes a bit to load on many cores as all the processes are starting
+
 # Run ingest (~25 mins) ---------------------------------------------------------
 message(paste(length(filenames), "files to process"))
+library(tictoc)
+tic()
 wahis_annual <- future_map(filenames, safe_ingest_annual, .progress = TRUE)
+toc()
 write_rds(wahis_annual, here::here("data-intermediate/wahis_ingested_annual_reports.rds"))
