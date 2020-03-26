@@ -2,8 +2,6 @@
 
 source(here::here("packages.R"))
 source(here::here("functions.R"))
-library(here)
-
 
 # Download and transform all ----------------------------------------------
 
@@ -39,7 +37,6 @@ write_csv(borders, here("data-intermediate/shared-borders.csv"))
 
 country_distance <- get_country_distance()
 write_csv(country_distance, here("data-intermediate/country-distance.csv"))
-
 
 # Join all ----------------------------------------------------------------
 
