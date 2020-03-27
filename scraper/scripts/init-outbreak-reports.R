@@ -45,3 +45,12 @@ ingest_status_log <- tibble(id = gsub(".html", "", basename(filenames)),
 outbreak_reports_transformed <- transform_outbreak_reports(outbreak_reports)
 write_rds(outbreak_reports_transformed, here::here("data-intermediate", "wahis_transformed_outbreak_reports.rds"))
 
+
+# Save files to db --------------------------------------------------------
+outbreak_reports_transformed <- read_rds(here::here("data-intermediate", "wahis_transformed_outbreak_reports.rds"))
+
+iwalk(outbreak_reports_transformed,
+      ~dbWriteTable(conn,  name = .y, value = .x)
+)
+
+dbWriteTable(conn,  name = "outbreak_reports_ingest_status_log", value = ingest_status_log)
