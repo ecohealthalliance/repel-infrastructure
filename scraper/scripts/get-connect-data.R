@@ -1,4 +1,4 @@
-# This script downloads and processes connect (non-wahis) data
+# This script downloads and processes connect (non-oie) data
 
 source(here::here("packages.R"))
 source(here::here("functions.R"))
@@ -18,7 +18,6 @@ download_livestock()
 livestock <- transform_livestock()
 item_code_lookup <- get_livestock_item_id()
 write_csv(livestock, here("data-intermediate/fao-livestock.csv"))
-write_csv(item_code_lookup,here("data-intermediate/fao-livestock-lookup.csv") )
 
 download_human_migration()
 human <- transform_human_migration()
@@ -28,7 +27,7 @@ download_tourism(username = Sys.getenv("UNWTO_USERNAME"), password = Sys.getenv(
 tourism <- transform_tourism()
 write_csv(tourism, here("data-intermediate/wto-tourism.csv"))
 
-download_wildlife()
+download_wildlife(token = Sys.getenv("IUCN_REDLIST_KEY"))
 wildlife_migration <- transform_wildlife_migration()
 write_csv(wildlife_migration, here("data-intermediate/iucn-wildlife_migration.csv"))
 
@@ -43,7 +42,7 @@ write_csv(country_distance, here("data-intermediate/country-distance.csv"))
 # master list of country pairs
 all_countries <- ggplot2::map_data("world") %>%
   as_tibble() %>%
-  mutate(iso3c = countrycode(sourcevar = region,
+  mutate(iso3c = countrycode::countrycode(sourcevar = region,
                              origin = "country.name",
                              destination = "iso3c"))  %>%
   dplyr::select(iso3c) %>%
@@ -55,7 +54,7 @@ all_countries <- ggplot2::map_data("world") %>%
   filter(country_origin != country_destination)
 
 # read in connect data
-files <- list.files(here::here("data-intermediate"), full.names = TRUE)
+files <- list.files(here::here("data-intermediate"), full.names = TRUE, pattern = "*.csv")
 dat <- map(files, ~read_csv(., col_type = cols(.default = "c")))
 
 # handling time indepentent vars
