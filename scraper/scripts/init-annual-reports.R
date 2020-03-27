@@ -51,3 +51,11 @@ ingest_status_log <- tibble(web_page = basename(filenames),
 annual_reports_transformed <- wahis::transform_annual_reports(annual_reports)
 write_rds(annual_reports_transformed, here::here("data-intermediate", "wahis_transformed_annual_reports.rds"))
 
+# Save files to db --------------------------------------------------------
+annual_reports_transformed <- read_rds(here::here("data-intermediate", "wahis_transformed_annual_reports.rds"))
+
+iwalk(annual_reports_transformed,
+      ~dbWriteTable(conn,  name = .y, value = .x)
+)
+
+dbWriteTable(conn,  name = "annual_reports_ingest_status_log", value = ingest_status_log)
