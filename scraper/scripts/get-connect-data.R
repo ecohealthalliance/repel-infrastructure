@@ -72,8 +72,7 @@ static_dat <- static_dat %>%
 # mutate_at(.vars = c("gc_dist"), ~as.double(.)) %>%
 # mutate_at(.vars = c("n_migratory_birds", "n_migratrory_wildlife"), ~as.integer(.))
 
-# save to DB
-#write_csv(static_dat, here("data-final/static-connect.csv.gz"))
+write_csv(static_dat, here("data-intermediate/connect/static-connect.csv.gz"))
 
 # handling time dependent vars
 yearly_dat <- keep(dat, ~"year" %in% names(.x)) %>%
@@ -94,5 +93,4 @@ yearly_dat <- yearly_dat %>%
 # mutate_at(vars(year, starts_with("n_"), starts_with("livestock_")), ~as.integer(.)) %>%
 # mutate_at(vars(starts_with("trade_")), ~as.double(.))
 
-# save to DB
-#write_csv(yearly_dat, here("data-final/yearly-connect.csv.gz"))
+write_csv(yearly_dat, here("data-intermediate/connect/yearly-connect.csv.gz"))
