@@ -8,7 +8,6 @@ library(future)
 library(furrr)
 
 # Connect to database ----------------------------
-message("Connect to database")
 conn <- wahis_db_connect()
 
 #Remove old tables ----------------------------
@@ -54,3 +53,5 @@ iwalk(outbreak_reports_transformed,
 )
 
 dbWriteTable(conn,  name = "outbreak_reports_ingest_status_log", value = ingest_status_log)
+
+dbDisconnect(conn)
