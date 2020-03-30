@@ -43,8 +43,8 @@ write_csv(country_distance, here("data-intermediate/country-distance.csv"))
 all_countries <- ggplot2::map_data("world") %>%
   as_tibble() %>%
   mutate(iso3c = countrycode::countrycode(sourcevar = region,
-                             origin = "country.name",
-                             destination = "iso3c"))  %>%
+                                          origin = "country.name",
+                                          destination = "iso3c"))  %>%
   dplyr::select(iso3c) %>%
   drop_na(iso3c) %>%
   unique() %>%
@@ -94,3 +94,13 @@ yearly_dat <- yearly_dat %>%
 # mutate_at(vars(starts_with("trade_")), ~as.double(.))
 
 write_csv(yearly_dat, here("data-intermediate/connect/yearly-connect.csv.gz"))
+
+# Add to db ---------------------------------------------------------------
+conn <- wahis_db_connect()
+static_dat <- read_csv(here("data-intermediate/connect/static-connect.csv.gz"))
+yearly_dat <- read_csv(here("data-intermediate/connect/yearly-connect.csv.gz"))
+
+dbWriteTable(conn,  name = "connect_static_vars", value = static_dat, overwrite = TRUE)
+dbWriteTable(conn,  name = "connect_yearly_vars", value = yearly_dat, overwrite = TRUE)
+
+dbDisconnect(conn)
