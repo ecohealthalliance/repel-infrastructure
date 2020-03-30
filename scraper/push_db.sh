@@ -1,0 +1,7 @@
+export PGUSER=$POSTGRES_USER
+export PGPASSWORD=$POSTGRES_PASSWORD
+export PGPORT=$POSTGRES_PORT
+export PGHOST=$POSTGRES_HOST
+export PGDATABASE=$POSTGRES_DB
+
+pg_dumpall | xz -9 -c | aws s3 cp - s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz

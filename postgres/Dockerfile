@@ -1,4 +1,4 @@
-FROM postgres:12
+FROM postgres:11
 
 ENV POSTGISV 2.5
 ENV TZ America/New_York
@@ -20,4 +20,3 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 COPY gen_certs.sh gen_certs.sh
 RUN ./gen_certs.sh
-

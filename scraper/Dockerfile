@@ -4,6 +4,7 @@ MAINTAINER noam.ross@gmail.com
 RUN apt-get update && apt-get install -y --no-install-recommends \
   postgresql-client \
   awscli \
+  xz-utils \
   curl
 
 ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.1.9/supercronic-linux-amd64 \
