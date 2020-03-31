@@ -17,6 +17,7 @@ services:
       - SCRAPER_PASSWORD=${POSTGRES_PASSWORD}
       - SCRAPER_DBNAME=${POSTGRES_DB}
       - USER=${USER}
+      - HOME=/home/${USER}
     volumes:
       - ~/.ssh:/home/${USER}/.ssh
       - ~/.Renviron:/home/${USER}/.Renviron
