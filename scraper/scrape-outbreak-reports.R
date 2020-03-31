@@ -21,7 +21,7 @@ current_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
 # new IDs only go back ~ 1 yr. Check that there is no gap in coverage. If there is, then add all integers between last report in DB and oldest report in new IDs.
 if(min(new_ids) > max(current_ids)) {
 
-  report_ids <- c(report_ids, seq(max(current_ids), min(new_ids)))
+  new_ids <- c(new_ids, seq(max(current_ids), min(new_ids)))
 }
 
 reports_to_get <- tibble(id = setdiff(new_ids, current_ids)) %>%
@@ -34,6 +34,7 @@ report_resps <- map_curl(
   urls = reports_to_get$url,
   .f = function(x) wahis::safe_ingest_outbreak(x$content),
   .host_con = 6L,
+  .delay = 2L,
   .timeout = nrow(reports_to_get)*120L,
   .handle_opts = list(low_speed_limit = 100, low_speed_time = 300),
   .retry = 3
@@ -55,17 +56,19 @@ ingest_status_log <- reports_to_get %>%
 message("Updating database")
 
 # tables
-outbreak_report_tables <- wahis::transform_outbreak_reports(report_resps) =
+outbreak_report_tables <- wahis::transform_outbreak_reports(report_resps)
 
-iwalk(outbreak_report_tables,
+iwalk(outbreak_report_tables[c("outbreak_reports_events", "outbreak_reports_outbreaks", "outbreak_reports_outbreaks_summary",  "outbreak_reports_laboratories")],
       ~update_sql_table(conn,  .y, .x,
                         c("id"), fill_col_na = TRUE)
 )
 
+# unmatched diseases
+update_sql_table(conn, "outbreak_reports_diseases_unmatched", outbreak_report_tables[[ "outbreak_reports_diseases_unmatched"]], "disease")
+
 # ingest log
 update_sql_table(conn, "outbreak_reports_ingest_status_log", ingest_status_log, c("id"))
 
-dbDisconnect(conn)
 message("Done updating outbreak reports.")
 
 # Generate QA report ------------------------------------------------------
@@ -80,3 +83,4 @@ safely(rmarkdown::render, quiet = FALSE)(
   output_dir = "qa-reports"
 )
 
+dbDisconnect(conn)
