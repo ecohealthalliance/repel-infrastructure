@@ -24,3 +24,6 @@ services:
       - ~/.gitconfig:/home/${USER}/.gitconfig
       - ~/.gnupg:/home/${USER}/.gnupg
       - $PWD/:/home/${USER}/repel-infrastructure
+      - postgres_db_vol:/var/lib/postgresql/data
+volumes:
+  postgres_db_vol:
