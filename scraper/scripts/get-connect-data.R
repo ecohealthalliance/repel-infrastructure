@@ -1,7 +1,7 @@
 # This script downloads and processes connect (non-oie) data
 
-source(here::here("scraper/packages.R"))
-source(here::here("scraper/functions.R"))
+source(here::here("packages.R"))
+source(here::here("functions.R"))
 
 # Download and transform all ----------------------------------------------
 
@@ -57,10 +57,15 @@ all_countries <- ggplot2::map_data("world") %>%
 
 # read in connect data
 files <- list.files(here::here("data-intermediate"), full.names = TRUE, pattern = "*.csv")
-dat <- map(files, ~read_csv(., col_type = cols(.default = "c")))
+dat <- map(files, ~read_csv(., col_type = cols(.default = "c"))) %>%
+  set_names(basename(files))
 
-# handling time indepentent vars
-static_dat <- keep(dat, ~!"year" %in% names(.x)) %>%
+static_tables <- c("bli-bird-migration.csv", "country-distance.csv", "iucn-wildlife_migration.csv", "shared-borders.csv")
+yearly_tables <- c("fao-livestock.csv", "ots-trade.csv", "un-human-migration.csv", "wto-tourism.csv")
+lookup_tables <- c("fao-livestock-item-code.csv",  "ots-trade-product-code.csv")
+
+# handling time independent vars
+static_dat <- dat[static_tables] %>%
   reduce(full_join)
 
 static_dat <- left_join(all_countries, static_dat)
@@ -77,7 +82,7 @@ static_dat <- static_dat %>%
 write_csv(static_dat, here("data-intermediate/connect/static-connect.csv.gz"))
 
 # handling time dependent vars
-yearly_dat <- keep(dat, ~"year" %in% names(.x)) %>%
+yearly_dat <- dat[yearly_tables] %>%
   reduce(full_join)
 
 all_years <- unique(yearly_dat$year) %>%
@@ -101,8 +106,12 @@ write_csv(yearly_dat, here("data-intermediate/connect/yearly-connect.csv.gz"))
 conn <- wahis_db_connect()
 static_dat <- read_csv(here("data-intermediate/connect/static-connect.csv.gz"))
 yearly_dat <- read_csv(here("data-intermediate/connect/yearly-connect.csv.gz"))
+fao_lookup <- read_csv(here("data-intermediate/fao-livestock-item-code.csv"))
+ots_lookup <- read_csv(here("data-intermediate/ots-trade-product-code.csv"))
 
 dbWriteTable(conn,  name = "connect_static_vars", value = static_dat, overwrite = TRUE)
 dbWriteTable(conn,  name = "connect_yearly_vars", value = yearly_dat, overwrite = TRUE)
+dbWriteTable(conn,  name = "connect_fao_lookup", value = fao_lookup, overwrite = TRUE)
+dbWriteTable(conn,  name = "connect_ots_lookup", value = ots_lookup, overwrite = TRUE)
 
 dbDisconnect(conn)
