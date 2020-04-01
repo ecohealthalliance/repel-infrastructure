@@ -1,7 +1,7 @@
 # This script downloads and processes connect (non-oie) data
 
-source(here::here("packages.R"))
-source(here::here("functions.R"))
+source(here::here("scraper/packages.R"))
+source(here::here("scraper/functions.R"))
 
 # Download and transform all ----------------------------------------------
 
@@ -13,11 +13,13 @@ download_trade() # ~ 2.5 hrs
 trade <- transform_trade()
 product_code_lookup <- tradestatistics::ots_products
 write_csv(trade, here("data-intermediate/ots-trade.csv"))
+write_csv(product_code_lookup, here("scraperdata-intermediate/ots-trade-product-code.csv"))
 
 download_livestock()
 livestock <- transform_livestock()
 item_code_lookup <- get_livestock_item_id()
 write_csv(livestock, here("data-intermediate/fao-livestock.csv"))
+write_csv(item_code_lookup, here("data-intermediate/fao-livestock-item-code.csv"))
 
 download_human_migration()
 human <- transform_human_migration()
