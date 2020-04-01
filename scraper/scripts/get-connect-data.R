@@ -1,7 +1,7 @@
 # This script downloads and processes connect (non-oie) data
 
-source(here::here("packages.R"))
-source(here::here("functions.R"))
+source(here::here("scraper/packages.R"))
+source(here::here("scraper/functions.R"))
 
 # Download and transform all ----------------------------------------------
 
