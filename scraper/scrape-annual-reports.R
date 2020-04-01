@@ -73,10 +73,10 @@ iwalk(annual_report_tables[names(annual_report_tables) != "annual_reports_diseas
 )
 
 # unmatched diseases
-update_sql_table(conn, "annual_reports_diseases_unmatched", annual_report_tables[[ "annual_reports_diseases_unmatched"]], "disease")
+update_sql_table(conn, "annual_reports_diseases_unmatched", annual_report_tables[[ "annual_reports_diseases_unmatched"]], "disease_clean")
 
 # ingest log
-update_sql_table(conn, "annual_reports_ingest_status_log", ingest_status_log, c("id"))
+update_sql_table(conn, "annual_reports_ingest_status_log", ingest_status_log, c("report"))
 
 # Generate QA report ------------------------------------------------------
 assert_that(dbExistsTable(conn, "annual_reports_ingest_status_log"))
