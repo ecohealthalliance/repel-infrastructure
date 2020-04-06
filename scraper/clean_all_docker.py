@@ -2,7 +2,9 @@ import docker
 
 # this script deletes all stops all running containers and
 #   then deletes all containers, images and volumes from
-#   you environment
+#   your environment.
+# This script should be run from where you currently run docker commands.
+# requires python docker api library.  Install with: pip install docker
 # usage: python clean_all_docker.py
 
 client = docker.from_env()
