@@ -71,6 +71,9 @@ update_sql_table(conn, "outbreak_reports_ingest_status_log", ingest_status_log, 
 
 message("Done updating outbreak reports.")
 
+# Schema lookup -----------------------------------------------------------
+field_check(conn, "outbreak_reports_")
+
 # Generate QA report ------------------------------------------------------
 assert_that(dbExistsTable(conn, "outbreak_reports_events"))
 assert_that(dbExistsTable(conn, "outbreak_reports_ingest_status_log"))
