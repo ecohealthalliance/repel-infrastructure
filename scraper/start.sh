@@ -1,5 +1,11 @@
 #!/bin/bash
 
+export PGUSER=$POSTGRES_USER
+export PGPASSWORD=$POSTGRES_PASSWORD
+export PGPORT=$POSTGRES_PORT
+export PGHOST=$POSTGRES_HOST
+export PGDATABASE=$POSTGRES_DB
+
 # RStudio doesn't read in all environment vars, so this makes them visible to
 # R processes
 env >> /usr/local/lib/R/etc/Renviron.site

@@ -1,9 +1,10 @@
-FROM rocker/tidyverse:3.6.0
+FROM rocker/tidyverse:3.6.2
 MAINTAINER noam.ross@gmail.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   postgresql-client \
   awscli \
+  xz-utils \
   curl
 
 ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.1.9/supercronic-linux-amd64 \
@@ -16,11 +17,11 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
  && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
  && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
-RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env
+RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env connections furrr future
 
 ARG GITHUB_PAT
 ENV GITHUB_PAT=${GITHUB_PAT}
-RUN installGithub.r ecohealthalliance/wahis noamross/scrapetools
+RUN installGithub.r ecohealthalliance/wahis@ffa491d435de87119b0d812b88b07356322b1a9b noamross/scrapetools
 
 COPY . /home/rstudio/repel-infrastructure/scraper/
 

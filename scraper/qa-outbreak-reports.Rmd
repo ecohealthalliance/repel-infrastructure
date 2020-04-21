@@ -7,16 +7,13 @@ output: html_document
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-
 library(tidyverse)
 library(DT)
 library(DBI)
 library(wahis)
-
 # connect to database
-base::readRenviron(here::here("repeldb", ".env"))
+base::readRenviron(here::here(".env"))
 conn <- wahis_db_connect()
-
 # function to make dt
 make_dt <- function(dat){
   dat %>%
@@ -37,7 +34,6 @@ outbreak_events <- dbReadTable(conn, "outbreak_reports_events")
 outbreak_log <- dbReadTable(conn, "outbreak_reports_ingest_status_log") 
 outbreak_detail <- dbReadTable(conn, "outbreak_reports_outbreaks")
 outbreak_summary <- dbReadTable(conn, "outbreak_reports_outbreaks_summary")
-
 ```
 
 ## Ingest errors that should be checked (error produced unexpectedly in ingest_outbreak_reports())
@@ -61,7 +57,6 @@ outbreak_events %>%
 sumna <- function(x) {
   if(all(is.na(x))) NA else sum(x, na.rm = TRUE)
 }
-
 outbreak_summary_calculated <- outbreak_detail %>%
   as_tibble() %>%
   select(id, species, susceptible, cases, deaths, killed_and_disposed_of, slaughtered) %>%
@@ -70,17 +65,14 @@ outbreak_summary_calculated <- outbreak_detail %>%
   summarize_all(sumna) %>%
   ungroup() %>%
   pivot_longer(cols = c(susceptible, cases, deaths, killed_and_disposed_of, slaughtered), names_to = "metric", values_to = "value_calculated") 
-
 outbreak_summary_reported <- outbreak_summary %>%
   as_tibble() %>%
   select(id, species, total_susceptible, total_cases, total_deaths, total_killed_and_disposed_of, total_slaughtered) %>%
   pivot_longer(cols = c(total_susceptible, total_cases, total_deaths, total_killed_and_disposed_of, total_slaughtered), names_to = "metric", values_to = "value_reported") %>%
   mutate(metric = str_remove(metric, "total_")) 
-
 left_join(outbreak_summary_calculated, outbreak_summary_reported) %>%
   filter(value_calculated != value_reported) %>%
   make_dt()
-
 ```
 
 ## to add - look at aquatic species (mortality) - requires more cleaning and maybe should be a separate table
@@ -88,4 +80,3 @@ left_join(outbreak_summary_calculated, outbreak_summary_reported) %>%
 ```{r disconnect}
 dbDisconnect(conn)
 ```
-

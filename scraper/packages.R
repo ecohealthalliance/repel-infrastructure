@@ -10,4 +10,5 @@ suppressMessages(suppressWarnings(suppressPackageStartupMessages({
   library(arkdb)
   library(wahis)
   library(glue)
+  library(here)
 })))

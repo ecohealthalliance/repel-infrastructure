@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  postgres:
+    ports:
+      - '${POSTGRES_EXTERNAL_PORT}:5432'
+  cron:
+    environment:
+      - BACKUP_FLAG=no
+  scraper:
+    ports:
+      - 8787:8787
+    environment:
+      - SCRAPER_HOST=${POSTGRES_HOST}
+      - SCRAPER_PORT=${POSTGRES_PORT}
+      - SCRAPER_USER=${POSTGRES_USER}
+      - SCRAPER_PASSWORD=${POSTGRES_PASSWORD}
+      - SCRAPER_DBNAME=${POSTGRES_DB}
+      - USER=${USER}
+      - HOME=/home/${USER}
+    volumes:
+      - ~/.ssh:/home/${USER}/.ssh
+      - ~/.Renviron:/home/${USER}/.Renviron
+      - ~/.gitconfig:/home/${USER}/.gitconfig
+      - ~/.gnupg:/home/${USER}/.gnupg
+      - $PWD/:/home/${USER}/repel-infrastructure
+      - postgres_db_vol:/var/lib/postgresql/data
+volumes:
+  postgres_db_vol:
