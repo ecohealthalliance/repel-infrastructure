@@ -33,6 +33,7 @@ build-postgres-image:
     - docker-compose push
   when: always
 
+# test comment
 deploy-app:
   stage: deploy
   image: ecohealthalliance/docker-compose-git-crypt
