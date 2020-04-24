@@ -15,7 +15,8 @@ library(DT)
 library(DBI)
 
 # connect to database
-base::readRenviron(here::here(".env"))
+source(here::here("packages.R"))
+source(here::here("functions.R"))
 conn <- wahis_db_connect()
 
 # reported but failed 
@@ -57,7 +58,7 @@ make_dt <- function(dat){
 ### Ingest errors that should be checked (error produced unexepectedly in ingest_annual_reports())
 ```{r errors}
 errors_to_check %>%
-  select(report, in_database, ingest_error) %>% 
+  select(report, in_database, ingest_error) %>%
   make_dt()
 ```
 
@@ -65,14 +66,14 @@ errors_to_check %>%
 this_year <- as.numeric(format(Sys.Date(), "%Y"))
 
 animal_diseases <- dbReadTable(conn, "annual_reports_animal_diseases") %>%
-  mutate_at(.vars = c("new_outbreaks", "total_outbreaks"), ~as.integer(.))  %>% 
+  mutate_at(.vars = c("new_outbreaks", "total_outbreaks"), ~as.integer(.))  %>%
   distinct()
 ```
 
 ### Cases where there are more new outbreaks than total outbreaks
 ```{r animal_diseases2}
 animal_diseases %>%
-  select(report, disease, oie_listed, serotype, disease_population, disease_status, new_outbreaks, total_outbreaks) %>% 
+  select(report, disease, oie_listed, serotype, disease_population, disease_status, new_outbreaks, total_outbreaks) %>%
   drop_na(new_outbreaks, total_outbreaks) %>%
   filter(new_outbreaks > total_outbreaks) %>%
   make_dt()
@@ -82,11 +83,11 @@ animal_diseases %>%
 ```{r animal_diseases3}
 ## Listed with more than one status
 test = animal_diseases %>%
-  group_by(report, disease, oie_listed, serotype, disease_population) %>% 
+  group_by(report, disease, oie_listed, serotype, disease_population) %>%
   mutate(n = n()) %>%
   #filter(disease == "viral_encephalopathy_and_retinopathy", country == "Australia", report_year == "2005", report_months == "Jan-Jun")
   filter(n>1) %>%
-  mutate(disease_status = paste(disease_status, collapse = "; ")) 
+  mutate(disease_status = paste(disease_status, collapse = "; "))
 
 %>%
   #mutate(serotype = paste(serotype, collapse = "; ")) %>%
@@ -120,7 +121,7 @@ animal_diseases_check <- full_join(animal_diseases_sem, animal_diseases_ann, by 
 ### In semester but not annual (exludes missing/error reports)
 #### note that many of these may be due to name mismatches (eg "highly_path_avian_influenza" in AFG 2006 sem 0 versus "highly_pathogenic_avian_influenza" in sem 2)
 ```{r animal_diseases5}
-missing_ann <- animal_diseases_check %>% 
+missing_ann <- animal_diseases_check %>%
   filter(is.na(occurrence.ann)) %>%
   filter(!report_year %in% c(this_year, this_year-1)) %>%
   select(-ends_with(".ann")) %>%
@@ -138,7 +139,7 @@ anti_join(missing_ann, status_missing_ann, by = c("country_iso3c", "report_year"
 
 ### In annual but not semester (all are disease absent or never reported...)
 ```{r animal_diseases6}
-missing_sem <- animal_diseases_check %>% 
+missing_sem <- animal_diseases_check %>%
   filter(is.na(occurrence.sem)) %>%
   filter(oie_listed == TRUE) %>% # non-oie lisetd are not in semester
   filter(!report_year %in% c(this_year, this_year-1)) %>%
