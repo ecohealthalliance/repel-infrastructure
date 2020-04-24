@@ -22,7 +22,7 @@ RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env connec
 ARG GITHUB_PAT
 ENV GITHUB_PAT=${GITHUB_PAT}
 
-RUN installGithub.r -u FALSE ecohealthalliance/wahis@a1d01243b36d5d344f1c9a60a4f9eaeb9d880b3a noamross/scrapetools
+RUN installGithub.r -u FALSE ecohealthalliance/wahis noamross/scrapetools
 
 COPY . /home/rstudio/repel-infrastructure/scraper/
 
