@@ -23,8 +23,6 @@ services:
       - postgres
   scraper:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
-    ports:
-      - 8787:8787
     build:
       context: './scraper'
       args:
