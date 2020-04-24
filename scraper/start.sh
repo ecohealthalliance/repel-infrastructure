@@ -10,7 +10,8 @@ export PGDATABASE=$POSTGRES_DB
 # R processes
 env >> /usr/local/lib/R/etc/Renviron.site
 
-if [ $REPEL_TEST == "1" ] then
+if [ $REPEL_TEST == "1" ]
+then
   echo "session-default-working-dir=~/repel-infrastructure/scraper" >> /etc/rstudio/rsession.conf
   exec /init
 else
