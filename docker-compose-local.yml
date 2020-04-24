@@ -8,8 +8,6 @@ services:
     environment:
       - BACKUP_FLAG=no
   scraper:
-    ports:
-      - 8787:8787
     environment:
       - SCRAPER_HOST=${POSTGRES_HOST}
       - SCRAPER_PORT=${POSTGRES_PORT}
