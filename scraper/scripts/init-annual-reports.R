@@ -1,5 +1,5 @@
 # This is to manually add downloaded annual reports to database
-# First run scripts/pull-aws to download the files
+# First run scripts/pull-aws-downloaded-wahis to download the files
 
 source(here::here("packages.R"))
 source(here::here("functions.R"))
