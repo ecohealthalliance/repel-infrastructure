@@ -78,9 +78,8 @@ update_sql_table(conn, "annual_reports_diseases_unmatched", annual_report_tables
 # ingest log
 update_sql_table(conn, "annual_reports_ingest_status_log", ingest_status_log, c("report"))
 
-
 # Schema lookup -----------------------------------------------------------
-field_check(conn, "annual_reports_")
+field_check(conn, "annual_reports_") #move up
 
 # Generate QA report ------------------------------------------------------
 assert_that(dbExistsTable(conn, "annual_reports_ingest_status_log"))
