@@ -18,6 +18,8 @@ services:
     links:
     - postgres:postgres
     env_file: .env
+    environment:
+      - BACKUP_FLAG=yes
     restart: on-failure
     depends_on:
       - postgres
