@@ -12,9 +12,9 @@ conn <- wahis_db_connect()
 
 #Remove old tables ----------------------------
 db_tables <- db_list_tables(conn)
-db_tables_wahis <- db_tables[grepl("outbreak_reports_", db_tables)]
+db_tables_outbreak <- db_tables[grepl("outbreak_reports_", db_tables)]
 
-walk(db_tables_wahis, ~dbRemoveTable(conn, .))
+walk(db_tables_outbreak, ~dbRemoveTable(conn, .))
 
 # List all outbreak report files to ingest ---------------------------------------------------------
 filenames <- list.files(here::here("data-raw/wahis-raw-outbreak-reports"),
@@ -44,7 +44,6 @@ ingest_status_log <- tibble(id = gsub(".html", "", basename(filenames)),
 outbreak_reports_transformed <- transform_outbreak_reports(outbreak_reports)
 write_rds(outbreak_reports_transformed, here::here("data-intermediate", "wahis_transformed_outbreak_reports.rds"))
 
-
 # Save files to db --------------------------------------------------------
 outbreak_reports_transformed <- read_rds(here::here("data-intermediate", "wahis_transformed_outbreak_reports.rds"))
 
@@ -53,5 +52,7 @@ iwalk(outbreak_reports_transformed,
 )
 
 dbWriteTable(conn,  name = "outbreak_reports_ingest_status_log", value = ingest_status_log)
+
+field_check(conn, "outbreak_reports_")
 
 dbDisconnect(conn)

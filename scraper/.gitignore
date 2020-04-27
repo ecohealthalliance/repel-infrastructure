@@ -1,0 +1,4 @@
+.httr-oauth
+*.csv
+*.xlsx
+.DS_Store

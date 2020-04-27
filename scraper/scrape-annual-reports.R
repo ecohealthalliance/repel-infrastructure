@@ -9,7 +9,6 @@ conn <- wahis_db_connect()
 
 # Scrape list of all annual reports ----------------------------
 annual_reports_status <- scrape_annual_report_list()
-annual_reports_status <- mutate(annual_reports_status, report = paste(code, report_year, semester, sep = "_"))
 
 # Update db with latest annual reports list
 if (dbExistsTable(conn, "annual_reports_status")) {
@@ -26,14 +25,14 @@ if (dbExistsTable(conn, "annual_reports_ingest_status_log")) {
   ingest_log <- dbReadTable(conn, "annual_reports_ingest_status_log") %>%
     mutate(in_database = as.logical(in_database))
 } else {
-  ingest_log <- tibble("code" = character(), "report_year" = character(), "semester" = character(), "in_database" = logical())
+  ingest_log <- tibble("country_iso3c" = character(), "report_year" = character(), "report_semester" = character(), "in_database" = logical())
 }
 
 # Make list of reports not in DB
-reports_to_get <- left_join(annual_reports_status, ingest_log, by = c("report", "code", "report_year", "semester")) %>%
+reports_to_get <- left_join(annual_reports_status, ingest_log, by = c("report", "country_iso3c", "report_year", "report_semester")) %>%
   mutate(in_database = coalesce(in_database, FALSE)) %>%
   filter(reported & !in_database) %>%
-  mutate(url = glue("https://www.oie.int/wahis_2/public/wahid.php/Reviewreport/semestrial/review?year={report_year}&semester={semester}&wild=0&country={code}&this_country_code={code}&detailed=1")) %>%
+  mutate(url = glue("https://www.oie.int/wahis_2/public/wahid.php/Reviewreport/semestrial/review?year={report_year}&semester={report_semester}&wild=0&country={country_iso3c}&this_country_code={country_iso3c}&detailed=1")) %>%
   sample_frac(1)
 
 # Pulling unfetched reports ----------------------------
@@ -55,7 +54,7 @@ report_resps <- map_if(report_resps, is.null,
 # Update ingest log -------------------------------------------------------
 
 ingest_status_log <- reports_to_get %>%
-  select(report, code, report_year, semester) %>%
+  select(report, country_iso3c, report_year, report_semester) %>%
   mutate(ingest_status = map_chr(report_resps, ~.x$ingest_status)) %>%
   mutate(in_database = ingest_status == "available") %>%
   mutate(ingest_error = ifelse(!in_database, ingest_status, NA)) %>%
@@ -69,24 +68,27 @@ annual_report_tables <- wahis::transform_annual_reports(report_resps)
 
 iwalk(annual_report_tables[names(annual_report_tables) != "annual_reports_diseases_unmatched"],
       ~update_sql_table(conn,  .y, .x,
-                        c("report", "country_iso3c", "report_year", "report_months"))
+                        c("report"))
 )
 
 # unmatched diseases
-update_sql_table(conn, "annual_reports_diseases_unmatched", annual_report_tables[[ "annual_reports_diseases_unmatched"]], "disease_clean")
+update_sql_table(conn, "annual_reports_diseases_unmatched", annual_report_tables[[ "annual_reports_diseases_unmatched"]], "disease")
 
 # ingest log
 update_sql_table(conn, "annual_reports_ingest_status_log", ingest_status_log, c("report"))
+
+# Schema lookup -----------------------------------------------------------
+field_check(conn, "annual_reports_") #move up
 
 # Generate QA report ------------------------------------------------------
 assert_that(dbExistsTable(conn, "annual_reports_ingest_status_log"))
 assert_that(dbExistsTable(conn, "annual_reports_status"))
 assert_that(dbExistsTable(conn, "annual_reports_animal_diseases"))
 
-safely(rmarkdown::render, quiet = FALSE)(
-  "qa-annual-reports.Rmd",
-  output_file = paste0("annual-report-qa.html"),
-  output_dir = "qa-reports"
-)
+# safely(rmarkdown::render, quiet = FALSE)(
+#   "qa-annual-reports.Rmd",
+#   output_file = paste0("annual-report-qa.html"),
+#   output_dir = "qa-reports"
+# )
 
 dbDisconnect(conn)
