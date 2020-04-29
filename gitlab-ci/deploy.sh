@@ -1,3 +1,4 @@
+#!/bin/sh
 
 restore_pg () {
   echo ${DEPLOYMENT_SERVER_PASS} \
