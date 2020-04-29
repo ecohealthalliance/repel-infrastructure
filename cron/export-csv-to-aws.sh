@@ -11,7 +11,7 @@ if [ "$BACKUP_CSV" == "1" ]; then
 # allow parallel, but limited, connections to the database.
 psql -Atc "select tablename from pg_tables where schemaname='public'" |\
   while read TBL; do
-    sem -j 10 "psql -c \"COPY $TBL TO STDOUT WITH NULL AS 'NA' ESCAPE '\' CSV HEADER\" | xz -9 -c | aws s3 cp - s3://${AWS_BUCKET}/csv/${TBL}.csv.xz"
+    sem -j 10 "psql -c \"COPY $TBL TO STDOUT WITH NULL AS 'NA' CSV HEADER\" | xz -9 -c | aws s3 cp - s3://${AWS_BUCKET}/csv/${TBL}.csv.xz"
   done
 fi
 sem --wait
