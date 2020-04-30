@@ -45,4 +45,4 @@ sshpass -p "${DEPLOYMENT_SERVER_PASS}" \
         -o PreferredAuthentications=password \
         -o PubkeyAuthentication=no \
         ${DEPLOYMENT_SERVER_USER}@${DEPLOYMENT_SERVER_URL} \
-        "$(typeset -f compose_up); compose_up"
+        "$(typeset -f compose_up); echo compose_up; compose_up"
