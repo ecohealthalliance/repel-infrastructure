@@ -19,8 +19,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # set time zone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN useradd -m -d /home/repeluser repeluser
-RUN echo 'repeluser:gitlabciuserforrepel' | chpasswd
-
 COPY gen_certs.sh gen_certs.sh
 RUN ./gen_certs.sh
