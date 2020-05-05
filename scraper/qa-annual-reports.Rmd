@@ -27,14 +27,10 @@ ingest_missing <- dbReadTable(conn, "annual_reports_ingest_status_log") %>%
 errors_to_check <- ingest_missing %>%
   filter(!str_detect(ingest_error, "failed to fetch"))
 
-ingest_missing <- ingest_missing %>%
-  select(-ingest_error) %>%
-  rename(country_iso3c = code)
-
 # not reported
 report_missing <- dbReadTable(conn, "annual_reports_status") %>%
   filter(!reported) %>%
-  select(report, country_iso3c = code, report_year, semester, in_database = reported) %>%
+  select(report, country_iso3c, report_year, report_semester, reported) %>%
   mutate(report_year = as.character(report_year))
 
 # all missing
@@ -65,9 +61,9 @@ errors_to_check %>%
 ```{r animal_diseases}
 this_year <- as.numeric(format(Sys.Date(), "%Y"))
 
-animal_diseases <- dbReadTable(conn, "annual_reports_animal_diseases") %>%
-  mutate_at(.vars = c("new_outbreaks", "total_outbreaks"), ~as.integer(.))  %>%
-  distinct()
+animal_diseases <- dbReadTable(conn, "annual_reports_animal_diseases") 
+animal_hosts <- dbReadTable(conn, "annual_reports_animal_hosts") 
+
 ```
 
 ### Cases where there are more new outbreaks than total outbreaks
@@ -79,125 +75,54 @@ animal_diseases %>%
   make_dt()
 ```
 
-### Diseases listed with more than one status
-```{r animal_diseases3}
-## Listed with more than one status
-test = animal_diseases %>%
-  group_by(report, disease, oie_listed, serotype, disease_population) %>%
-  mutate(n = n()) %>%
-  #filter(disease == "viral_encephalopathy_and_retinopathy", country == "Australia", report_year == "2005", report_months == "Jan-Jun")
-  filter(n>1) %>%
-  mutate(disease_status = paste(disease_status, collapse = "; "))
+### Cases where the new outbreaks in the annual report do not match the sum of the new outbreak in the semester reports OR the total outbreaks in the annual report exceed the sum of the total outbreaks in the semester reports 
+```{r animal_diseases8}
 
-%>%
-  #mutate(serotype = paste(serotype, collapse = "; ")) %>%
-  ungroup() %>%
-  select(report, oie_listed, disease, disease_population, serotype, disease_status) %>%
-  make_dt()
-```
+sum_na <- function(vec) ifelse(all(is.na(vec)), NA_integer_, sum(as.numeric(vec), na.rm = TRUE))
 
-```{r animal_diseases4}
-# Check that semester diseases are in annual report, and vice versa. Check that math adds up.
+
 animal_diseases_sem <- animal_diseases %>%
-  filter(report_months != "Jan-Dec") %>%
-  select(-notes, -date_of_last_occurrence_if_absent, -taxa, -occurrence_description, -country, -report_months)
-
+  filter(report_months != "Jan-Dec") %>% 
+  group_by(country_iso3c, report_year, disease, serotype) %>% 
+  summarize(sum_new_outbreaks_sem = sum_na(new_outbreaks), 
+            sum_total_outbreaks_sem = sum_na(total_outbreaks)) %>% 
+  ungroup()
+  
 animal_diseases_ann <- animal_diseases %>%
   filter(report_months == "Jan-Dec") %>%
-  select(-notes, -date_of_last_occurrence_if_absent, -taxa, -occurrence_description, -country, -report_months, -report_semester)
+  group_by(country_iso3c, report_year, disease, serotype) %>% 
+  summarize(new_outbreaks_ann = sum_na(new_outbreaks), 
+            total_outbreaks_ann = sum_na(total_outbreaks)) %>% 
+  ungroup()
 
-animal_diseases_check <- full_join(animal_diseases_sem, animal_diseases_ann, by = c("country_iso3c", "report_year", "disease", "oie_listed"), suffix = c(".sem", ".ann")) %>%
-  select("country_iso3c", "report_year","report_semester", "disease", "oie_listed", starts_with("disease_population"), starts_with("serotype"), starts_with("status"), starts_with("occurrence"), starts_with("new_outbreaks"), starts_with("total_outbreaks")) %>%
-  distinct() %>%
-  mutate(disease_population.sem.temp = str_split(disease_population.sem, " and ")) %>%
-  mutate(disease_population.ann.temp = str_split(disease_population.ann, " and ")) %>%
-  mutate(disease_population_match =  map2_lgl(disease_population.sem.temp, disease_population.ann.temp, function(x,y)  any(unlist(x) %in% unlist(y)))) %>%
-  select(-disease_population.sem.temp, -disease_population.ann.temp) %>%
-  filter(!(disease_population_match == FALSE & !is.na(disease_population.ann) & !is.na(disease_population.sem))) %>%
-  select(-disease_population_match)
-
-```
-
-### In semester but not annual (exludes missing/error reports)
-#### note that many of these may be due to name mismatches (eg "highly_path_avian_influenza" in AFG 2006 sem 0 versus "highly_pathogenic_avian_influenza" in sem 2)
-```{r animal_diseases5}
-missing_ann <- animal_diseases_check %>%
-  filter(is.na(occurrence.ann)) %>%
-  filter(!report_year %in% c(this_year, this_year-1)) %>%
-  select(-ends_with(".ann")) %>%
-  mutate(status.sem = factor(status.sem, levels = c("present", "absent", "unreported"))) %>%
-  arrange(status.sem)
-
-# check against report errors/missing
-status_missing_ann <- status_missing %>%
-  filter(semester == 0) %>%
-  select(-semester)
-
-anti_join(missing_ann, status_missing_ann, by = c("country_iso3c", "report_year")) %>%
+full_join(animal_diseases_sem, animal_diseases_ann) %>% 
+  mutate(total_outbreak_check = sum_total_outbreaks_sem >= total_outbreaks_ann) %>% # there may be overlap in total outbreaks in semesters. year report should not have more than semester sum
+  mutate(new_outbreak_check = sum_new_outbreaks_sem == new_outbreaks_ann) %>% # new outbreaks from semesters should add up to new outbreaks from years
+  filter(!total_outbreak_check | ! new_outbreak_check) %>% 
   make_dt()
 ```
 
-### In annual but not semester (all are disease absent or never reported...)
-```{r animal_diseases6}
-missing_sem <- animal_diseases_check %>%
-  filter(is.na(occurrence.sem)) %>%
-  filter(oie_listed == TRUE) %>% # non-oie lisetd are not in semester
-  filter(!report_year %in% c(this_year, this_year-1)) %>%
-  select(-ends_with(".sem")) %>%
-  mutate(status.ann = factor(status.ann, levels = c("present", "absent", "unreported"))) %>%
-  arrange(status.ann) %>%
-  select(-report_semester)
+### Cases where the cases in the annual report exceed the sum of the cases in the semester reports 
+```{r animal_diseases9}
 
-# check against report errors/missing
-status_missing_sem <- status_missing %>%
-  filter(semester != 0) %>%
-  select(-semester)
-
-anti_join(missing_sem, status_missing_sem, by = c("country_iso3c", "report_year")) %>%
-  make_dt()
-
-```
+sum_na <- function(vec) ifelse(all(is.na(vec)), NA_integer_, sum(as.numeric(vec), na.rm = TRUE))
 
 
-```{r animal_diseases7}
-## Cases where there are mismatches between semester and annual reports - due to being listed as more than one status (above)
+animal_hosts_sem <- animal_hosts %>%
+  filter(report_months != "Jan-Dec") %>% 
+  group_by(country_iso3c, report_year, disease, serotype, taxa) %>% 
+  summarize(sum_cases_sem = sum_na(cases)) %>% 
+  ungroup()
+  
+animal_hosts_ann <- animal_hosts %>%
+  filter(report_months == "Jan-Dec") %>% 
+  group_by(country_iso3c, report_year, disease, serotype, taxa) %>% 
+  summarize(cases_ann = sum_na(cases)) %>% 
+  ungroup()
 
-# animal_diseases_check %>%
-#   group_by(country_iso3c, report_year, report_semester, disease, oie_listed) %>%
-#   mutate(n = n()) %>%
-#   ungroup() %>%
-#   filter(n>2) %>%
-#   arrange(n, country_iso3c, report_year, report_semester, disease) %>%
-#   make_dt()
-
-```
-
-### Cases where the new outbreaks in the annual report do not match the sum of the new outbreak in the semester reports (some due to name mismatches or missing/error reports (see one_or_more_report_missing))
-```{r animal_diseases8}
-unique_na <- function(x){
-  if(all(is.na(x))) return(NA)
-  return(unique(na.omit(x)))
-}
-
-animal_diseases_check %>%
-  filter(!is.na(occurrence.ann), !is.na(occurrence.sem)) %>%
-  group_by(country_iso3c, report_year, report_semester, disease, oie_listed, disease_population.sem, disease_population.ann) %>%
-  mutate(n = n()) %>%
-  ungroup() %>%
-  arrange(n, country_iso3c, report_year, report_semester, disease) %>%
-  filter(n<=2) %>%
-  group_by(country_iso3c, report_year, disease, oie_listed, disease_population.sem, disease_population.ann) %>%
-  mutate(sum_new_outbreaks.sem = sum(new_outbreaks.sem, na.rm = TRUE)) %>%
-  mutate(unique_new_outbreaks.ann = unique_na(new_outbreaks.ann)) %>%
-  ungroup() %>%
-  mutate(match_new_outbreaks = sum_new_outbreaks.sem == unique_new_outbreaks.ann) %>%
-  filter(match_new_outbreaks == FALSE) %>%
-  select(-match_new_outbreaks) %>%
-  left_join(status_missing %>%
-              select(-semester) %>%
-              distinct() %>%
-              mutate(one_or_more_report_missing = TRUE)) %>%
-  mutate(one_or_more_report_missing = replace_na(one_or_more_report_missing, FALSE)) %>%
+full_join(animal_hosts_sem, animal_hosts_ann) %>% 
+  mutate(cases_check = sum_cases_sem >= cases_ann) %>% # there may be overlap in cases in semesters. year report should not have more than semester sum
+  filter(!cases_check) %>% 
   make_dt()
 ```
 
