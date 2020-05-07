@@ -43,4 +43,4 @@ sshpass -p "${DEPLOYMENT_SERVER_PASS}" \
             | sudo docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}; \
               cd ${DEPLOYMENT_SERVER_DIR}; \
               sudo docker-compose pull; \
-              sudo docker-compose up -d;"
+              sudo docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d;"
