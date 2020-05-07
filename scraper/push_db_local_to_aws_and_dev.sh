@@ -1,5 +1,23 @@
 # copy local repel database to dev and AWS
 
+# functions to test environment variables to local or dev server
+
+set_local_env () {
+  export PGUSER=$POSTGRES_USER
+  export PGPASSWORD=$POSTGRES_PASSWORD
+  export PGPORT=$POSTGRES_PORT
+  export PGHOST=$POSTGRES_HOST
+  export PGDATABASE=$POSTGRES_DB
+}
+
+set_dev_env () {
+  export PGUSER=$DEPLOYMENT_SERVER_USER
+  export PGPASSWORD=$DEPLOYMENT_SERVER_DB_PASS
+  export PGPORT=$DEPLOYMENT_SERVER_PSQL_PORT
+  export PGHOST=$DEPLOYMENT_SERVER_URL
+  export PGDATABASE=$POSTGRES_DB
+}
+
 # verify with user that this should be run
 echo "Running this script will push your local repel database to the development server and to AWS."
 read -p "Are you sure you want to proceed? (Y/N) " -r
@@ -11,22 +29,12 @@ fi
 
 # set env to local and dump database
 
-export PGUSER=$POSTGRES_USER
-export PGPASSWORD=$POSTGRES_PASSWORD
-export PGPORT=$POSTGRES_PORT
-export PGHOST=$POSTGRES_HOST
-export PGDATABASE=$POSTGRES_DB
-
+set_local_env
 pg_dump repel > /tmp/repel_backup_local.dmp
 
 # set env to dev server and update database
 
-export PGUSER=$DEPLOYMENT_SERVER_USER
-export PGPASSWORD=$DEPLOYMENT_SERVER_DB_PASS
-export PGPORT=$DEPLOYMENT_SERVER_PSQL_PORT
-export PGHOST=$DEPLOYMENT_SERVER_URL
-export PGDATABASE=$POSTGRES_DB
-
+set_dev_env
 dropdb repel || { echo "Error: failed to drop repel database!" && exit 1; }
 createdb repel || { echo "Error: failed to create repel database!" && exit 1; }
 psql repel < /tmp/repel_backup_local.dmp || { echo "Error: failed to restore repel database from backup!" && exit 1; }
@@ -46,11 +54,7 @@ aws s3 rm s3://${AWS_BUCKET}/csv --recursive
 
 # set env back to local to copy CSVs to AWS
 
-export PGUSER=$POSTGRES_USER
-export PGPASSWORD=$POSTGRES_PASSWORD
-export PGPORT=$POSTGRES_PORT
-export PGHOST=$POSTGRES_HOST
-export PGDATABASE=$POSTGRES_DB
+set_local_env
 
 psql -Atc "select tablename from pg_tables where schemaname='public'" |\
   while read TBL; do
