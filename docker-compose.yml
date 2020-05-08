@@ -6,8 +6,8 @@ services:
     build:
       context: './postgres'
     volumes:
-       - ./postgres/init:/docker-entrypoint-initdb.d
-       - ./postgres/pgconf:/pgconf
+      - ./postgres/init:/docker-entrypoint-initdb.d
+      - ./postgres/pgconf:/pgconf
     command: postgres -c config_file=/pgconf/postgresql.conf
     env_file: .env
     restart: on-failure
@@ -16,8 +16,10 @@ services:
     build:
       context: './cron'
     links:
-    - postgres:postgres
+      - postgres:postgres
     env_file: .env
+    environment:
+      - BACKUP_FLAG=yes
     restart: on-failure
     depends_on:
       - postgres
