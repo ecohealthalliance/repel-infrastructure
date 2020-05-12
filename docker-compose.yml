@@ -35,3 +35,49 @@ services:
     restart: on-failure
     depends_on:
       - postgres
+    volumes:
+      - static-content:/var/www/html/static
+  nginx:
+    image: linuxserver/letsencrypt
+    restart: always
+    env_file: .env
+    environment:
+      EMAIL: young@ecohealthalliance.org
+      URL: ${HOSTNAME}.ecohealthalliance.org
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - "./nginx/site-confs:/config/nginx/site-confs/"
+      - "./nginx/www:/config/www"
+    networks:
+      - eha-servers
+  rshinyauth0:
+    image: "node:7"
+    restart: always
+    working_dir: /home/node/app
+    env_file: .env
+    environment:
+      NODE_ENV: production
+    volumes:
+      - ./rshinyauth0:/home/node/app
+    command: "bash -c 'npm install && npm start'"
+    networks:
+      - eha-servers
+  shinyserver:
+    image: "rocker/shiny"
+    restart: always
+    env_file: .env
+    ports:
+      - 3838:3838
+    volumes:
+      - ./shiny/shinyapps/:/srv/shiny-server/
+      - ./shiny/shinylog/:/var/log/shiny-server/
+      - static-content:/srv/shinyserver/static/
+    networks:
+      - eha-servers
+volumes:
+  static-content:
+networks:
+  eha-servers:
+    driver: bridge
