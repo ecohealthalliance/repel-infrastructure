@@ -73,7 +73,7 @@ services:
     volumes:
       - ./shiny/shinyapps/:/srv/shiny-server/
       - ./shiny/shinylog/:/var/log/shiny-server/
-      - static-content:/srv/shinyserver/static/
+      - static-content:/srv/shiny-server/static/
     networks:
       - eha-servers
 volumes:
