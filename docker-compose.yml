@@ -54,6 +54,8 @@ services:
       - eha-servers
   rshinyauth0:
     image: "node:7"
+    build:
+      context: './rshinyauth0'
     restart: always
     working_dir: /home/node/app
     env_file: .env
@@ -61,7 +63,6 @@ services:
       NODE_ENV: production
     volumes:
       - ./rshinyauth0:/home/node/app
-    command: "bash -c 'npm install && npm start'"
     networks:
       - eha-servers
   shinyserver:

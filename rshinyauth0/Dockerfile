@@ -1,14 +1,12 @@
 FROM node:7
 
-RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+COPY . /home/node/app
+# ADD URL /home/node/app
 
-working_dir: /home/node/app
-
-USER node
+WORKDIR /home/node/app
 
 RUN npm install
 
-EXPOSE 3838
+EXPOSE 3000
 
-ENTRYPOINT []
-CMD ["npm start"]
+CMD ["npm", "start"]
