@@ -53,7 +53,8 @@ services:
     networks:
       - eha-servers
   rshinyauth0:
-    image: "node:7"
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-rshinyauth0
+#    image: "node:7"
     build:
       context: './rshinyauth0'
     restart: always
