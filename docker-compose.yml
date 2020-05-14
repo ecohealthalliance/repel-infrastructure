@@ -39,6 +39,8 @@ services:
       - static-content:/var/www/html/static
   nginx:
     image: linuxserver/letsencrypt
+    build:
+      context: './nginx'
     restart: always
     env_file: .env
     environment:
