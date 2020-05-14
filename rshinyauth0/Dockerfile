@@ -1,7 +1,7 @@
 FROM node:7
 
-COPY . /home/node/app
-# ADD URL /home/node/app
+# COPY . /home/node/app
+ADD https://github.com/ecohealthalliance/shiny-auth0/archive/master.zip /home/node/app
 
 WORKDIR /home/node/app
 
