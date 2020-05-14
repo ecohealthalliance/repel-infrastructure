@@ -38,7 +38,7 @@ services:
     volumes:
       - static-content:/var/www/html/static
   nginx:
-    image: linuxserver/letsencrypt
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
     build:
       context: './nginx'
     restart: always
