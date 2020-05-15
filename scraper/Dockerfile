@@ -8,6 +8,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   curl \
   parallel
 
+# install fixuid
+RUN USER=rstudio && \
+    GROUP=rstudio && \
+    curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.1/fixuid-0.1-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - && \
+    chown root:root /usr/local/bin/fixuid && \
+    chmod 4755 /usr/local/bin/fixuid && \
+    mkdir -p /etc/fixuid && \
+    printf "user: $USER\ngroup: $GROUP\n" > /etc/fixuid/config.yml
+ENTRYPOINT ["fixuid"]
+
 ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.1.9/supercronic-linux-amd64 \
     SUPERCRONIC=supercronic-linux-amd64 \
     SUPERCRONIC_SHA1SUM=5ddf8ea26b56d4a7ff6faecdd8966610d5cb9d85
@@ -27,5 +37,4 @@ RUN installGithub.r -u FALSE ecohealthalliance/wahis noamross/scrapetools
 
 COPY . /home/rstudio/repel-infrastructure/scraper/
 
-ENTRYPOINT []
 CMD ["/home/rstudio/repel-infrastructure/scraper/start.sh"]
