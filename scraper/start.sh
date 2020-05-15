@@ -17,3 +17,7 @@ then
 else
   exec supercronic /home/rstudio/repel-infrastructure/scraper/scrape-schedule.cron
 fi
+
+if [[ $IS_LOCAL == "yes" ]]
+then
+  fixuid

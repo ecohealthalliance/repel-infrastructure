@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   parallel
 
 # install fixuid
-RUN USER=rstudio && \
-    GROUP=rstudio && \
+RUN USER=${USER} && \
+    GROUP=${GROUP} && \
     curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.1/fixuid-0.1-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - && \
     chown root:root /usr/local/bin/fixuid && \
     chmod 4755 /usr/local/bin/fixuid && \
@@ -38,3 +38,5 @@ RUN installGithub.r -u FALSE ecohealthalliance/wahis noamross/scrapetools
 COPY . /home/rstudio/repel-infrastructure/scraper/
 
 CMD ["/home/rstudio/repel-infrastructure/scraper/start.sh"]
+
+USER ${USER}:${GROUP}
