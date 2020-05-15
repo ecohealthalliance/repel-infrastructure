@@ -9,7 +9,7 @@ services:
       - BACKUP_FLAG=no
   scraper:
     ports:
-      - 8787:22097
+      - 22097:9797
     environment:
       - SCRAPER_HOST=${POSTGRES_HOST}
       - SCRAPER_PORT=${POSTGRES_PORT}
