@@ -30,6 +30,8 @@ services:
       args:
         - GITHUB_PAT=${GITHUB_PAT}
     env_file: .env
+    environment:
+      - IS_LOCAL=no    
     links:
       - postgres:postgres
     restart: on-failure

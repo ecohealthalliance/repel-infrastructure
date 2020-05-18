@@ -18,11 +18,14 @@ services:
       - SCRAPER_DBNAME=${POSTGRES_DB}
       - USER=${USER}
       - HOME=/home/${USER}
+      - USERID=${USERID}
+      - GROUPID=${GROUPID}
+      - IS_LOCAL=yes
     volumes:
-      - ~/.ssh:/home/${USER}/.ssh
-      - ~/.Renviron:/home/${USER}/.Renviron
-      - ~/.gitconfig:/home/${USER}/.gitconfig
-      - ~/.gnupg:/home/${USER}/.gnupg
+      - $HOME/.ssh:/home/${USER}/.ssh
+      - $HOME/.Renviron:/home/${USER}/.Renviron
+      - $HOME/.gitconfig:/home/${USER}/.gitconfig
+      - $HOME/.gnupg:/home/${USER}/.gnupg
       - $PWD/:/home/${USER}/repel-infrastructure
       - postgres_db_vol:/var/lib/postgresql/data
 volumes:
