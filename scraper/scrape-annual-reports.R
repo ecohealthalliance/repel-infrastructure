@@ -66,13 +66,17 @@ message("Updating database")
 # All annual report tables
 annual_report_tables <- wahis::transform_annual_reports(report_resps)
 
-iwalk(annual_report_tables[names(annual_report_tables) != "annual_reports_diseases_unmatched"],
-      ~update_sql_table(conn,  .y, .x,
-                        c("report"))
-)
+if(!is.null(annual_report_tables)){
+  iwalk(annual_report_tables[names(annual_report_tables) != "annual_reports_diseases_unmatched"],
+        ~update_sql_table(conn,  .y, .x,
+                          c("report"))
+  )
+}
 
 # unmatched diseases
-update_sql_table(conn, "annual_reports_diseases_unmatched", annual_report_tables[[ "annual_reports_diseases_unmatched"]], "disease")
+if(!is.null(annual_report_tables[[ "annual_reports_diseases_unmatched"]])){
+  update_sql_table(conn, "annual_reports_diseases_unmatched", annual_report_tables[[ "annual_reports_diseases_unmatched"]], "disease")
+}
 
 # ingest log
 update_sql_table(conn, "annual_reports_ingest_status_log", ingest_status_log, c("report"))
