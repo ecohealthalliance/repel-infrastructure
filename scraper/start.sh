@@ -20,4 +20,6 @@ fi
 
 if [[ $IS_LOCAL == "yes" ]]
 then
-  fixuid
+  #fixuid
+  export USER=$USER
+  export UID=$UID
