@@ -18,10 +18,10 @@ services:
       - SCRAPER_DBNAME=${POSTGRES_DB}
       - USER=${USER}
       - HOME=/home/${USER}
-      - UID=${UID}
-      - GID=${GID}
+      - USERID=${UID}
+      - GROUPID=${GID}
       - IS_LOCAL=yes
-    user: "${UID}:${GID}"
+#    user: "${UID}:${GID}"
     volumes:
       - ~/.ssh:/home/${USER}/.ssh
       - ~/.Renviron:/home/${USER}/.Renviron
