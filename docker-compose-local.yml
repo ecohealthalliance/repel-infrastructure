@@ -21,7 +21,6 @@ services:
       - USERID=${UID}
       - GROUPID=${GID}
       - IS_LOCAL=yes
-#    user: "${UID}:${GID}"
     volumes:
       - ~/.ssh:/home/${USER}/.ssh
       - ~/.Renviron:/home/${USER}/.Renviron
