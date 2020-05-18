@@ -12,6 +12,7 @@ env >> /usr/local/lib/R/etc/Renviron.site
 
 if [[ $IS_LOCAL == "yes" ]]
 then
+  chown -r $USERID:$GROUPID /home/rstudio
   echo "session-default-working-dir=~/repel-infrastructure/scraper" >> /etc/rstudio/rsession.conf
   exec /init
 else
