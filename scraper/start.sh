@@ -21,5 +21,4 @@ fi
 if [[ $IS_LOCAL == "yes" ]]
 then
   #fixuid
-  export USER=$USER
-  export UID=$UID
+  userconf.sh
