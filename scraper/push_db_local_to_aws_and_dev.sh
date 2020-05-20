@@ -35,7 +35,7 @@ pg_dump repel > /tmp/repel_backup_local.dmp
 # set env to dev server and update database
 
 set_dev_env
-dropdb repel || { echo "Error: failed to drop repel database!" && exit 1; }
+dropdb repel || { echo "Warning: failed to drop repel database!"; }
 createdb repel || { echo "Error: failed to create repel database!" && exit 1; }
 psql repel < /tmp/repel_backup_local.dmp || { echo "Error: failed to restore repel database from backup!" && exit 1; }
 
