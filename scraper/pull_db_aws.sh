@@ -8,7 +8,7 @@ export PGDATABASE=$POSTGRES_DB
 
 aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz repel_backup.dmp.xz
 unxz repel_backup.dmp.xz
-dropdb repel || { echo "Error: failed to drop repel database!" && exit 1; }
+dropdb repel || { echo "Warning: failed to drop repel database!"; }
 createdb repel || { echo "Error: failed to create repel database!" && exit 1; }
 psql repel < repel_backup.dmp || { echo "Error: failed to restore repel database from backup!" && exit 1; }
 rm repel_backup.dmp*
