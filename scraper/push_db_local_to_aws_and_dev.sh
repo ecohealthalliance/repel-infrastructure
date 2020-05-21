@@ -31,6 +31,7 @@ fi
 
 set_local_env
 pg_dump repel > /tmp/repel_backup_local.dmp
+pg_dumpall > /tmp/all_pg_local.dmp
 
 # set env to dev server and update database
 
@@ -41,8 +42,8 @@ psql repel < /tmp/repel_backup_local.dmp || { echo "Error: failed to restore rep
 
 # archive dump and push to AWS
 
-xz /tmp/repel_backup_local.dmp
-aws s3 cp /tmp/repel_backup_local.dmp.xz s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz
+xz /tmp/all_pg_local.dmp
+aws s3 cp /tmp/all_pg_local.dmp.xz s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz
 
 # remove existing csv files from AWS then copy local ones
 
@@ -65,3 +66,4 @@ sem --wait
 # clean up
 
 rm /tmp/repel_backup_local.dmp*
+rm /tmp/all_pg_local.dmp*
