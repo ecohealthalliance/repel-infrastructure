@@ -21,6 +21,6 @@ RU_EXISTS=`psql -X -A -d postgres -t -c "SELECT 1 FROM pg_roles WHERE rolname='r
 if [ "$RU_EXISTS" != "1" ]
 then
   psql -d postgres -c "create user repeluser with encrypted password '$REPELUSER_PASS'"
-  psql -d postgres -c "alter database repel owner to repeluser"
+#  psql -d postgres -c "alter database repel owner to repeluser"
   psql -d postgres -c "alter user repeluser createdb"
 fi
