@@ -11,8 +11,8 @@ set_local_env () {
 }
 
 set_dev_env () {
-  export PGUSER=$DEPLOYMENT_SERVER_USER
-  export PGPASSWORD=$DEPLOYMENT_SERVER_DB_PASS
+  export PGUSER=$POSTGRES_USER
+  export PGPASSWORD=$POSTGRES_PASSWORD
   export PGPORT=$DEPLOYMENT_SERVER_PSQL_PORT
   export PGHOST=$DEPLOYMENT_SERVER_URL
   export PGDATABASE=$POSTGRES_DB
@@ -36,9 +36,19 @@ pg_dumpall > /tmp/all_pg_local.dmp
 # set env to dev server and update database
 
 set_dev_env
-dropdb repel || { echo "Warning: failed to drop repel database!"; }
-createdb repel || { echo "Error: failed to create repel database!" && exit 1; }
-psql repel < /tmp/repel_backup_local.dmp || { echo "Error: failed to restore repel database from backup!" && exit 1; }
+createdb repeltmp || { echo "Error: failed to create repel database!" && exit 1; }
+psql repeltmp < /tmp/repel_backup_local.dmp || { echo "Error: failed to restore repel database from backup!" && exit 1; }
+psql <<EOF
+\connect postgres;
+drop database repel;
+alter database repeltmp rename to repel;
+EOF
+# make sure last commands succeeded
+if [[ $? -ne 0 ]]
+then
+  echo "Error: failed to rename database to repel";
+  exit 1;
+fi
 
 # archive dump and push to AWS
 
