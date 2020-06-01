@@ -13,6 +13,8 @@ RUN unzip master.zip
 
 RUN cp -R /tmp/shiny-auth0-master/* /home/node/app
 
+COPY .env /home/node/app
+
 WORKDIR /home/node/app
 
 RUN npm install
