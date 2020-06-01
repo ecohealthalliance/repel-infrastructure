@@ -5,11 +5,13 @@ RUN apt-get update && apt-get install -y unzip
 RUN mkdir -p /home/node/app
 
 # COPY . /home/node/app
-ADD https://github.com/ecohealthalliance/shiny-auth0/archive/master.zip /home/node
+ADD https://github.com/ecohealthalliance/shiny-auth0/archive/master.zip /tmp
 
-RUN unzip /home/node/master.zip
+WORKDIR /tmp
 
-RUN mv shiny-auth0-master app
+RUN unzip master.zip
+
+RUN cp -R /tmp/shiny-auth0-master/* /home/node/app
 
 WORKDIR /home/node/app
 
