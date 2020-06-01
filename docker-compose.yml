@@ -31,7 +31,7 @@ services:
         - GITHUB_PAT=${GITHUB_PAT}
     env_file: .env
     environment:
-      - IS_LOCAL=no    
+      - IS_LOCAL=no
     links:
       - postgres:postgres
     restart: on-failure
@@ -51,9 +51,6 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    volumes:
-      - "./nginx/site-confs:/config/nginx/site-confs/"
-      - "./nginx/www:/config/www"
     networks:
       - eha-servers
   rshinyauth0:
@@ -65,8 +62,6 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
-    volumes:
-      - ./rshinyauth0:/home/node/app
     networks:
       - eha-servers
   shinyserver:
@@ -76,8 +71,6 @@ services:
     ports:
       - 3838:3838
     volumes:
-      - ./shiny/shinyapps/:/srv/shiny-server/
-      - ./shiny/shinylog/:/var/log/shiny-server/
       - static-content:/srv/shiny-server/static/
     networks:
       - eha-servers
