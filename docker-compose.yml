@@ -52,7 +52,7 @@ services:
       - '80:80'
       - '443:443'
     networks:
-      - eha-servers
+      - repel-servers
   rshinyauth0:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-rshinyauth0
     build:
@@ -63,7 +63,7 @@ services:
     environment:
       NODE_ENV: production
     networks:
-      - eha-servers
+      - repel-servers
   shinyserver:
     image: "rocker/shiny"
     restart: always
@@ -73,9 +73,9 @@ services:
     volumes:
       - static-content:/srv/shiny-server/static/
     networks:
-      - eha-servers
+      - repel-servers
 volumes:
   static-content:
 networks:
-  eha-servers:
+  repel-servers:
     driver: bridge

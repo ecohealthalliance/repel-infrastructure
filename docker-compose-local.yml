@@ -31,5 +31,8 @@ services:
   nginx:
     environment:
       - STAGING=true
+  rshinyauth0:
+    ports:
+      - 22111:3000
 volumes:
   postgres_db_vol:
