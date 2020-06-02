@@ -28,5 +28,8 @@ services:
       - $HOME/.gnupg:/home/${USER}/.gnupg
       - $PWD/:/home/${USER}/repel-infrastructure
       - postgres_db_vol:/var/lib/postgresql/data
+  nginx:
+    environment:
+      - STAGING=true
 volumes:
   postgres_db_vol:

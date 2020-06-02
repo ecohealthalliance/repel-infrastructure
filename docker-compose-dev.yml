@@ -3,7 +3,10 @@ version: '3'
 services:
   postgres:
     ports:
-      - '${POSTGRES_EXTERNAL_PORT}:5432'  
+      - '${POSTGRES_EXTERNAL_PORT}:5432'
   cron:
     environment:
       - BACKUP_FLAG=yes
+  nginx:
+    environment:
+      - STAGING=true
