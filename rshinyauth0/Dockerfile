@@ -4,7 +4,6 @@ RUN apt-get update && apt-get install -y unzip
 
 RUN mkdir -p /home/node/app
 
-# COPY . /home/node/app
 ADD https://github.com/ecohealthalliance/shiny-auth0/archive/master.zip /tmp
 
 WORKDIR /tmp
