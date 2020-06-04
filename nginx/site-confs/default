@@ -48,6 +48,9 @@ server {
         location = /index.html {
         }
 
+        location = /test.html {
+        }
+
         location / {
                 proxy_set_header Host $host;
 
