@@ -32,6 +32,16 @@ server {
 
         client_max_body_size 0;
 
+        rewrite ^/repel$ $scheme://$http_host/repel/ permanent;
+        location /repel/ {
+            rewrite ^/repel/(.*)$ /$1 break;
+            include /config/nginx/proxy.conf;
+            proxy_pass http://repel:3000;
+            proxy_redirect $scheme://$http_host:443/ $scheme://$http_host/repel/;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+        }
+
         location = / {
         }
 
