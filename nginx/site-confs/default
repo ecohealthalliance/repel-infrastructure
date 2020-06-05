@@ -32,18 +32,8 @@ server {
 
         client_max_body_size 0;
 
-        rewrite ^/repel$ $scheme://$http_host/repel/ permanent;
         location /repel/ {
             proxy_pass http://google.com
-        }
-
-        location = / {
-        }
-
-        location = /index.html {
-        }
-
-        location = /test.html {
         }
 
         location / {
