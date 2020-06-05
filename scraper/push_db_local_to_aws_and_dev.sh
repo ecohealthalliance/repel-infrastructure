@@ -36,6 +36,7 @@ pg_dumpall > /tmp/all_pg_local.dmp
 # set env to dev server and update database
 
 set_dev_env
+dropdb --if-exists repeltmp
 createdb repeltmp || { echo "Error: failed to create repel database!" && exit 1; }
 psql repeltmp < /tmp/repel_backup_local.dmp || { echo "Error: failed to restore repel database from backup!" && exit 1; }
 psql <<EOF
