@@ -33,11 +33,11 @@ server {
         client_max_body_size 0;
 
         location /repel/ {
-            proxy_pass http://google.com
+            proxy_pass http://google.com;
         }
 
         location / {
-            proxy_pass http://news.google.com
+            proxy_pass http://news.google.com;
         }
 
 
