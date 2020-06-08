@@ -24,20 +24,20 @@ router.get('/login',
       return authenticateWithPromptNone(req, res, next);
     }
     return authenticateWithDefaultPrompt(req, res, next);
-  },
+  }/*,
   function (req, res) {
     res.redirect('/reports/');
-  });
+  }*/);
 
 router.get('/logout', function(req, res){
   var logoutUrl = env.LOGOUT_URL;
 
   if (env.LOGOUT_AUTH0 === 'true') {
-    logoutUrl = 'https://' + env.AUTH0_DOMAIN + '/v2/logout?returnTo=' 
+    logoutUrl = 'https://' + env.AUTH0_DOMAIN + '/v2/logout?returnTo='
       + env.LOGOUT_URL + '&client_id=' + env.AUTH0_CLIENT_ID
       + (env.LOGOUT_FEDERATED === 'true'? '&federated' : '');
   }
-  
+
   req.logout();
   res.redirect(logoutUrl);
 });
@@ -52,7 +52,7 @@ router.get('/callback',
       if (info === 'login_required') {
         return res.redirect('/login?sso=false');
       }
-      
+
       if (user) {
         return req.login(user, function (err) {
           if (err) {
