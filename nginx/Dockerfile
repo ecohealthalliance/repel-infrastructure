@@ -1,5 +1,7 @@
 FROM linuxserver/letsencrypt
 
-COPY . /config
+RUN mkdir -p /config/nginx/site-confs/
+COPY ./site-confs/ /config/nginx/site-confs/
 
-RUN cat /config/site-confs/default >> /etc/nginx/nginx.conf
+RUN mkdir -p /config/www
+COPY ./www/ /config/www/
