@@ -71,7 +71,8 @@ services:
     ports:
       - 3838:3838
     volumes:
-      - static-content:/srv/shiny-server/static/
+#      - static-content:/srv/shiny-server/static
+      - static-content:/srv/shiny-server
     networks:
       - repel-servers
 volumes:
