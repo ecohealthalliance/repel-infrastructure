@@ -16,6 +16,8 @@ COPY .env /home/node/app
 
 WORKDIR /home/node/app
 
+COPY ./routes/index.js /home/node/app/routes/
+
 RUN npm install
 
 EXPOSE 3000

@@ -37,7 +37,9 @@ RUN installGithub.r -u FALSE ecohealthalliance/wahis noamross/scrapetools
 
 COPY . /home/rstudio/repel-infrastructure/scraper/
 
-RUN mkdir -p /var/www/html/static /var/www/html/logs && chgrp -R staff /var/www/  && chmod -R g+w /var/www
+RUN mkdir -p /var/log/html/shiny /var/www/html/static /var/www/html/logs /var/www/html/apps && chgrp -R staff /var/www/  && chmod -R g+w /var/www
+
+COPY index.html /var/www/html/
 
 CMD ["/home/rstudio/repel-infrastructure/scraper/start.sh"]
 

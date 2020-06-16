@@ -12,22 +12,16 @@ var authenticateWithPromptNone = passport.authenticate('auth0', {
   prompt: 'none'
 });
 
-
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.send('Add an username to the URL path to view their rshiny apps.');
-});
-
 router.get('/login',
   function (req, res, next) {
     if (env.CHECK_SESSION === 'true' && req.query.sso !== 'false') {
       return authenticateWithPromptNone(req, res, next);
     }
     return authenticateWithDefaultPrompt(req, res, next);
-  }/*,
+  },
   function (req, res) {
     res.redirect('/reports/');
-  }*/);
+  });
 
 router.get('/logout', function(req, res){
   var logoutUrl = env.LOGOUT_URL;
