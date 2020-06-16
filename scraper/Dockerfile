@@ -41,6 +41,12 @@ RUN mkdir -p /var/log/html/shiny /var/www/html/static /var/www/html/logs /var/ww
 
 COPY index.html /var/www/html/
 
+RUN mkdir -p /var/www/html/shiny
+
+RUN ln -s /var/log/rstudio /var/www/html/logs/rstudio
+
+RUN ln -s /var/log/html/shiny /var/www/html/logs/shiny
+
 CMD ["/home/rstudio/repel-infrastructure/scraper/start.sh"]
 
 # USER rstudio:rstudio

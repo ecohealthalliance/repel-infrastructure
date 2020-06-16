@@ -38,7 +38,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - static-content:/var/www/html
+      - static-content:/var/www/html/shiny
   nginx:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
     build:
