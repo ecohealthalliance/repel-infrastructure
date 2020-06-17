@@ -24,7 +24,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - log-volume:/var/log/shared
+      - ./logs/repel:/var/log/shared
   scraper:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
     build:
@@ -73,14 +73,12 @@ services:
     ports:
       - 3838:3838
     volumes:
-#      - static-content:/srv/shiny-server/static
       - shiny-content:/srv/shiny-server
-      - log-volume:/srv/shiny-server/logs
+      - ./logs/repel:/srv/shiny-server/logs
     networks:
       - repel-servers
 volumes:
   shiny-content:
-  log-volume:
 networks:
   repel-servers:
     driver: bridge
