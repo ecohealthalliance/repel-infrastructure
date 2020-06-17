@@ -7,6 +7,11 @@ services:
   cron:
     environment:
       - BACKUP_FLAG=yes
+    volumes:
+      - /var/log/repel:/var/log/shared      
+  shinyserver:
+    volumes:
+      - /var/log/repel:/srv/shiny-server/logs
   nginx:
     environment:
       - STAGING=true

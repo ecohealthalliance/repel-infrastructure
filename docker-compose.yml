@@ -23,8 +23,6 @@ services:
     restart: on-failure
     depends_on:
       - postgres
-    volumes:
-      - ./logs/repel:/var/log/shared
   scraper:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
     build:
@@ -74,7 +72,6 @@ services:
       - 3838:3838
     volumes:
       - shiny-content:/srv/shiny-server
-      - ./logs/repel:/srv/shiny-server/logs
     networks:
       - repel-servers
 volumes:

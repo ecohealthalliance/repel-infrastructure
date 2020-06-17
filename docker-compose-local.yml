@@ -7,6 +7,8 @@ services:
   cron:
     environment:
       - BACKUP_FLAG=no
+    volumes:
+      - ./logs/repel:/var/log/shared
   scraper:
     ports:
       - 22097:8787
@@ -31,5 +33,8 @@ services:
   nginx:
     environment:
       - STAGING=true
+  shinyserver:
+    volumes:
+      - ./logs/repel:/srv/shiny-server/logs
 volumes:
   postgres_db_vol:
