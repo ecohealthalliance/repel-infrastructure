@@ -19,5 +19,7 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
 
 COPY . /
 
+RUN mkdir /var/log/shared
+
 ENTRYPOINT []
 CMD ["/start.sh"]
