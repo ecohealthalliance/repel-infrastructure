@@ -65,7 +65,9 @@ services:
     networks:
       - repel-servers
   shinyserver:
-    image: "rocker/shiny"
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/shiny
+    build:
+      context: './shiny'
     restart: always
     env_file: .env
     ports:
