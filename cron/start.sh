@@ -8,5 +8,5 @@ export PGDATABASE=$POSTGRES_DB
 
 if [ "$BACKUP_FLAG" == "yes" ]
 then
-    supercronic backup-schedule.cron
+    supercronic backup-schedule.cron >> /var/log/shared/backups.log 2>&1
 fi

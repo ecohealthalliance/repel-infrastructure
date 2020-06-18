@@ -8,10 +8,15 @@ services:
     environment:
       - BACKUP_FLAG=yes
     volumes:
-      - /var/log/repel:/var/log/shared      
+      - /var/log/repel:/var/log/shared
   shinyserver:
     volumes:
-      - /var/log/repel:/srv/shiny-server/logs
+      - /var/log/repel:/srv/repel-shiny-server/logs
+      - /home/repeluser/reports:/srv/repel-shiny-server/reports
+  scraper:
+    volumes:
+      - /var/log/repel:/var/log/shared
+      - /home/repeluser/reports:/var/www/reports
   nginx:
     environment:
       - STAGING=true

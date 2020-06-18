@@ -41,6 +41,14 @@ RUN mkdir -p /var/www/html/logs && chgrp -R staff /var/www/  && chmod -R g+w /va
 
 COPY index.html /var/www/html
 
+RUN mkdir /var/log/shared
+
+RUN mkdir /var/www/reports
+
+RUN chgrp staff /var/www/reports
+
+RUN chmod g+w /var/www/reports
+
 CMD ["/home/rstudio/repel-infrastructure/scraper/start.sh"]
 
 # USER rstudio:rstudio
