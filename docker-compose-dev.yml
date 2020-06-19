@@ -21,4 +21,4 @@ services:
 #    environment:
 #      - STAGING=true
     volumes:
-      - /home/repeluser/letsencrypt:/etc/letsencrypt
+      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys
