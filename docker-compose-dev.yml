@@ -17,8 +17,8 @@ services:
     volumes:
       - /var/log/repel:/var/log/shared
       - /home/repeluser/reports:/var/www/reports
-  nginx:
-    environment:
-      - STAGING=true
+#  nginx:
+#    environment:
+#      - STAGING=true
 #    volumes:
 #      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys
