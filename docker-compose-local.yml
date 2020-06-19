@@ -7,6 +7,8 @@ services:
   cron:
     environment:
       - BACKUP_FLAG=no
+    volumes:
+      - ./webdocs/logs:/var/log/shared
   scraper:
     ports:
       - 22097:8787
@@ -28,5 +30,16 @@ services:
       - $HOME/.gnupg:/home/${USER}/.gnupg
       - $PWD/:/home/${USER}/repel-infrastructure
       - postgres_db_vol:/var/lib/postgresql/data
+      - ./webdocs/logs/:/var/log/shared
+      - ./webdocs/reports:/var/www/reports
+  nginx:
+    environment:
+      - STAGING=true
+  shinyserver:
+    ports:
+      - 22090:3838
+    volumes:
+      - ./webdocs/logs:/srv/repel-shiny-server/logs
+      - ./webdocs/reports:/srv/repel-shiny-server/reports
 volumes:
   postgres_db_vol:

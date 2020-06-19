@@ -16,6 +16,5 @@ then
   echo "session-default-working-dir=~/repel-infrastructure/scraper" >> /etc/rstudio/rsession.conf
   exec /init
 else
-  exec supercronic /home/rstudio/repel-infrastructure/scraper/scrape-schedule.cron
+  exec supercronic /home/rstudio/repel-infrastructure/scraper/scrape-schedule.cron >> /var/log/shared/scraper.log 2>&1
 fi
-

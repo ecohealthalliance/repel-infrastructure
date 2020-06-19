@@ -1,2 +1,3 @@
 repeldb/.env filter=git-crypt diff=git-crypt
 .env filter=git-crypt diff=git-crypt
+rshinyauth0/.env filter=git-crypt diff=git-crypt
