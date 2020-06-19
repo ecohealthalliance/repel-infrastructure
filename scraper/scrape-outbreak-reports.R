@@ -83,7 +83,7 @@ assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks_summary"))
 safely(rmarkdown::render, quiet = FALSE)(
   "qa-outbreak-reports.Rmd",
   output_file = paste0("outbreak-report-qa.html"),
-  output_dir = "qa-reports"
+  output_dir = "reports"
 )
 
 dbDisconnect(conn)
