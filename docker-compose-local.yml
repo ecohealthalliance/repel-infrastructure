@@ -36,6 +36,8 @@ services:
     environment:
       - STAGING=true
   shinyserver:
+    ports:
+      - 22090:3838
     volumes:
       - ./webdocs/logs:/srv/repel-shiny-server/logs
       - ./webdocs/reports:/srv/repel-shiny-server/reports
