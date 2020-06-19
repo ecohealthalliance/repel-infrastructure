@@ -20,5 +20,5 @@ services:
   nginx:
     environment:
       - STAGING=true
-    volumes:
-      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys
+#    volumes:
+#      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys
