@@ -19,6 +19,6 @@ services:
       - /home/repeluser/reports:/var/www/reports
   nginx:
     volumes:
-      - /home/repeluser/letsencrypt:/etc/letsencrypt
+      - /home/repeluser/letsencrypt:/config/etc/letsencrypt
 #    environment:
 #      - STAGING=true
