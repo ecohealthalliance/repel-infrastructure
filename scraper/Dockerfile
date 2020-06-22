@@ -45,6 +45,8 @@ RUN mkdir /var/log/shared
 
 RUN mkdir /var/www/reports
 
+RUN chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-annual-reports.R /home/rstudio/repel-infrastructure/scraper/scrape-outbreak-reports.R
+
 RUN chgrp staff /var/www/reports
 
 RUN chmod g+w /var/www/reports
