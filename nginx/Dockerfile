@@ -6,4 +6,4 @@ COPY ./site-confs/ /config/nginx/site-confs/
 RUN mkdir -p /config/www
 COPY ./www/ /config/www/
 
-RUN rm /etc/letsencrypt
+RUN rm -fr /config/etc/letsencrypt
