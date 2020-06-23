@@ -50,7 +50,7 @@ services:
       URL: ${HOSTNAME}.ecohealthalliance.org
     ports:
       - '80:80'
-      - '443:443'
+      - '22222:443'
     networks:
       - repel-servers
   rshinyauth0:
