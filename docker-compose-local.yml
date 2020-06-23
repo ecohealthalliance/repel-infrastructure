@@ -32,10 +32,6 @@ services:
       - postgres_db_vol:/var/lib/postgresql/data
       - ./webdocs/logs/:/var/log/shared
       - ./webdocs/reports:/var/www/reports
-  nginx:
-    environment:
-      - STAGING=true
-      - IS_LOCAL="yes"
   shinyserver:
     ports:
       - 22090:3838

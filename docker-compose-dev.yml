@@ -18,7 +18,20 @@ services:
       - /var/log/repel:/var/log/shared
       - /home/repeluser/reports:/var/www/reports
   nginx:
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
+    build:
+      context: './nginx'
+    restart: on-failure
+    env_file: .env
     environment:
-      - STAGING=true
+      EMAIL: young@ecohealthalliance.org
+      URL: ${HOSTNAME}.ecohealthalliance.org
+      IS_LOCAL: "no"
+      STAGING: true
+    ports:
+      - '80:80'
+      - '443:443'
+    networks:
+      - repel-servers
 #    volumes:
 #      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys
