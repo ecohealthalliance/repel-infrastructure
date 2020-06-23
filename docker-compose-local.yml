@@ -35,11 +35,15 @@ services:
   nginx:
     environment:
       - STAGING=true
+      - IS_LOCAL="yes"
   shinyserver:
     ports:
       - 22090:3838
     volumes:
       - ./webdocs/logs:/srv/repel-shiny-server/logs
       - ./webdocs/reports:/srv/repel-shiny-server/reports
+  rshinyauth0:
+    environment:
+      - IS_LOCAL="yes"
 volumes:
   postgres_db_vol:
