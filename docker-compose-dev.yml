@@ -27,7 +27,7 @@ services:
       EMAIL: young@ecohealthalliance.org
       URL: ${HOSTNAME}.ecohealthalliance.org
       IS_LOCAL: "no"
-      STAGING: true
+      STAGING: "true"
     ports:
       - '80:80'
       - '443:443'
