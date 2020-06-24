@@ -63,6 +63,20 @@ services:
       - shiny-content:/srv/shiny-server
     networks:
       - repel-servers
+  nginx:
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
+    build:
+      context: './nginx'
+    restart: on-failure
+    env_file: .env
+    environment:
+      EMAIL: young@ecohealthalliance.org
+      URL: ${HOSTNAME}.ecohealthalliance.org
+    ports:
+      - '80:80'
+      - '443:443'
+    networks:
+      - repel-servers
 volumes:
   shiny-content:
 networks:
