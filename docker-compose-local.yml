@@ -41,5 +41,8 @@ services:
   rshinyauth0:
     environment:
       - IS_LOCAL="yes"
+  nginx:
+    entrypoint: "bash -c"
+    command: "exit 0"
 volumes:
   postgres_db_vol:
