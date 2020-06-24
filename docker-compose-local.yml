@@ -31,7 +31,7 @@ services:
       - $PWD/:/home/${USER}/repel-infrastructure
       - postgres_db_vol:/var/lib/postgresql/data
       - ./webdocs/logs/:/var/log/shared
-      - ./webdocs/reports:/var/www/reports
+      - ./webdocs/reports:/home/rstudio/repel-infrastructure/scraper/reports/
   nginx:
     environment:
       - STAGING=true
