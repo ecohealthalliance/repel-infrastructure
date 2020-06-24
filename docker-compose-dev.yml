@@ -18,6 +18,7 @@ services:
       - /var/log/repel:/var/log/shared
       - /home/repeluser/reports:/home/rstudio/repel-infrastructure/scraper/reports/
   nginx:
+    environment:
       IS_LOCAL: "no"
       STAGING: "true"
 #    volumes:
