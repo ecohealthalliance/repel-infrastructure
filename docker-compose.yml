@@ -39,29 +39,16 @@ services:
       - postgres
     volumes:
       - shiny-content:/var/www/html
-  nginx:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
-    build:
-      context: './nginx'
-    restart: always
-    env_file: .env
-    environment:
-      EMAIL: young@ecohealthalliance.org
-      URL: ${HOSTNAME}.ecohealthalliance.org
-    ports:
-      - '80:80'
-      - '443:443'
-    networks:
-      - repel-servers
   rshinyauth0:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-rshinyauth0
     build:
       context: './rshinyauth0'
-    restart: always
+    restart: on-failure
     working_dir: /home/node/app
     env_file: .env
     environment:
       NODE_ENV: production
+      IS_LOCAL: "no"
     networks:
       - repel-servers
   shinyserver:
