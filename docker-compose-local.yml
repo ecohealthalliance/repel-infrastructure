@@ -5,10 +5,8 @@ services:
     ports:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
   cron:
-    environment:
-      - BACKUP_FLAG=no
-    volumes:
-      - ./webdocs/logs:/var/log/shared
+    entrypoint: "bash -c"
+    command: "exit 0"
   scraper:
     ports:
       - 22097:8787
@@ -39,8 +37,8 @@ services:
       - ./webdocs/logs:/srv/repel-shiny-server/logs
       - ./webdocs/reports:/srv/repel-shiny-server/reports
   rshinyauth0:
-    environment:
-      - IS_LOCAL="yes"
+    entrypoint: "bash -c"
+    command: "exit 0"
   nginx:
     entrypoint: "bash -c"
     command: "exit 0"

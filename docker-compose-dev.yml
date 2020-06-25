@@ -5,8 +5,6 @@ services:
     ports:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
   cron:
-    environment:
-      - BACKUP_FLAG=yes
     volumes:
       - /var/log/repel:/var/log/shared
   shinyserver:

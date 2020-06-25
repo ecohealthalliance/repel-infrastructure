@@ -4,9 +4,6 @@ services:
   postgres:
     ports:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
-  cron:
-    environment:
-      - BACKUP_FLAG=no
   scraper:
       ports:
         - 8787:8787
@@ -16,18 +13,3 @@ services:
       - SCRAPER_USER=${POSTGRES_USER}
       - SCRAPER_PASSWORD=${POSTGRES_PASSWORD}
       - SCRAPER_DBNAME=${POSTGRES_DB}
-  nginx:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
-    build:
-      context: './nginx'
-    restart: on-failure
-    env_file: .env
-    environment:
-      EMAIL: young@ecohealthalliance.org
-      URL: ${HOSTNAME}.ecohealthalliance.org
-      IS_LOCAL: "no"
-    ports:
-      - '80:80'
-      - '443:443'
-    networks:
-      - repel-servers
