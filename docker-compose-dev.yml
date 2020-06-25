@@ -3,7 +3,21 @@ version: '3'
 services:
   postgres:
     ports:
-      - '${POSTGRES_EXTERNAL_PORT}:5432'  
+      - '${POSTGRES_EXTERNAL_PORT}:5432'
   cron:
+    volumes:
+      - /var/log/repel:/var/log/shared
+  shinyserver:
+    volumes:
+      - /var/log/repel:/srv/repel-shiny-server/logs
+      - /home/repeluser/reports:/srv/repel-shiny-server/reports
+  scraper:
+    volumes:
+      - /var/log/repel:/var/log/shared
+      - /home/repeluser/reports:/home/rstudio/repel-infrastructure/scraper/reports/
+  nginx:
     environment:
-      - BACKUP_FLAG=yes
+      IS_LOCAL: "no"
+      STAGING: "true"
+#    volumes:
+#      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys

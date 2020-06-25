@@ -18,8 +18,6 @@ services:
     links:
       - postgres:postgres
     env_file: .env
-    environment:
-      - BACKUP_FLAG=yes
     restart: on-failure
     depends_on:
       - postgres
@@ -30,8 +28,55 @@ services:
       args:
         - GITHUB_PAT=${GITHUB_PAT}
     env_file: .env
+    environment:
+      - IS_LOCAL=no
     links:
       - postgres:postgres
     restart: on-failure
     depends_on:
       - postgres
+    volumes:
+      - shiny-content:/var/www/html
+  rshinyauth0:
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-rshinyauth0
+    build:
+      context: './rshinyauth0'
+    restart: on-failure
+    working_dir: /home/node/app
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      IS_LOCAL: "no"
+    networks:
+      - repel-servers
+  shinyserver:
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/shiny
+    build:
+      context: './shiny'
+    restart: always
+    env_file: .env
+    ports:
+      - 3838:3838
+    volumes:
+      - shiny-content:/srv/shiny-server
+    networks:
+      - repel-servers
+  nginx:
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
+    build:
+      context: './nginx'
+    restart: "no"
+    env_file: .env
+    environment:
+      EMAIL: young@ecohealthalliance.org
+      URL: ${HOSTNAME}.ecohealthalliance.org
+    ports:
+      - '80:80'
+      - '443:443'
+    networks:
+      - repel-servers
+volumes:
+  shiny-content:
+networks:
+  repel-servers:
+    driver: bridge
