@@ -19,6 +19,9 @@ services:
       - USER=${USER}
       - HOME=/home/${USER}
       - PASSWORD=${RSTUDIO_PASSWORD}
+      - USERID=${USERID}
+      - GROUPID=${GROUPID}
+      - IS_LOCAL=yes
     volumes:
       - $HOME/.ssh:/home/${USER}/.ssh
       - $HOME/.Renviron:/home/${USER}/.Renviron
