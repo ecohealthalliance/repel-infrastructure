@@ -18,8 +18,6 @@ services:
     links:
       - postgres:postgres
     env_file: .env
-    environment:
-      - BACKUP_FLAG=yes
     restart: on-failure
     depends_on:
       - postgres
@@ -67,7 +65,7 @@ services:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
     build:
       context: './nginx'
-    restart: on-failure
+    restart: "no"
     env_file: .env
     environment:
       EMAIL: young@ecohealthalliance.org
