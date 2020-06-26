@@ -18,6 +18,7 @@ services:
       - SCRAPER_DBNAME=${POSTGRES_DB}
       - USER=${USER}
       - HOME=/home/${USER}
+      - PASSWORD=${RSTUDIO_PASSWORD}
       - USERID=${USERID}
       - GROUPID=${GROUPID}
       - IS_LOCAL=yes
