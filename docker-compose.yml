@@ -65,7 +65,7 @@ services:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
     build:
       context: './nginx'
-    restart: "no"
+    restart: on-failure
     env_file: .env
     environment:
       EMAIL: young@ecohealthalliance.org
