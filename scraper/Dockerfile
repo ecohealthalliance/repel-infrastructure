@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:3.6.2
+FROM rocker/tidyverse:4.0.2
 MAINTAINER noam.ross@gmail.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

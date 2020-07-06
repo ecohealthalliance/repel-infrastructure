@@ -1,4 +1,4 @@
-FROM rocker/shiny
+FROM rocker/shiny:4.0.2
 
 RUN mkdir -p /srv/repel-shiny-server/reports /srv/repel-shiny-server/logs
 
