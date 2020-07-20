@@ -19,5 +19,8 @@ services:
     environment:
       IS_LOCAL: "no"
       STAGING: "true"
+    ports:
+      - '80:80'
+      - '443:443'
 #    volumes:
 #      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys

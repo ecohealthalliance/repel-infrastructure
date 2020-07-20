@@ -55,8 +55,6 @@ services:
       context: './shiny'
     restart: always
     env_file: .env
-    ports:
-      - 3838:3838
     volumes:
       - shiny-content:/srv/shiny-server
     networks:
@@ -70,9 +68,6 @@ services:
     environment:
       EMAIL: young@ecohealthalliance.org
       URL: ${HOSTNAME}.ecohealthalliance.org
-    ports:
-      - '80:80'
-      - '443:443'
     networks:
       - repel-servers
 volumes:
