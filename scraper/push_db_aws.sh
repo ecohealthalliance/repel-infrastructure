@@ -1,3 +1,6 @@
+set -e
+set -x
+
 export PGUSER=$POSTGRES_USER
 export PGPASSWORD=$POSTGRES_PASSWORD
 export PGPORT=$POSTGRES_PORT

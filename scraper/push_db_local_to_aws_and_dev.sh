@@ -1,5 +1,7 @@
 # copy local repel database to dev and AWS
 
+set -e
+set -x
 # functions to test environment variables to local or dev server
 
 set_local_env () {
