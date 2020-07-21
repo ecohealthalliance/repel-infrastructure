@@ -3,7 +3,10 @@
 source(here::here("packages.R"))
 source(here::here("functions.R"))
 
-gdp <- wahis::get_country_gdp()
+wb <- wahis::get_wb_indicators(indicators_list =
+                                 list(gdp_dollars = "NY.GDP.MKTP.CD",
+                                      human_population = "SP.POP.TOTL"))
+
 
 download_taxa_population()
 taxa <- transform_taxa_population()
@@ -15,7 +18,7 @@ taxa <- transform_taxa_population()
 # Add to db ---------------------------------------------------------------
 conn <- wahis_db_connect()
 
-dbWriteTable(conn,  name = "country_gdp", value = gdp, overwrite = TRUE)
+dbWriteTable(conn,  name = "worldbank_indicators", value = wb, overwrite = TRUE)
 dbWriteTable(conn,  name = "country_taxa_population", value = taxa, overwrite = TRUE)
 
 dbDisconnect(conn)
