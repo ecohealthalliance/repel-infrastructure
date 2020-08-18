@@ -12,6 +12,11 @@ var authenticateWithPromptNone = passport.authenticate('auth0', {
   prompt: 'none'
 });
 
+router.get('/repel-scraper',
+  function (req, res) {
+    res.redirect('http://127.0.0.1:22097')
+  });
+
 router.get('/login',
   function (req, res, next) {
     if (env.CHECK_SESSION === 'true' && req.query.sso !== 'false') {
