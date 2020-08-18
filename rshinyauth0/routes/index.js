@@ -14,7 +14,7 @@ var authenticateWithPromptNone = passport.authenticate('auth0', {
 
 router.get('/repel-scraper',
   function (req, res) {
-    res.redirect('http://google.com')
+    res.redirect('http://127.0.0.1:22097')
   });
 
 router.get('/login',
