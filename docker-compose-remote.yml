@@ -42,7 +42,7 @@ services:
     command: "exit 0"
   nginx:
     environment:
-      IS_LOCAL: "no"
+      IS_LOCAL: "yes"
       STAGING: "true"
       URL: aegypti.ecohealthalliance.org
 #    ports:
