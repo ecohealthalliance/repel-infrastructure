@@ -32,6 +32,14 @@ server {
 
         client_max_body_size 0;
 
+        location /repel-scraper {
+            proxy_set_header Host $host;
+            include /config/nginx/proxy.conf;
+            proxy_pass http://localhost:22097;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+        }
+
         location / {
               proxy_set_header Host $host;
               include /config/nginx/proxy.conf;
