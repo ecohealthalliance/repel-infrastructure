@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  postgres:
+    ports:
+      - '${POSTGRES_EXTERNAL_PORT}:5432'
+  cron:
+    entrypoint: "bash -c"
+    command: "exit 0"
+  scraper:
+    entrypoint: "bash -c"
+    command: "exit 0"
+  shinyserver:
+    ports:
+      - 22090:3838
+    volumes:
+      - ./webdocs/logs:/srv/repel-shiny-server/logs
+      - ./webdocs/reports:/srv/repel-shiny-server/reports
+  rshinyauth0:
+    entrypoint: "bash -c"
+    command: "exit 0"
+  nginx:
+    entrypoint: "bash -c"
+    command: "exit 0"
+volumes:
+  postgres_db_vol:

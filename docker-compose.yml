@@ -36,7 +36,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - shiny-content:/var/www/html
+      - ./shiny/content:/var/www/html
   rshinyauth0:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-rshinyauth0
     build:
@@ -56,7 +56,7 @@ services:
     restart: always
     env_file: .env
     volumes:
-      - shiny-content:/srv/shiny-server
+      - ./shiny/content:/srv/shiny-server
     networks:
       - repel-servers
   nginx:
@@ -70,8 +70,6 @@ services:
       URL: ${HOSTNAME}.ecohealthalliance.org
     networks:
       - repel-servers
-volumes:
-  shiny-content:
 networks:
   repel-servers:
     driver: bridge
