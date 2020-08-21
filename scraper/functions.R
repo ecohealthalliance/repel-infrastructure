@@ -2,15 +2,14 @@
 
 # Connect to WAHIS Database
 wahis_db_connect <- function(){
-
-  base::readRenviron("../.env")
+  base::readRenviron(here::here(".env"))
   conn <- dbConnect(
     RPostgres::Postgres(),
-    host = Sys.getenv("SCRAPER_HOST"),
-    port = Sys.getenv("SCRAPER_PORT"),
-    user = Sys.getenv("SCRAPER_USER"),
-    password = Sys.getenv("SCRAPER_PASSWORD"),
-    dbname = Sys.getenv("SCRAPER_DBNAME")
+    host = "aegypti.ecohealthalliance.org",
+    port = "22053",
+    user = Sys.getenv("POSTGRES_USER"),
+    password = Sys.getenv("POSTGRES_PASSWORD"),
+    dbname = Sys.getenv("POSTGRES_DB")
     )
   if (require("connections")) {
     connections::connection_view(conn, name = "repel", connection_code = "repel")
@@ -34,7 +33,7 @@ update_sql_table <- function(conn, table, updates, id_fields, fill_col_na = FALS
     updates[,add_cols] <- NA
     assert_that(identical(sort(colnames(sql_table)), sort(colnames(updates))))
   }
-  criteria <- distinct(select(updates, id_fields))
+  criteria <- distinct(select(updates, all_of(id_fields)))
   selector <- paste0("(", do.call(paste, c(imap(criteria, ~paste0("", .y, " = \'", .x, "\'")), sep = " AND ")), ")", collapse = " OR ")
   removed <- DBI::dbGetQuery(conn, glue("DELETE FROM {table} WHERE {selector} RETURNING * ;"))
   dbAppendTable(conn, table, updates)

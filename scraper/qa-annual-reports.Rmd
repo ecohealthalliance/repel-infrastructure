@@ -15,8 +15,8 @@ library(DT)
 library(DBI)
 
 # connect to database
-source(here::here("packages.R"))
-source(here::here("functions.R"))
+source(here::here("scraper/packages.R"))
+source(here::here("scraper/functions.R"))
 conn <- wahis_db_connect()
 
 # reported but failed 
