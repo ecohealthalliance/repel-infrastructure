@@ -2,7 +2,8 @@
 
 # Connect to WAHIS Database
 wahis_db_connect <- function(){
-  base::readRenviron(here::here(".env"))
+  env_file <- str_remove(here::here(".env"), "scraper/")
+  base::readRenviron(env_file)
   conn <- dbConnect(
     RPostgres::Postgres(),
     host = "aegypti.ecohealthalliance.org",

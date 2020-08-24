@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
-source(here::here("scraper/packages.R"))
-source(here::here("scraper/functions.R"))
+dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper/", "")
+source(here::here(paste0(dir, "packages.R")))
+source(here::here(paste0(dir, "functions.R")))
 
 # Connect to database ----------------------------
 message("Connect to database")
@@ -85,9 +86,9 @@ if(any(unique(ingest_status_log$in_database))){ # check if there are any non-err
   assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks_summary"))
 
   safely(rmarkdown::render, quiet = FALSE)(
-    here::here("scraper/qa-outbreak-reports.Rmd"),
+    here::here(paste0(dir, "qa-outbreak-reports.Rmd")),
     output_file = paste0("outbreak-report-qa.html"),
-    output_dir = "scraper/reports"
+    output_dir = here::here(paste0(dir, "reports"))
   )
 
 }
