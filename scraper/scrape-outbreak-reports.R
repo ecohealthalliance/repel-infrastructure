@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
-source(here::here("packages.R"))
-source(here::here("functions.R"))
+dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper/", "")
+source(here::here(paste0(dir, "packages.R")))
+source(here::here(paste0(dir, "functions.R")))
 
 # Connect to database ----------------------------
 message("Connect to database")
@@ -20,7 +21,6 @@ current_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
 
 # new IDs only go back ~ 1 yr. Check that there is no gap in coverage. If there is, then add all integers between last report in DB and oldest report in new IDs.
 if(min(new_ids) > max(current_ids)) {
-
   new_ids <- c(new_ids, seq(max(current_ids), min(new_ids)))
 }
 
@@ -53,37 +53,43 @@ ingest_status_log <- reports_to_get %>%
   select(-ingest_status)
 
 # Updating database  ----------------------------
-message("Updating database")
+if(any(unique(ingest_status_log$in_database))){ # check if there are any non-error responses
+  message("Updating database")
 
-# tables
-outbreak_report_tables <- wahis::transform_outbreak_reports(report_resps)
+  # tables
+  outbreak_report_tables <- wahis::transform_outbreak_reports(report_resps)
 
-iwalk(outbreak_report_tables[c("outbreak_reports_events", "outbreak_reports_outbreaks", "outbreak_reports_outbreaks_summary",  "outbreak_reports_laboratories")],
-      ~update_sql_table(conn,  .y, .x,
-                        c("id"), fill_col_na = TRUE)
-)
+  iwalk(outbreak_report_tables[c("outbreak_reports_events", "outbreak_reports_outbreaks", "outbreak_reports_outbreaks_summary",  "outbreak_reports_laboratories")],
+        ~update_sql_table(conn,  .y, .x,
+                          c("id"), fill_col_na = TRUE)
+  )
 
-# unmatched diseases
-update_sql_table(conn, "outbreak_reports_diseases_unmatched", outbreak_report_tables[[ "outbreak_reports_diseases_unmatched"]], "disease")
+  # unmatched diseases
+  update_sql_table(conn, table = "outbreak_reports_diseases_unmatched",
+                   updates = outbreak_report_tables[[ "outbreak_reports_diseases_unmatched"]],
+                   id_fields = "disease")
 
-# ingest log
-update_sql_table(conn, "outbreak_reports_ingest_status_log", ingest_status_log, c("id"))
+  # ingest log
+  update_sql_table(conn, table = "outbreak_reports_ingest_status_log",
+                   updates = ingest_status_log,
+                   id_fields = c("id"))
 
-message("Done updating outbreak reports.")
+  message("Done updating outbreak reports.")
 
-# Schema lookup -----------------------------------------------------------
-field_check(conn, "outbreak_reports_")
+  # Schema lookup -----------------------------------------------------------
+  field_check(conn, "outbreak_reports_")
 
-# Generate QA report ------------------------------------------------------
-assert_that(dbExistsTable(conn, "outbreak_reports_events"))
-assert_that(dbExistsTable(conn, "outbreak_reports_ingest_status_log"))
-assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks"))
-assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks_summary"))
+  # Generate QA report ------------------------------------------------------
+  assert_that(dbExistsTable(conn, "outbreak_reports_events"))
+  assert_that(dbExistsTable(conn, "outbreak_reports_ingest_status_log"))
+  assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks"))
+  assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks_summary"))
 
-safely(rmarkdown::render, quiet = FALSE)(
-  "qa-outbreak-reports.Rmd",
-  output_file = paste0("outbreak-report-qa.html"),
-  output_dir = "reports"
-)
+  safely(rmarkdown::render, quiet = FALSE)(
+    here::here(paste0(dir, "qa-outbreak-reports.Rmd")),
+    output_file = paste0("outbreak-report-qa.html"),
+    output_dir = here::here(paste0(dir, "reports"))
+  )
 
+}
 dbDisconnect(conn)

@@ -1,11 +1,12 @@
 # This is to manually add downloaded outbreak reports to database
 # First run scripts/pull-aws to download the files
 
-source(here::here("packages.R"))
-source(here::here("functions.R"))
+source(here::here("scraper/packages.R"))
+source(here::here("scraper/functions.R"))
 library(fs)
 library(future)
 library(furrr)
+library(tictoc)
 
 # Connect to database ----------------------------
 conn <- wahis_db_connect()
@@ -17,23 +18,22 @@ db_tables_outbreak <- db_tables[grepl("outbreak_reports_", db_tables)]
 walk(db_tables_outbreak, ~dbRemoveTable(conn, .))
 
 # List all outbreak report files to ingest ---------------------------------------------------------
-filenames <- list.files(here::here("data-raw/wahis-raw-outbreak-reports"),
+filenames <- list.files(here::here("scraper/data-raw/wahis-raw-outbreak-reports"),
                         pattern = "*.html",
                         full.names = TRUE)
 
 # Set up parallel plan  --------------------------------------------------------
-plan(multiprocess) # This takes a bit to load on many cores as all the processes are starting
+plan("multisession") # This takes a bit to load on many cores as all the processes are starting
 
 # Run ingest (~5 mins) ---------------------------------------------------------
 message(paste(length(filenames), "files to process"))
-library(tictoc)
 tic()
 wahis_outbreak <- future_map(filenames, safe_ingest_outbreak, .progress = TRUE)
 toc()
-write_rds(wahis_outbreak, here::here("data-intermediate", "wahis_ingested_outbreak_reports.rds"))
+write_rds(wahis_outbreak, here::here("scraper", "data-intermediate", "wahis_ingested_outbreak_reports.rds"))
 
 # Transform files   ------------------------------------------------------
-outbreak_reports <-  readr::read_rds(here::here("data-intermediate", "wahis_ingested_outbreak_reports.rds"))
+outbreak_reports <-  readr::read_rds(here::here("scraper", "data-intermediate", "wahis_ingested_outbreak_reports.rds"))
 assertthat::are_equal(length(filenames), length(outbreak_reports))
 ingest_status_log <- tibble(id = gsub(".html", "", basename(filenames)),
                             ingest_status = map_chr(outbreak_reports, ~.x$ingest_status)) %>%
@@ -42,10 +42,10 @@ ingest_status_log <- tibble(id = gsub(".html", "", basename(filenames)),
   select(-ingest_status)
 
 outbreak_reports_transformed <- transform_outbreak_reports(outbreak_reports)
-write_rds(outbreak_reports_transformed, here::here("data-intermediate", "wahis_transformed_outbreak_reports.rds"))
+write_rds(outbreak_reports_transformed, here::here("scraper", "data-intermediate", "wahis_transformed_outbreak_reports.rds"))
 
 # Save files to db --------------------------------------------------------
-outbreak_reports_transformed <- read_rds(here::here("data-intermediate", "wahis_transformed_outbreak_reports.rds"))
+outbreak_reports_transformed <- read_rds(here::here("scraper", "data-intermediate", "wahis_transformed_outbreak_reports.rds"))
 
 iwalk(outbreak_reports_transformed,
       ~dbWriteTable(conn,  name = .y, value = .x)

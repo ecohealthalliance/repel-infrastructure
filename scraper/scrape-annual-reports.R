@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
-source(here::here("packages.R"))
-source(here::here("functions.R"))
+dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper/", "")
+source(here::here(paste0(dir, "packages.R")))
+source(here::here(paste0(dir, "functions.R")))
 
 # Connect to database ----------------------------
 message("Connect to database")
@@ -75,11 +76,15 @@ if(!is.null(annual_report_tables)){
 
 # unmatched diseases
 if(!is.null(annual_report_tables[[ "annual_reports_diseases_unmatched"]])){
-  update_sql_table(conn, "annual_reports_diseases_unmatched", annual_report_tables[[ "annual_reports_diseases_unmatched"]], "disease")
+  update_sql_table(conn, table = "annual_reports_diseases_unmatched",
+                   updates = annual_report_tables[[ "annual_reports_diseases_unmatched"]],
+                   id_fields = "disease")
 }
 
 # ingest log
-update_sql_table(conn, "annual_reports_ingest_status_log", ingest_status_log, c("report"))
+update_sql_table(conn, table = "annual_reports_ingest_status_log",
+                 updates = ingest_status_log,
+                 id_fields = c("report"))
 
 # Schema lookup -----------------------------------------------------------
 field_check(conn, "annual_reports_") #move up
@@ -90,9 +95,9 @@ assert_that(dbExistsTable(conn, "annual_reports_status"))
 assert_that(dbExistsTable(conn, "annual_reports_animal_diseases"))
 
 safely(rmarkdown::render, quiet = FALSE)(
-  "qa-annual-reports.Rmd",
+  here::here(paste0(dir, "qa-annual-reports.Rmd")),
   output_file = paste0("annual-report-qa.html"),
-  output_dir = "reports"
+  output_dir = here::here(paste0(dir, "reports")),
 )
 
 dbDisconnect(conn)
