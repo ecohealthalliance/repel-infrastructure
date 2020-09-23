@@ -4,12 +4,23 @@ services:
   postgres:
     ports:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
+  cron:
+    volumes:
+      - /var/log/repel:/var/log/shared
+  shinyserver:
+    volumes:
+      - /var/log/repel:/srv/repel-shiny-server/logs
+      - /home/repeluser/reports:/srv/repel-shiny-server/reports
   scraper:
-      ports:
-        - 8787:8787
+    volumes:
+      - /var/log/repel:/var/log/shared
+      - /home/repeluser/reports:/home/rstudio/repel-infrastructure/scraper/reports/
+  nginx:
     environment:
-      - SCRAPER_HOST=${DEPLOYMENT_SERVER_URL}
-      - SCRAPER_PORT=${POSTGRES_EXTERNAL_PORT}
-      - SCRAPER_USER=${POSTGRES_USER}
-      - SCRAPER_PASSWORD=${POSTGRES_PASSWORD}
-      - SCRAPER_DBNAME=${POSTGRES_DB}
+      IS_LOCAL: "no"
+      STAGING: "true"
+    ports:
+      - '80:80'
+      - '443:443'
+#    volumes:
+#      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys
