@@ -69,13 +69,13 @@ def add_post_repel(cur, curr_post):
                                       promed_semester, epitator_counts,
                                       epitator_keywords_disease,
                                       epitator_keywords_species,
-                                      epitator_geonames)
-                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+                                      epitator_geonames, update_script_version)
+                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
     record_to_insert = (promed_id, promed_url, subject_description, subject_region,
                         subject_additional_info, subject_disease_labels,
                         promed_year, promed_semester, epitator_counts,
                         epitator_keywords_disease, epitator_keywords_species,
-                        epitator_geonames_countries)
+                        epitator_geonames_countries, script_version)
     print(record_to_insert)
     cur.execute(sql, record_to_insert)
 
@@ -115,9 +115,10 @@ if cur.rowcount == 0:
                      promed_year INTEGER,
                      promed_semester INTEGER,
                      epitator_counts VARCHAR(1023),
-                     epitator_keywords_disease VARCHAR(1023),
-                     epitator_keywords_species VARCHAR(1023),
-                     epitator_geonames VARCHAR(4095) ) '''
+                     epitator_keywords_disease VARCHAR(4095),
+                     epitator_keywords_species VARCHAR(4095),
+                     epitator_geonames VARCHAR(4095),
+                     update_script_version REAL ) '''
     cur.execute(sql)
 
 
