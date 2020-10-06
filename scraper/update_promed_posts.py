@@ -12,9 +12,9 @@ import pymongo
 from pymongo import MongoClient
 import time
 
-script_version = 0.1
+script_version = 0.2
 
-def add_post_repel(cur, curr_post):
+def add_post_repel(cur, curr_post, mode):
     promed_id = curr_post['promedId']
     promed_url = 'https://promedmail.org/promed-post/?id={}'.format(promed_id)
     subject_description = ''
@@ -63,30 +63,50 @@ def add_post_repel(cur, curr_post):
     print(epitator_geonames_countries)
     print()
 
-    sql = '''INSERT INTO promed_posts(promed_id, promed_url, subject_description,
-                                      subject_region, subject_additional_info,
-                                      subject_disease_labels, promed_year,
-                                      promed_semester, epitator_counts,
-                                      epitator_keywords_disease,
-                                      epitator_keywords_species,
-                                      epitator_geonames, update_script_version)
-                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
-    record_to_insert = (promed_id, promed_url, subject_description, subject_region,
-                        subject_additional_info, subject_disease_labels,
-                        promed_year, promed_semester, epitator_counts,
-                        epitator_keywords_disease, epitator_keywords_species,
-                        epitator_geonames_countries, script_version)
-    print(record_to_insert)
-    cur.execute(sql, record_to_insert)
+    if mode == 'insert':
+        sql = '''INSERT INTO promed_posts(promed_id, promed_url, subject_description,
+                                          subject_region, subject_additional_info,
+                                          subject_disease_labels, promed_year,
+                                          promed_semester, epitator_counts,
+                                          epitator_keywords_disease,
+                                          epitator_keywords_species,
+                                          epitator_geonames, update_script_version)
+                        VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+        record_to_insert = (promed_id, promed_url, subject_description, subject_region,
+                            subject_additional_info, subject_disease_labels,
+                            promed_year, promed_semester, epitator_counts,
+                            epitator_keywords_disease, epitator_keywords_species,
+                            epitator_geonames_countries, script_version)
+        cur.execute(sql, record_to_insert)
+    elif mode == 'update':
+        sql = '''UPDATE promed_posts SET promed_url=%s, subject_description=%s,
+                                         subject_region=%s, subject_additional_info=%s,
+                                         subject_disease_labels=%s, promed_year=%s,
+                                         promed_semester=%s, epitator_counts=%s,
+                                         epitator_keywords_disease=%s,
+                                         epitator_keywords_species=%s,
+                                         epitator_geonames=%s, update_script_version=%s
+                                     WHERE promed_id=%s'''
+        record_to_insert = (promed_url, subject_description, subject_region,
+                            subject_additional_info, subject_disease_labels,
+                            promed_year, promed_semester, epitator_counts,
+                            epitator_keywords_disease, epitator_keywords_species,
+                            epitator_geonames_countries, script_version, promed_id)
+        cur.execute(sql, record_to_insert)
+
 
 def post_in_db(cur, post):
-    # FIX: use change following query to technique above
-    sql = "SELECT * FROM promed_posts WHERE promed_id = {}".format(post['promedId'])
-    cur.execute(sql)
+    sql = "SELECT update_script_version FROM promed_posts WHERE promed_id = %s"
+    sql_values = (post['promedId'],)
+    cur.execute(sql, sql_values)
     if cur.rowcount == 0:
-        return False
+        return 'insert'
     else:
-        return True
+        row = cur.fetchone()
+        if script_version != row[0]:
+            return 'update'
+        else:
+            return 'skip'
 
 ###########  end utility fucntions, start script content
 
@@ -129,8 +149,9 @@ db = client.promed
 posts = db.posts
 all_posts = posts.find()
 for post in all_posts:
-    if not post_in_db(cur, post):
-        add_post_repel(cur, post)
+    how_to_proceed = post_in_db(cur, post)
+    if how_to_proceed != 'skip':
+        add_post_repel(cur, post, how_to_proceed)
 
 cur.close()
 conn.commit()
