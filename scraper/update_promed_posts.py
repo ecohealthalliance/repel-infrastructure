@@ -9,10 +9,9 @@ import docker
 import os
 import psycopg2
 import pymongo
-from pymongo import MongoClient
 import time
 
-script_version = 0.2
+script_version = 0.3
 
 def add_post_repel(cur, curr_post, mode):
     promed_id = curr_post['promedId']
@@ -144,8 +143,14 @@ if cur.rowcount == 0:
 
 ### promed mongodb connection
 
-client = MongoClient('mongo', 27017)
-db = client.promed
+uri_str = 'mongodb://{0}:{1}@{2}:{3}/{4}'.format(os.getenv('PROMED_USER'),
+                                                 os.getenv('PROMED_PASS'),
+                                                 os.getenv('PROMED_HOST'),
+                                                 os.getenv('PROMED_PORT'),
+                                                 os.getenv('PROMED_DB'))
+client = pymongo.MongoClient(uri_str)
+db = client[os.getenv('PROMED_DB')]
+
 posts = db.posts
 all_posts = posts.find()
 for post in all_posts:
