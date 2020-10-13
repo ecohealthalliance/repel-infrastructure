@@ -134,9 +134,9 @@ if cur.rowcount == 0:
                      promed_year INTEGER,
                      promed_semester INTEGER,
                      epitator_counts VARCHAR(1023),
-                     epitator_keywords_disease VARCHAR(4095),
-                     epitator_keywords_species VARCHAR(4095),
-                     epitator_geonames VARCHAR(4095),
+                     epitator_keywords_disease VARCHAR(8191),
+                     epitator_keywords_species VARCHAR(8191),
+                     epitator_geonames VARCHAR(8191),
                      update_script_version REAL ) '''
     cur.execute(sql)
 
