@@ -35,6 +35,13 @@ set_local_env
 pg_dump repel > /tmp/repel_backup_local.dmp
 pg_dumpall > /tmp/all_pg_local.dmp
 
+filesize_repel=$(stat -c%s "/tmp/repel_backup_local.dmp")
+if (( filesize_repel < 100000)); then
+  echo "Error: repel backup file size is too small!"
+  exit 1
+fi
+
+
 # set env to dev server and update database
 
 set_dev_env

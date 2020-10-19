@@ -2,6 +2,12 @@
 
 set -e
 
+export PGUSER=$POSTGRES_USER
+export PGPASSWORD=$POSTGRES_PASSWORD
+export PGPORT=$DEPLOYMENT_SERVER_PSQL_PORT
+export PGHOST=$DEPLOYMENT_SERVER_URL
+export PGDATABASE=$POSTGRES_DB
+
 # Backup the whole DB to S3
 if [ "$BACKUP_CSV" == "1" ]; then
   echo "Exporting CSVs from $PGDATABASE and archiving on S3 bucket $AWS_BUCKET"
