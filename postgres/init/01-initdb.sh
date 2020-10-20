@@ -3,8 +3,11 @@
 set -e
 
 # Perform all actions as $POSTGRES_USER
-export PGUSER="$POSTGRES_USER"
-export PGDATABASE="$POSTGRES_DB"
+export PGUSER=$POSTGRES_USER
+export PGPASSWORD=$POSTGRES_PASSWORD
+export PGPORT=$POSTGRES_PORT
+export PGHOST=$POSTGRES_URL
+export PGDATABASE=$POSTGRES_DB
 
 if [ "$RESTORE_PG_FROM_AWS" == "1" ]; then
   echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET"
@@ -42,4 +45,3 @@ CREATE EXTENSION IF NOT EXISTS plr;
 EOF
 # pg_cron extension adding must occur AFTER db startup
 # (sleep 5; psql -c "CREATE EXTENSION IF NOT EXISTS pg_cron;") &
-
