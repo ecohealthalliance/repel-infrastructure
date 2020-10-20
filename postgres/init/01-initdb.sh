@@ -12,6 +12,7 @@ export PGDATABASE=$POSTGRES_DB
 if [ "$RESTORE_PG_FROM_AWS" == "1" ]; then
   echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET"
   dropdb $POSTGRES_DB || true
+  createdb $POSTGRES_DB
   aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz - |\
   unxz |\
   egrep -v '^(CREATE|DROP) ROLE $POSTGRES_USER;' |\
