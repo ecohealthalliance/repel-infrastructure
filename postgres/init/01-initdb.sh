@@ -2,6 +2,8 @@
 
 set -e
 
+echo "starting 01-initdb.sh" >> /tmp/deploy.log
+
 # Perform all actions as $POSTGRES_USER
 export PGUSER=$POSTGRES_USER
 export PGPASSWORD=$POSTGRES_PASSWORD
@@ -46,3 +48,5 @@ CREATE EXTENSION IF NOT EXISTS plr;
 EOF
 # pg_cron extension adding must occur AFTER db startup
 # (sleep 5; psql -c "CREATE EXTENSION IF NOT EXISTS pg_cron;") &
+
+echo "leaving 01-initdb.sh" >> /tmp/deploy.log
