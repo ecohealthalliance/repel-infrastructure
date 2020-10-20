@@ -21,3 +21,5 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 COPY gen_certs.sh gen_certs.sh
 RUN ./gen_certs.sh
+
+CMD ["/start.sh"]
