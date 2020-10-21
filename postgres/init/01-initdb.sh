@@ -18,13 +18,14 @@ then
   echo "flag 1" >> /tmp/deploy.log
   echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET"
   echo "flag 2" >> /tmp/deploy.log
-  dropdb --if-exists $POSTGRES_DB
+  dropdb $POSTGRES_DB || true
   echo "flag 3" >> /tmp/deploy.log
   createdb $POSTGRES_DB || { echo "Error: failed to create database!" && exit 1; }
   echo "flag 4" >> /tmp/deploy.log
   aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz - |\
   unxz |\
-  psql $POSTGRES_DB
+  egrep -v '^(CREATE|DROP) ROLE $POSTGRES_USER;' |\
+  psql postgres
   echo "flag 5" >> /tmp/deploy.log
 fi
 # Configure database, system setting from https://pgtune.leopard.in.ua/
