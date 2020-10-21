@@ -17,9 +17,16 @@ then
   echo "flag 3" >> /tmp/deploy.log
   dropdb $POSTGRES_DB || true
   echo "flag 4" >> /tmp/deploy.log
-  aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz - |\
-  unxz | psql postgres
+  aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
   echo "flag 5" >> /tmp/deploy.log
+  unxz /tmp/repel_backup.dmp.xz
+  echo "flag 6" >> /tmp/deploy.log
+  createdb $POSTGRES_DB || { echo "Error: failed to create repel database!" && exit 1; }
+  echo "flag 7" >> /tmp/deploy.log
+  psql -f /tmp/repel_backup.dmp postgres || { echo "Error: failed to restore repel database from backup!" && exit 1; }
+  echo "flag 8" >> /tmp/deploy.log
+  rm /tmp/repel_backup.dmp*
+  echo "flag 9" >> /tmp/deploy.log
 fi
 # Configure database, system setting from https://pgtune.leopard.in.ua/
 # DB Version: 12
