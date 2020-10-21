@@ -11,15 +11,21 @@ export PGPORT=$POSTGRES_PORT
 export PGHOST=$POSTGRES_HOST
 export PGDATABASE=$POSTGRES_DB
 
-if [ "$RESTORE_PG_FROM_AWS" == "1" ]; then
-  echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET"
-  dropdb --if-exists $POSTGRES_DB
-  createdb $POSTGRES_DB || { echo "Error: failed to create database!" && exit 1; }
+echo $RESTORE_PG_FROM_AWS >> /tmp/deploy.log
+
+if [[ "$RESTORE_PG_FROM_AWS" == "1" ]]
+then
   echo "flag 1" >> /tmp/deploy.log
+  echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET"
+  echo "flag 2" >> /tmp/deploy.log
+  dropdb --if-exists $POSTGRES_DB
+  echo "flag 3" >> /tmp/deploy.log
+  createdb $POSTGRES_DB || { echo "Error: failed to create database!" && exit 1; }
+  echo "flag 4" >> /tmp/deploy.log
   aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz - |\
   unxz |\
   psql $POSTGRES_DB
-  echo "flag 2" >> /tmp/deploy.log  
+  echo "flag 5" >> /tmp/deploy.log
 fi
 # Configure database, system setting from https://pgtune.leopard.in.ua/
 # DB Version: 12
