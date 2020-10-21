@@ -18,9 +18,7 @@ then
   dropdb $POSTGRES_DB || true
   echo "flag 4" >> /tmp/deploy.log
   aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz - |\
-  unxz |\
-  egrep -v '^(CREATE|DROP) ROLE $POSTGRES_USER;' |\
-  psql postgres
+  unxz | psql postgres
   echo "flag 5" >> /tmp/deploy.log
 fi
 # Configure database, system setting from https://pgtune.leopard.in.ua/
