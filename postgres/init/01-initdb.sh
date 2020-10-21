@@ -2,31 +2,19 @@
 
 set -e
 
-echo "starting 01-initdb.sh" >> /tmp/deploy.log
-
 # Perform all actions as $POSTGRES_USER
 export PGUSER="$POSTGRES_USER"
 export PGDATABASE="$POSTGRES_DB"
 
-echo "flag 1" >> /tmp/deploy.log
-
 if [ "$RESTORE_PG_FROM_AWS" == "1" ]
 then
-  echo "flag 2" >> /tmp/deploy.log
   echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET"
-  echo "flag 3" >> /tmp/deploy.log
   dropdb $POSTGRES_DB || true
-  echo "flag 4" >> /tmp/deploy.log
   aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
-  echo "flag 5" >> /tmp/deploy.log
   unxz /tmp/repel_backup.dmp.xz
-  echo "flag 6" >> /tmp/deploy.log
   createdb $POSTGRES_DB || { echo "Error: failed to create repel database!" && exit 1; }
-  echo "flag 7" >> /tmp/deploy.log
   psql -f /tmp/repel_backup.dmp postgres || { echo "Error: failed to restore repel database from backup!" && exit 1; }
-  echo "flag 8" >> /tmp/deploy.log
   rm /tmp/repel_backup.dmp*
-  echo "flag 9" >> /tmp/deploy.log
 fi
 # Configure database, system setting from https://pgtune.leopard.in.ua/
 # DB Version: 12
@@ -56,5 +44,3 @@ CREATE EXTENSION IF NOT EXISTS plr;
 EOF
 # pg_cron extension adding must occur AFTER db startup
 # (sleep 5; psql -c "CREATE EXTENSION IF NOT EXISTS pg_cron;") &
-
-echo "leaving 02-useraccts.sh" >> /tmp/deploy.log
