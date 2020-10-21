@@ -2,6 +2,8 @@
 
 set -e
 
+echo "starting 02-usraccts.sh" >> /tmp/deploy.log
+
 # Perform all actions as $POSTGRES_USER
 export PGUSER="$POSTGRES_USER"
 export PGDATABASE="$POSTGRES_DB"
@@ -24,3 +26,5 @@ then
 #  psql -d postgres -c "alter database repel owner to repeluser"
   psql -d postgres -c "alter user repeluser createdb"
 fi
+
+echo "leaving 02-usraccts.sh" >> /tmp/deploy.log
