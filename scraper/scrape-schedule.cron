@@ -2,4 +2,6 @@
  5 4 * * 6 cd /home/rstudio/repel-infrastructure/scraper && ./scrape-annual-reports.R
 # Run run outbreak report scraper daily
  5 0 * * * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-outbreak-reports.R
+# Run promed table update nightly
+ 0 4 * * * cd /home/rstudio/repel-infrastructure/scraper && ./update_promed_posts.py
 # We need a blank line here for it to be a valid cron file

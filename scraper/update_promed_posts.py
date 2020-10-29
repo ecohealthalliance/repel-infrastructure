@@ -26,9 +26,13 @@ def add_post_repel(cur, curr_post, mode):
     if 'subject' in curr_post.keys() and 'additionalInfo' in curr_post['subject'].keys():
         subject_additional_info = curr_post['subject']['additionalInfo']
     subject_disease_labels = ''
-    if 'subject' in curr_post.keys() and 'disease_labels' in curr_post['subject'].keys():
-        subject_disease_labels = curr_post['subject']['disease_labels']
+    if 'subject' in curr_post.keys() and 'diseaseLabels' in curr_post['subject'].keys():
+        subject_disease_labels = curr_post['subject']['diseaseLabels']
+    promed_date = ''
+    promed_year = -1
+    promed_semester = -1
     if 'promedDate' in curr_post.keys():
+        promed_date = curr_post['promedDate'].strftime("%m/%d/%Y, %H:%M:%S")
         promed_year = curr_post['promedDate'].year
         if curr_post['promedDate'].month < 7:
             promed_semester = 1
@@ -46,49 +50,57 @@ def add_post_repel(cur, curr_post, mode):
     epitator_geonames_countries = ''
     if 'epitator_geonames' in curr_post.keys():
         epitator_geonames_countries = curr_post['epitator_geonames']
+    subject_epitator_geonames = ''
+    if 'subject_epitator_geonames' in curr_post.keys():
+        subject_epitator_geonames = curr_post['subject_epitator_geonames']
+    subject_epitator_keywords_disease = ''
+    if 'subject_epitator_keywords_disease' in curr_post.keys():
+        subject_epitator_keywords_disease = curr_post['subject_epitator_keywords_disease']
+    subject_epitator_keywords_species = ''
+    if 'subject_epitator_keywords_species' in curr_post.keys():
+        subject_epitator_keywords_species = curr_post['subject_epitator_keywords_species']
 
-    print('*** record start ***')
-    print(promed_id)
-    print(promed_url)
-    print(subject_description)
-    print(subject_region)
-    print(subject_additional_info)
-    print(subject_disease_labels)
-    print(promed_year)
-    print(promed_semester)
-    print(epitator_counts)
-    print(epitator_keywords_disease)
-    print(epitator_keywords_species)
-    print(epitator_geonames_countries)
-    print()
 
     if mode == 'insert':
         sql = '''INSERT INTO promed_posts(promed_id, promed_url, subject_description,
                                           subject_region, subject_additional_info,
-                                          subject_disease_labels, promed_year,
-                                          promed_semester, epitator_counts,
+                                          subject_disease_labels,
+                                          subject_epitator_geonames,
+                                          subject_epitator_keywords_disease,
+                                          subject_epitator_keywords_species,
+                                          promed_date, promed_year, promed_semester,
+                                          epitator_counts,
                                           epitator_keywords_disease,
                                           epitator_keywords_species,
                                           epitator_geonames, update_script_version)
-                        VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+                        VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
         record_to_insert = (promed_id, promed_url, subject_description, subject_region,
                             subject_additional_info, subject_disease_labels,
-                            promed_year, promed_semester, epitator_counts,
+                            subject_epitator_geonames, subject_epitator_keywords_disease,
+                            subject_epitator_keywords_species,
+                            promed_date, promed_year, promed_semester, epitator_counts,
                             epitator_keywords_disease, epitator_keywords_species,
                             epitator_geonames_countries, script_version)
         cur.execute(sql, record_to_insert)
     elif mode == 'update':
         sql = '''UPDATE promed_posts SET promed_url=%s, subject_description=%s,
                                          subject_region=%s, subject_additional_info=%s,
-                                         subject_disease_labels=%s, promed_year=%s,
-                                         promed_semester=%s, epitator_counts=%s,
+                                         subject_disease_labels=%s,
+                                         subject_epitator_geonames=%s,
+                                         subject_epitator_keywords_disease=%s,
+                                         subject_epitator_keywords_species=%s,
+                                         promed_date=%s,
+                                         promed_year=%s, promed_semester=%s,
+                                         epitator_counts=%s,
                                          epitator_keywords_disease=%s,
                                          epitator_keywords_species=%s,
                                          epitator_geonames=%s, update_script_version=%s
                                      WHERE promed_id=%s'''
         record_to_insert = (promed_url, subject_description, subject_region,
                             subject_additional_info, subject_disease_labels,
-                            promed_year, promed_semester, epitator_counts,
+                            subject_epitator_geonames, subject_epitator_keywords_disease,
+                            subject_epitator_keywords_species,
+                            promed_date, promed_year, promed_semester, epitator_counts,
                             epitator_keywords_disease, epitator_keywords_species,
                             epitator_geonames_countries, script_version, promed_id)
         cur.execute(sql, record_to_insert)
@@ -125,12 +137,16 @@ sql = ''' SELECT * FROM information_schema.tables where table_name='promed_posts
 cur.execute(sql)
 if cur.rowcount == 0:
     sql = ''' CREATE TABLE promed_posts (
-                     promed_id INTEGER PRIMARY KEY,
+                     promed_id VARCHAR(255) PRIMARY KEY,
                      promed_url VARCHAR(255),
                      subject_description VARCHAR(1023),
                      subject_region VARCHAR(255),
                      subject_additional_info VARCHAR(1023),
                      subject_disease_labels VARCHAR(1023),
+                     subject_epitator_geonames VARCHAR(1023),
+                     subject_epitator_keywords_disease VARCHAR(1023),
+                     subject_epitator_keywords_species VARCHAR(1023),
+                     promed_date VARCHAR(255),
                      promed_year INTEGER,
                      promed_semester INTEGER,
                      epitator_counts VARCHAR(1023),
