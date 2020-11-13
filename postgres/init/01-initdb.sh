@@ -6,13 +6,15 @@ set -e
 export PGUSER="$POSTGRES_USER"
 export PGDATABASE="$POSTGRES_DB"
 
-if [ "$RESTORE_PG_FROM_AWS" == "1" ]; then
+if [ "$RESTORE_PG_FROM_AWS" == "1" ]
+then
   echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET"
   dropdb $POSTGRES_DB || true
-  aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz - |\
-  unxz |\
-  egrep -v '^(CREATE|DROP) ROLE $POSTGRES_USER;' |\
-  psql postgres
+  aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
+  unxz /tmp/repel_backup.dmp.xz
+  createdb $POSTGRES_DB || { echo "Error: failed to create repel database!" && exit 1; }
+  psql -f /tmp/repel_backup.dmp postgres || { echo "Error: failed to restore repel database from backup!" && exit 1; }
+  rm /tmp/repel_backup.dmp*
 fi
 # Configure database, system setting from https://pgtune.leopard.in.ua/
 # DB Version: 12
@@ -42,4 +44,3 @@ CREATE EXTENSION IF NOT EXISTS plr;
 EOF
 # pg_cron extension adding must occur AFTER db startup
 # (sleep 5; psql -c "CREATE EXTENSION IF NOT EXISTS pg_cron;") &
-

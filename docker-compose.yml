@@ -11,6 +11,9 @@ services:
     command: postgres -c config_file=/pgconf/postgresql.conf
     env_file: .env
     restart: on-failure
+    networks:
+      - promed-net
+      - repel-servers
   cron:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-cron
     build:
@@ -21,6 +24,8 @@ services:
     restart: on-failure
     depends_on:
       - postgres
+    networks:
+      - repel-servers
   scraper:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
     build:
@@ -37,6 +42,9 @@ services:
       - postgres
     volumes:
       - ./shiny/content:/var/www/html
+    networks:
+      - promed-net
+      - repel-servers
   rshinyauth0:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-rshinyauth0
     build:
@@ -72,4 +80,6 @@ services:
       - repel-servers
 networks:
   repel-servers:
+    driver: bridge
+  promed-net:
     driver: bridge
