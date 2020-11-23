@@ -10,15 +10,20 @@ message("Connect to database")
 conn <- wahis_db_connect()
 
 # Check if aws mod etag differs from db -----------------------------------
-forecasted_repeldat <- dbReadTable(conn, name = "nowcast_boost_augment_predict")
-db_disease_status_etag <- unique(forecasted_repeldat$db_disease_status_etag)
-db_cases_etag <- unique(forecasted_repeldat$db_cases_etag)
 aws_disease_status_etag <- aws.s3::head_object(bucket = "repeldb/models", object = "boost_mod_disease_status.rds") %>%
   attr(., "etag")
 aws_cases_etag <- aws.s3::head_object(bucket = "repeldb/models", object = "boost_mod_cases.rds") %>%
   attr(., "etag")
 
-if(db_disease_status_etag != aws_disease_status_etag | db_cases_etag != aws_cases_etag){
+if(dbExistsTable(conn,  "nowcast_boost_augment_predict")){
+
+  forecasted_repeldat <- dbReadTable(conn, name = "nowcast_boost_augment_predict")
+  db_disease_status_etag <- unique(forecasted_repeldat$db_disease_status_etag)
+  db_cases_etag <- unique(forecasted_repeldat$db_cases_etag)
+
+}
+
+if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_etag != aws_disease_status_etag | db_cases_etag != aws_cases_etag){
 
   # Cache full database predictions ---------------------------------------------------
   repeldat <- repelpredict:::repel_cases(conn)
