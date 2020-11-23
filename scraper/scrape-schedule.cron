@@ -1,7 +1,9 @@
 # Run annual report scraper once per week on early Saturday morning.
  5 4 * * 6 cd /home/rstudio/repel-infrastructure/scraper && ./scrape-annual-reports.R
-# Run run outbreak report scraper daily
+# Run outbreak report scraper daily
  5 0 * * * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-outbreak-reports.R
+# Run nowcast cache daily (it will only update if there is a new model)
+ 3 0 * * * cd /home/rstudio/repel-infrastructure/scraper && ./cache-nowcast.R
 # Run promed table update nightly
  0 4 * * * cd /home/rstudio/repel-infrastructure/scraper && ./update_promed_posts.py
 # We need a blank line here for it to be a valid cron file

@@ -33,12 +33,12 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
  && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
  && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
-RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env connections furrr future
+RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env connections furrr future aws.s3
 
 ARG GITHUB_PAT
 ENV GITHUB_PAT=${GITHUB_PAT}
 
-RUN installGithub.r -u FALSE ecohealthalliance/wahis noamross/scrapetools
+RUN installGithub.r -u FALSE ecohealthalliance/wahis noamross/scrapetools ecohealthalliance/repelpredict@nowcast
 
 COPY . /home/rstudio/repel-infrastructure/scraper/
 
