@@ -40,6 +40,9 @@ report_resps <- map_curl(
   .retry = 3
 )
 
+# write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
+# report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
+
 report_resps <- map_if(report_resps, is.null,
                        function(x) list(ingest_status = "failed to fetch"))
 
@@ -59,10 +62,14 @@ if(any(unique(ingest_status_log$in_database))){ # check if there are any non-err
   # tables
   outbreak_report_tables <- wahis::transform_outbreak_reports(report_resps)
 
-  iwalk(outbreak_report_tables[c("outbreak_reports_events", "outbreak_reports_outbreaks", "outbreak_reports_outbreaks_summary",  "outbreak_reports_laboratories")],
-        ~update_sql_table(conn,  .y, .x,
-                          c("id"), fill_col_na = TRUE)
-  )
+  if(!is.null(outbreak_report_tables)){
+    iwalk(outbreak_report_tables[c("outbreak_reports_events", "outbreak_reports_outbreaks", "outbreak_reports_outbreaks_summary",  "outbreak_reports_laboratories")],
+          function(x, y){
+            update_sql_table(conn,  y, x,
+                             c("id"), fill_col_na = TRUE)
+            Sys.sleep(1)
+          })
+  }
 
   # unmatched diseases
   update_sql_table(conn, table = "outbreak_reports_diseases_unmatched",

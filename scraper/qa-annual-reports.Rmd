@@ -30,8 +30,7 @@ errors_to_check <- ingest_missing %>%
 # not reported
 report_missing <- dbReadTable(conn, "annual_reports_status") %>%
   filter(!reported) %>%
-  select(report, country_iso3c, report_year, report_semester, reported) %>%
-  mutate(report_year = as.character(report_year))
+  select(report, country_iso3c, report_year, report_semester, reported)
 
 # all missing
 status_missing <- bind_rows(ingest_missing, report_missing)
