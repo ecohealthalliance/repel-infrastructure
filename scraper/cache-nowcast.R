@@ -26,7 +26,10 @@ if(dbExistsTable(conn,  "nowcast_boost_augment_predict")){
 if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_etag != aws_disease_status_etag | db_cases_etag != aws_cases_etag){
 
   # Cache full database predictions ---------------------------------------------------
-  repeldat <- repelpredict:::repel_cases(conn)
+  repeldat <- repelpredict:::repel_cases(conn) %>%
+    select(all_of(repelpredict:::grouping_vars), validation_set) %>%
+    distinct()
+
   model_object <-  nowcast_boost_model(
     disease_status_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "boost_mod_disease_status.rds"),
     cases_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "boost_mod_cases.rds"))
