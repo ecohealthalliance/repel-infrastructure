@@ -28,4 +28,4 @@ First launch local postgres (**bring up local workflow** above)
 
 `scraper/scrape-annual-reports.R` and `scraper/scrape-outbreak-reports.R` can be run to ingest and transform OIE reports that were not processed in the init scripts (above). These reports are either more recent than the files saved locally, or failed during the initial scrape.
 
-To copy your local database to AWS (backup) and the development server (kirby), run `scraper/push_db_local_to_aws_and_dev_outside.sh` 
+To copy your local database to AWS (backup) and the development server (kirby), run `./scraper/push_db_local_to_aws_and_dev_outside.sh`.

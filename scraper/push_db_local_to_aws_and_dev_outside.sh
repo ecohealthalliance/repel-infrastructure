@@ -1,7 +1,7 @@
+#!/bin/bash
 # copy local repel database to dev and AWS
 
 set -e
-set -x
 # functions to test environment variables to local or dev server
 
 set_local_env () {
@@ -32,7 +32,7 @@ fi
 # set env to local and dump database
 if [ -z "$POSTGRES_USER" ]
 then
-  source .env
+ source ../.env
 fi
 
 set_local_env

@@ -39,8 +39,8 @@ assertthat::are_equal(length(filenames), length(annual_reports))
 ingest_status_log <- tibble(web_page = basename(filenames),
                             ingest_status = map_chr(annual_reports, ~.x$ingest_status)) %>%
   mutate(country_iso3c = substr(web_page, 1, 3),
-         report_year = substr(web_page, 5, 8),
-         report_semester = substr(web_page, 13, 13),
+         report_year = as.numeric(substr(web_page, 5, 8)),
+         report_semester = as.numeric(substr(web_page, 13, 13)),
          report = paste(country_iso3c, report_year, report_semester, sep ="_")) %>%
   select(-web_page) %>%
   mutate(in_database = ingest_status == "available") %>%

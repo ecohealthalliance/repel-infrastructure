@@ -11,4 +11,5 @@ suppressMessages(suppressWarnings(suppressPackageStartupMessages({
   library(wahis)
   library(glue)
   library(here)
+  library(aws.s3)
 })))

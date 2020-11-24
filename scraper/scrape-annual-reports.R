@@ -10,11 +10,14 @@ conn <- wahis_db_connect()
 
 # Scrape list of all annual reports ----------------------------
 annual_reports_status <- scrape_annual_report_list()
+# write_csv(annual_reports_status, here::here("scraper", "scraper_files_for_testing/annual_reports_status.csv"))
+# annual_reports_status <- read_csv(here::here("scraper", "scraper_files_for_testing/annual_reports_status.csv"))
 
 # Update db with latest annual reports list
 if (dbExistsTable(conn, "annual_reports_status")) {
   dbRemoveTable(conn, "annual_reports_status")
 }
+
 dbWriteTable(conn, "annual_reports_status",  annual_reports_status)
 message("Done collecting list of annual reports.")
 
@@ -26,7 +29,7 @@ if (dbExistsTable(conn, "annual_reports_ingest_status_log")) {
   ingest_log <- dbReadTable(conn, "annual_reports_ingest_status_log") %>%
     mutate(in_database = as.logical(in_database))
 } else {
-  ingest_log <- tibble("country_iso3c" = character(), "report_year" = character(), "report_semester" = character(), "in_database" = logical())
+  ingest_log <- tibble("country_iso3c" = character(), "report_year" = numeric(), "report_semester" = numeric(), "in_database" = logical())
 }
 
 # Make list of reports not in DB
@@ -48,9 +51,12 @@ report_resps <- map_curl(
   .handle_opts = list(low_speed_limit = 100, low_speed_time = 300),
   .retry = 3
 )
+# write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_annual.rds"))
+# report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_annual.rds"))
 
 report_resps <- map_if(report_resps, is.null,
                        function(x) list(ingest_status = "failed to fetch"))
+
 
 # Update ingest log -------------------------------------------------------
 
@@ -69,9 +75,10 @@ annual_report_tables <- wahis::transform_annual_reports(report_resps)
 
 if(!is.null(annual_report_tables)){
   iwalk(annual_report_tables[names(annual_report_tables) != "annual_reports_diseases_unmatched"],
-        ~update_sql_table(conn,  .y, .x,
-                          c("report"))
-  )
+        function(x, y){
+          update_sql_table(conn, y, x, c("report"))
+          Sys.sleep(1)
+  })
 }
 
 # unmatched diseases
