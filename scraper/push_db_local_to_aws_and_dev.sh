@@ -1,3 +1,4 @@
+#!/bin/bash
 # copy local repel database to dev and AWS
 
 set -e
