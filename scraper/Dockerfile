@@ -55,6 +55,7 @@ RUN chgrp staff /var/www/reports
 RUN chmod g+w /var/www/reports
 
 RUN chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-outbreak-reports.R
+RUN chmod +x /home/rstudio/repel-infrastructure/scraper/cache-nowcast.R
 
 CMD ["/home/rstudio/repel-infrastructure/scraper/start.sh"]
 
