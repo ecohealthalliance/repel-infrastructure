@@ -26,7 +26,7 @@ if(dbExistsTable(conn,  "nowcast_boost_augment_predict")){
 if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_etag != aws_disease_status_etag | db_cases_etag != aws_cases_etag){
 
   # Cache full database predictions ---------------------------------------------------
-  repeldat <- repelpredict:::repel_cases(conn) %>%
+  repeldat <- repelpredict:::split_annual_reports_animal_hosts(conn) %>%
     select(all_of(repelpredict:::grouping_vars), validation_set) %>%
     distinct()
 
