@@ -36,7 +36,8 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_
 
   forecasted_repeldat <- repel_forecast(model_object = model_object,
                                         conn = conn,
-                                        newdata = repeldat)
+                                        newdata = repeldat,
+                                        use_cache = FALSE)
 
   forecasted_repeldat <- forecasted_repeldat[[1]] %>%
     mutate(predicted_cases = forecasted_repeldat[[2]]) %>%
@@ -46,3 +47,4 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_
 }
 
 dbDisconnect(conn)
+
