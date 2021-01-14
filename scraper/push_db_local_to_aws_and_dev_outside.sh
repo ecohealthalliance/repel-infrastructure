@@ -8,7 +8,7 @@ set_local_env () {
   export PGUSER=$POSTGRES_USER
   export PGPASSWORD=$POSTGRES_PASSWORD
   export PGPORT=22053
-  export PGHOST=aegypti.ecohealthalliance.org
+  export PGHOST=prospero.ecohealthalliance.org
   export PGDATABASE=$POSTGRES_DB
 }
 
@@ -32,7 +32,7 @@ fi
 # set env to local and dump database
 if [ -z "$POSTGRES_USER" ]
 then
- source ../.env
+ source .env
 fi
 
 set_local_env
