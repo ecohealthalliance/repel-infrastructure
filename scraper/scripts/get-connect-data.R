@@ -1,43 +1,45 @@
 # This script downloads and processes connect (non-oie) data
 
-source(here::here("packages.R"))
-source(here::here("functions.R"))
+dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper", "")
+source(here::here(dir, "packages.R"))
+source(here::here(dir, "functions.R"))
 
 # Download and transform all ----------------------------------------------
 
-download_bird_migration()
-bird <- transform_bird_migration()
-write_csv(bird, here("data-intermediate/bli-bird-migration.csv"))
+dir_downloads <- paste(dir, "data-raw", sep = "/")
+download_bird_migration(directory = dir_downloads)
+bird <- transform_bird_migration(directory = dir_downloads)
+write_csv(bird, here(dir, "data-intermediate/bli-bird-migration.csv"))
 
-download_trade() # ~ 2.5 hrs
-trade <- transform_trade()
+download_trade(directory = dir_downloads) # ~ 2.5 hrs
+trade <- transform_trade(directory = dir_downloads)
 product_code_lookup <- tradestatistics::ots_products
 write_csv(trade, here("data-intermediate/ots-trade.csv"))
-write_csv(product_code_lookup, here("scraperdata-intermediate/ots-trade-product-code.csv"))
+write_csv(product_code_lookup, here(dir, "scraperdata-intermediate/ots-trade-product-code.csv"))
 
-download_livestock()
-livestock <- transform_livestock()
-item_code_lookup <- get_livestock_item_id()
+download_livestock(directory = dir_downloads)
+livestock <- transform_livestock(directory = dir_downloads)
+item_code_lookup <- get_livestock_item_id(directory = dir_downloads)
 write_csv(livestock, here("data-intermediate/fao-livestock.csv"))
-write_csv(item_code_lookup, here("data-intermediate/fao-livestock-item-code.csv"))
+write_csv(item_code_lookup, here(dir, "data-intermediate/fao-livestock-item-code.csv"))
 
-download_human_migration()
-human <- transform_human_migration()
-write_csv(human, here("data-intermediate/un-human-migration.csv"))
+download_human_migration(directory = dir_downloads)
+human <- transform_human_migration(directory = dir_downloads)
+write_csv(human, here(dir, "data-intermediate/un-human-migration.csv"))
 
-download_tourism(username = Sys.getenv("UNWTO_USERNAME"), password = Sys.getenv("UNWTO_PASSWORD"))
-tourism <- transform_tourism()
-write_csv(tourism, here("data-intermediate/wto-tourism.csv"))
+download_tourism(username = Sys.getenv("UNWTO_USERNAME"), password = Sys.getenv("UNWTO_PASSWORD"), directory = dir_downloads)
+tourism <- transform_tourism(directory = dir_downloads)
+write_csv(tourism, here(dir, "data-intermediate/wto-tourism.csv"))
 
-download_wildlife(token = Sys.getenv("IUCN_REDLIST_KEY"))
-wildlife_migration <- transform_wildlife_migration()
-write_csv(wildlife_migration, here("data-intermediate/iucn-wildlife_migration.csv"))
+download_wildlife(token = Sys.getenv("IUCN_REDLIST_KEY"), directory = dir_downloads)
+wildlife_migration <- transform_wildlife_migration(directory = dir_downloads)
+write_csv(wildlife_migration, here(dir, "data-intermediate/iucn-wildlife_migration.csv"))
 
 borders <- get_country_borders()
-write_csv(borders, here("data-intermediate/shared-borders.csv"))
+write_csv(borders, here(dir, "data-intermediate/shared-borders.csv"))
 
 country_distance <- get_country_distance()
-write_csv(country_distance, here("data-intermediate/country-distance.csv"))
+write_csv(country_distance, here(dir, "data-intermediate/country-distance.csv"))
 
 # Join all ----------------------------------------------------------------
 
@@ -56,7 +58,7 @@ all_countries <- ggplot2::map_data("world") %>%
   filter(country_origin != country_destination)
 
 # read in connect data
-files <- list.files(here::here("data-intermediate"), full.names = TRUE, pattern = "*.csv")
+files <- list.files(here::here(dir, "data-intermediate"), full.names = TRUE, pattern = "*.csv")
 dat <- map(files, ~read_csv(., col_type = cols(.default = "c"))) %>%
   set_names(basename(files))
 
@@ -79,7 +81,7 @@ static_dat <- static_dat %>%
 # mutate_at(.vars = c("gc_dist"), ~as.double(.)) %>%
 # mutate_at(.vars = c("n_migratory_birds", "n_migratrory_wildlife"), ~as.integer(.))
 
-write_csv(static_dat, here("data-intermediate/connect/static-connect.csv.gz"))
+write_rds(static_dat, here(dir, "data-intermediate/connect/static-connect.rds"))
 
 # handling time dependent vars
 yearly_dat <- dat[yearly_tables] %>%
@@ -100,14 +102,14 @@ yearly_dat <- yearly_dat %>%
 # mutate_at(vars(year, starts_with("n_"), starts_with("livestock_")), ~as.integer(.)) %>%
 # mutate_at(vars(starts_with("trade_")), ~as.double(.))
 
-write_csv(yearly_dat, here("data-intermediate/connect/yearly-connect.csv.gz"))
+write_rds(yearly_dat, here(dir, "data-intermediate/connect/yearly-connect.rds"))
 
 # Add to db ---------------------------------------------------------------
 conn <- wahis_db_connect()
-static_dat <- read_csv(here("data-intermediate/connect/static-connect.csv.gz"))
-yearly_dat <- read_csv(here("data-intermediate/connect/yearly-connect.csv.gz"))
-fao_lookup <- read_csv(here("data-intermediate/fao-livestock-item-code.csv"))
-ots_lookup <- read_csv(here("data-intermediate/ots-trade-product-code.csv"))
+static_dat <- read_rds(here(dir, "data-intermediate/connect/static-connect.rds"))
+yearly_dat <- read_rds(here(dir, "data-intermediate/connect/yearly-connect.rds"))
+fao_lookup <- read_csv(here(dir, "data-intermediate/fao-livestock-item-code.csv"))
+ots_lookup <- read_csv(here(dir, "data-intermediate/ots-trade-product-code.csv"))
 
 dbWriteTable(conn,  name = "connect_static_vars", value = static_dat, overwrite = TRUE)
 dbWriteTable(conn,  name = "connect_yearly_vars", value = yearly_dat, overwrite = TRUE)
