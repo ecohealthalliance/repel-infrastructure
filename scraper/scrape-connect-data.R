@@ -7,20 +7,21 @@ source(here::here(dir, "functions.R"))
 # Download and transform all ----------------------------------------------
 
 dir_downloads <- paste(dir, "data-raw", sep = "/")
+
 download_bird_migration(directory = dir_downloads)
 bird <- transform_bird_migration(directory = dir_downloads)
 write_csv(bird, here(dir, "data-intermediate/bli-bird-migration.csv"))
 
-download_trade(directory = dir_downloads) # ~ 2.5 hrs
+download_trade(directory = dir_downloads)
 trade <- transform_trade(directory = dir_downloads)
 product_code_lookup <- tradestatistics::ots_products
-write_csv(trade, here("data-intermediate/ots-trade.csv"))
-write_csv(product_code_lookup, here(dir, "scraperdata-intermediate/ots-trade-product-code.csv"))
+write_csv(trade, here(dir, "data-intermediate/ots-trade.csv"))
+write_csv(product_code_lookup, here(dir, "data-intermediate/ots-trade-product-code.csv"))
 
 download_livestock(directory = dir_downloads)
 livestock <- transform_livestock(directory = dir_downloads)
 item_code_lookup <- get_livestock_item_id(directory = dir_downloads)
-write_csv(livestock, here("data-intermediate/fao-livestock.csv"))
+write_csv(livestock, here(dir, "data-intermediate/fao-livestock.csv"))
 write_csv(item_code_lookup, here(dir, "data-intermediate/fao-livestock-item-code.csv"))
 
 download_human_migration(directory = dir_downloads)
@@ -35,8 +36,9 @@ download_wildlife(token = Sys.getenv("IUCN_REDLIST_KEY"), directory = dir_downlo
 wildlife_migration <- transform_wildlife_migration(directory = dir_downloads)
 write_csv(wildlife_migration, here(dir, "data-intermediate/iucn-wildlife_migration.csv"))
 
-borders <- get_country_borders()
-write_csv(borders, here(dir, "data-intermediate/shared-borders.csv"))
+# this is down - need to refactor function for new CIA web page
+# borders <- get_country_borders()
+# write_csv(borders, here(dir, "data-intermediate/shared-borders.csv"))
 
 country_distance <- get_country_distance()
 write_csv(country_distance, here(dir, "data-intermediate/country-distance.csv"))
@@ -49,9 +51,9 @@ all_countries <- ggplot2::map_data("world") %>%
   mutate(iso3c = countrycode::countrycode(sourcevar = region,
                                           origin = "country.name",
                                           destination = "iso3c"))  %>%
-  dplyr::select(iso3c) %>%
+  distinct(iso3c) %>%
   drop_na(iso3c) %>%
-  unique() %>%
+  bind_rows(tibble(iso3c = "HKG")) %>%
   bind_cols(., .) %>%
   set_names("country_origin", "country_destination") %>%
   expand(country_origin, country_destination) %>%
@@ -75,7 +77,7 @@ static_dat <- left_join(all_countries, static_dat)
 assertthat::are_equal(nrow(janitor::get_dupes(static_dat, country_origin, country_destination)), 0)
 
 static_dat <- static_dat %>%
-  select(country_origin, country_destination, shared_border, gc_dist, n_migratory_birds, n_migratrory_wildlife) %>%
+  select(country_origin, country_destination, shared_border, gc_dist, n_migratory_birds, n_migratory_wildlife) %>%
   mutate(shared_border = replace_na(shared_border, FALSE)) #%>%
 # mutate_at(.vars = c("shared_border"), ~as.logical(.)) %>%
 # mutate_at(.vars = c("gc_dist"), ~as.double(.)) %>%
