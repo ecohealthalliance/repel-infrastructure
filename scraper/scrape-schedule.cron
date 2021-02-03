@@ -1,5 +1,7 @@
 # Run annual report scraper once per week on early Saturday morning.
  5 4 * * 6 cd /home/rstudio/repel-infrastructure/scraper && ./scrape-annual-reports.R
+# Run connect scraper once per week on early Sunday morning.
+ 5 4 * * 7 cd /home/rstudio/repel-infrastructure/scraper && ./scrape-connect-data.R
 # Run outbreak report scraper daily
  5 0 * * * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-outbreak-reports.R
 # Run nowcast cache daily (it will only update if there is a new model)
