@@ -80,6 +80,14 @@ services:
       URL: ${HOSTNAME}.ecohealthalliance.org
     networks:
       - repel-servers
+  plumber:
+    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/plumber
+    build:
+      context: './plumber'
+    restart: on-failure
+    env_file: .env
+    networks:
+      - repel-servers
 networks:
   repel-servers:
     driver: bridge
