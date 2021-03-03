@@ -17,6 +17,9 @@ conn <- repeldata::repel_remote_conn(
     password = Sys.getenv("REPEL_READER_PASS")
 )
 
+
+#conn <- repeldata::repel_remote_conn()
+
 nowcast_predict <- tbl(conn, "nowcast_boost_augment_predict")  %>%
     collect()
 
@@ -26,7 +29,17 @@ ui <- fluidPage(
     # Application title
     titlePanel("REPEL Nowcast"),
 
-    # Sidebar with a slider input for number of bins
+    # User options: Select Disease
+    # Map: showing currently reported, not currently reported/predicted
+    #  - 4 color, or maybe color + hatched in future iteration
+    #  - Slider to change time point?
+    # Map: Predicted in six months
+    #  Use leaflet with no base to start
+    # Shiny: Click on a country, get a time series
+    # Time series plot(s):
+    #  - Show presence, cases reported and predicted (emphasize gaps!)
+    #  - Hover to show values
+    #  -
     sidebarLayout(
         sidebarPanel(
             sliderInput("bins",
