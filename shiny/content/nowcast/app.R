@@ -36,7 +36,7 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    conn <- repeldata::repel_local_conn()
+    conn <- repeldata::repel_remote_conn()
 
     nowcast_predict <- tbl(conn, "nowcast_boost_augment_predict")  %>%
         collect()

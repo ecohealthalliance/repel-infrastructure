@@ -61,10 +61,12 @@ services:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/shiny
     build:
       context: './shiny'
+      args:
+        - GITHUB_PAT=${GITHUB_PAT}
     restart: always
     env_file: .env
     volumes:
-      - ./shiny/content:/srv/shiny-server
+      - ./shiny/content:/srv/repel-shiny-server
     networks:
       - repel-servers
   nginx:
