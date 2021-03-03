@@ -10,6 +10,16 @@
 library(shiny)
 library(tidyverse)
 
+conn <- repeldata::repel_remote_conn(
+    host = "postgres",
+    port = 5432,
+    user = "repel_reader",
+    password = Sys.getenv("REPEL_READER_PASS")
+)
+
+nowcast_predict <- tbl(conn, "nowcast_boost_augment_predict")  %>%
+    collect()
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
@@ -36,15 +46,10 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    conn <- repeldata::repel_remote_conn()
-
-    nowcast_predict <- tbl(conn, "nowcast_boost_augment_predict")  %>%
-        collect()
-
-
     output$distPlot <- renderPlot({
         # generate bins based on input$bins from ui.R
         x    <- nowcast_predict$predicted_cases
+        #x <- rnorm(100)
         bins <- seq(min(x), max(x), length.out = input$bins + 1)
 
         # draw the histogram with the specified number of bins

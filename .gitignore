@@ -17,3 +17,4 @@ repeldb/db-data-entry/data-processed/*
 .DS_Store
 webdocs/
 letsencrypt/
+!.Renviron
