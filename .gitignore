@@ -18,3 +18,4 @@ repeldb/db-data-entry/data-processed/*
 webdocs/
 letsencrypt/
 !.Renviron
+plumber/plumber_cache
