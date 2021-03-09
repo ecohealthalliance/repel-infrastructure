@@ -63,13 +63,12 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_
 
   # run prediction (slow)
 
-  augmented_data <- repel_augment(model_object, conn, repeldat_expand)
-  write_rds(augmented_data, "tmp_augmented_data.rds")
+  # augment then predict
+  # augmented_data <- repel_augment(model_object, conn, repeldat_expand)
+  # write_rds(augmented_data, "tmp_augmented_data.rds")
+  # predictions <- repel_predict(model_object, newdata = augmented_data)
 
-  # TODO need to rerun model - xgboost and tidymodel compatability issue
-  predictions <- repel_predict(model_object, newdata = augmented_data)
-
-
+  # forecast combines augment and predict
   forecasted_repeldat <- repel_forecast(model_object = model_object,
                                         conn = conn,
                                         newdata = repeldat_expand,
@@ -82,5 +81,14 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_
   dbWriteTable(conn, name = "nowcast_boost_augment_predict", forecasted_repeldat, overwrite = TRUE)
 }
 
+dbDisconnect(conn)
+
+# patch until this is added in augment
+conn <- wahis_db_connect()
+forecasted_repeldat <- dbReadTable(conn, name = "nowcast_boost_augment_predict")
+forecasted_repeldat <- forecasted_repeldat %>%
+  mutate(unreported = ifelse(is.na(cases) & is.na(disease_status), 1, 0))
+
+dbWriteTable(conn, name = "nowcast_boost_augment_predict", forecasted_repeldat, overwrite = TRUE)
 dbDisconnect(conn)
 
