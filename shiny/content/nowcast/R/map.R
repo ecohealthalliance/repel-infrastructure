@@ -8,6 +8,9 @@ library(leaflet.extras)
 library(RColorBrewer)
 library(stars)
 library(ggpattern)
+
+any2 <- function(x) ifelse(all(is.na(x)), NA, any(x, na.rm = TRUE))
+
 diseases <-  c("foot_and_mouth_disease", "vesicular_stomatitis",
                "swine_vesicular_disease", "rinderpest",
                "peste_des_petits_ruminants", "ovine_bluetongue_disease",
@@ -20,16 +23,13 @@ disease <- diseases[[1]]
 conn <- repeldata::repel_remote_conn()
 
 nowcast_predicted <- tbl(conn, "nowcast_boost_augment_predict")  %>%
-  select(report_year, report_semester, disease, country_iso3c, continent, cases, predicted_cases) %>%
+  select(report_year, report_semester, disease, country_iso3c, continent,
+         unreported, actual_cases = cases, actual_status = disease_status,  predicted_cases) %>%
   filter(disease %in% diseases) %>%
   collect() %>%
-  filter(report_year == max(report_year)) %>%
-  mutate(predicted_presence = predicted_cases > 0) %>%
-  mutate(actual_presence = cases > 0 | is.na(cases))
-
-#TODO - add to augment whether report is missing
-#TODO - why arent all country/disease combo here?
-# ^ will happen when model is rerun, then predicted and cached in DB
+  mutate(predicted_status = predicted_cases > 0,
+         actual_status = as.logical(actual_status),
+         unreported = as.logical(unreported))
 
 report_year <- 2019
 report_semester <- 1
@@ -40,32 +40,40 @@ nowcast_world_map <- function(disease, report_year, report_semester){
   # proj_leaflet <- leafletCRS(proj4def = proj)
 
   dat <- nowcast_predicted %>%
-    filter(disease == !!disease, report_year == 2019, report_semester == 1) %>%
+    filter(disease == !!disease, report_year == !!report_year, report_semester == !!report_semester) %>%
     group_by(country_iso3c) %>%
-    summarize(predicted_presence = any(predicted_presence), actual_presence = any(actual_presence)) %>%
-    ungroup()
+    summarize(predicted_status = any(predicted_status), actual_status = any2(actual_status), unreported = all(unreported),
+              predicted_cases = sum(predicted_cases), actual_cases = sum(actual_cases, na.rm = TRUE)
+              ) %>%
+    ungroup()  %>%
+    mutate(status = case_when(
+      actual_status == TRUE ~ "reported present",
+      actual_status == FALSE ~ "reported absent",
+      unreported == TRUE & predicted_status == TRUE ~ "unreported, predicted present",
+      unreported == TRUE & predicted_status == FALSE ~ "unreported, predicted absent",
+    )) %>%
+    mutate(status = factor(status, levels = c("reported present", "unreported, predicted present",  "reported absent", "unreported, predicted absent"))) %>%
+    mutate(tooltip_lab = paste0(countrycode::countrycode(country_iso3c, origin = "iso3c", destination = "country.name"),
+                                ":",
+                                if_else(unreported, paste0(" ", predicted_cases, " predicted cases"), paste0(" ", actual_cases, " reported cases"))
+                               ))
 
   admin <- ne_countries(type='countries', scale = 'medium', returnclass = "sf") %>%
     filter(name != "Antarctica") %>%
     select(country_iso3c = iso_a3, geometry) %>%
-    left_join(dat) %>%
-    mutate(actual_presence = if_else(TRUE, true =  "present",false =  "absent",missing =  "unreported")) %>%
-    mutate(actual_presence = factor(actual_presence, levels = c("present", "absent", "unreported"))) %>%
-    mutate(predicted_presence = if_else(TRUE, true = "present", false = "absent", missing =  c("present", "absent")[sample(2, 1)])) %>%
-    mutate(predicted_presence = factor(predicted_presence, levels = c("present", "absent")))
+    right_join(dat)
 
-  #TODO four colors and two shades for present/absent and report/unreported combos
-  pal <- colorFactor(palette = c("#d67b74", "#21908CFF"), domain = levels(dat$actual_presence))
+  pal <- colorFactor(palette = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3"), domain = levels(dat$status))
+  admin <- admin %>% left_join(tibble(fill = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3"), status = levels(dat$status)))
 
   leaflet() %>%
     addProviderTiles("CartoDB.DarkMatter") %>%
-    addPolygons(data = admin, weight = 1, smoothFactor = 0.5,
-                opacity = 1, color = ~pal(predicted_presence),
-                fillOpacity = 0.5, fillColor = ~pal(actual_presence)) %>%
-    addLegend(pal = pal, values = levels(dat$actual_presence), position = "bottomright",
-              labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE)))
-
-  # add unreported predicted absent/present colors
+    addPolygons(data = admin, weight = 0.5, smoothFactor = 0.5,
+                opacity = 0.5,  color = ~fill,
+                fillOpacity = 0.75, fillColor = ~fill,
+                label = ~tooltip_lab) %>%
+    addLegend(pal = pal, values = levels(dat$status), position = "bottomright",
+              labFormat = labelFormat(transform = function(x) levels(dat$status)))
 
   # ggplot(data = admin) +
   #   geom_sf(aes(fill = actual_presence)) +
