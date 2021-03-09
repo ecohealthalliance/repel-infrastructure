@@ -7,11 +7,16 @@ RUN apt-get update -qq && apt-get install -y \
   libcurl4-gnutls-dev \
   libsodium-dev \
   unixodbc-dev \
-  libpq-dev
+  libpq-dev \
+  postgresql-client
+
 
 ## RUN R -e 'install.packages(c("devtools"))'
 ## RUN R -e 'devtools::install_github("trestletech/plumber")'
-RUN install2.r plumber
+
+#RUN install2.r plumber
+# RUN R -e 'install.packages(c("dplyr","RPostgreSQL","memoise","stringr"))'
+RUN install2.r -s plumber stringr RPostgres DBI arkdb here env dplyr memoise
 
 EXPOSE 8000
 

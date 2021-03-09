@@ -84,7 +84,12 @@ services:
     image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/plumber
     build:
       context: './plumber'
+    volumes:
+      - ./plumber/plumber_cache:/plumber_cache
     restart: on-failure
+    depends_on:
+      - postgres
+      - shinyserver
     env_file: .env
     networks:
       - repel-servers
