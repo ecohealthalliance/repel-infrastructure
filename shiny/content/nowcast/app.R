@@ -9,26 +9,52 @@
 
 library(shiny)
 library(tidyverse)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(leaflet)
 
-conn <- repeldata::repel_remote_conn(
-    host = "postgres",
-    port = 5432,
-    user = "repel_reader",
-    password = Sys.getenv("REPEL_READER_PASS")
+admin <- ne_countries(type='countries', scale = 'medium', returnclass = "sf") %>%
+    filter(name != "Antarctica") %>%
+    select(country_iso3c = iso_a3, geometry)
+
+nowcast_predicted_sum <- read_csv(here::here("shiny", "content", "nowcast", "data", "nowcast_predicted_sum.csv"))
+
+oie_diseases <- repelpredict:::get_oie_high_importance_diseases()
+
+# bring in render map
+
+ui <- fluidPage(
+    navbarPage("REPEL Nowcast", id="main",
+                 tabPanel("Map",
+                          # dropdown
+                          selectInput(inputId = "select_disease", label = "Select OIE disease", choices = oie_diseases),
+                          sliderInput(inputId = "select_year", label = "Select year", min = min(nowcast_predicted_sum$report_year), max = max(nowcast_predicted_sum$report_year), value = 2019, sep = ""),
+                          radioButtons(inputId = "select_semester", label = "Select semester", choices = c("Jan - June", "July - Dec"), inline = TRUE),
+                          leafletOutput(outputId = "diseasemap", height=1000)),
+                 tabPanel("Time series", plotOutput("data")))
 )
 
+server <- function(input, output) {
 
-#conn <- repeldata::repel_remote_conn()
+    output$diseasemap <- renderLeaflet({
+        mapdat <- nowcast_predicted_sum %>%
+            filter(disease == input$select_disease, report_year == input$select_year, report_semester == input$select_semester) %>%
+            left_join(admin)
+        pal <- colorFactor(palette = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3"), domain = levels(mapdat$status_coalesced))
 
-nowcast_predict <- tbl(conn, "nowcast_boost_augment_predict")  %>%
-    collect()
+        leaflet() %>%
+            addProviderTiles("CartoDB.DarkMatter") %>%
+            addPolygons(data = mapdat, weight = 0.5, smoothFactor = 0.5,
+                        opacity = 0.5,  color = ~fill,
+                        fillOpacity = 0.75, fillColor = ~fill,
+                        label = ~tooltip_lab) %>%
+            addLegend(pal = pal, values = levels(mapdat$status_coalesced), position = "bottomright",
+                      labFormat = labelFormat(transform = function(x) levels(mapdat$status_coalesced)))
+    })
 
-# Define UI for application that draws a histogram
-ui <- fluidPage(
 
-    # Application title
-    titlePanel("REPEL Nowcast"),
 
+}
     # User options: Select Disease
     # Map: showing currently reported, not currently reported/predicted
     #  - 4 color, or maybe color + hatched in future iteration
@@ -40,35 +66,4 @@ ui <- fluidPage(
     #  - Show presence, cases reported and predicted (emphasize gaps!)
     #  - Hover to show values
     #  -
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
-    )
-)
-
-# Define server logic required to draw a histogram
-server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- nowcast_predict$predicted_cases
-        #x <- rnorm(100)
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
-    })
-}
-
-# Run the application
 shinyApp(ui = ui, server = server)

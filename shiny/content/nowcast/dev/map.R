@@ -6,8 +6,6 @@ library(sf)
 library(leaflet)
 library(leaflet.extras)
 library(RColorBrewer)
-library(stars)
-library(ggpattern)
 
 any2 <- function(x) ifelse(all(is.na(x)), NA, any(x, na.rm = TRUE))
 
