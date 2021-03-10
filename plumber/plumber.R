@@ -1,4 +1,4 @@
-# library(dplyr)
+library(dplyr)
 library(plumber)
 library(DBI)
 library(RPostgreSQL)

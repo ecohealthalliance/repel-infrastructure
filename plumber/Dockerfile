@@ -1,4 +1,4 @@
-FROM rocker/r-base
+FROM rocker/tidyverse:4.0.4
 
 RUN apt-get update -qq && apt-get install -y \
   git-core \
@@ -10,8 +10,9 @@ RUN apt-get update -qq && apt-get install -y \
   postgresql-client
 
 
-RUN install2.r -s plumber stringr RPostgres DBI arkdb here env dplyr memoise
+RUN install2.r -s plumber stringr RPostgres DBI arkdb here env memoise
 RUN R -e 'install.packages("readr")'
+RUN R -e 'install.packages("dplyr")'
 
 EXPOSE 8000
 
