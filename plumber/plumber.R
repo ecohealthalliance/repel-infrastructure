@@ -17,39 +17,17 @@ conn <- dbConnect(
   dbname = Sys.getenv("POSTGRES_DB")
 )
 
-serializer_switch <- function() {
-  function(val, req, res, errorHandler) {
-    tryCatch({
-      format <- attr(val, "serialize_format")
-      if (is.null(format) || format  == "json") {
-        type <- "application/json"
-        sfn <- jsonlite::toJSON
-      } else if (format == "csv") {
-        type <- "text/csv; charset=UTF-8"
-        sfn <- readr::format_csv
-      } else if (format == "rds") {
-        type <- "application/rds"
-        sfn <- function(x) base::serialize(x, NULL)
-      }
-      val <- sfn(val)
-      res$setHeader("Content-Type", type)
-      res$body <- val
-      res$toResponse()
-    }, error = function(err) {
-      errorHandler(req, res, err)
-    })
-  }
-}
-
-register_serializer("switch", serializer_switch)
+serializers <- list(
+  "json" = serializer_json(),
+  "csv" = serializer_csv(),
+  "rds" = serializer_rds()
+)
 
 cache_dir <- cachem::cache_disk("/plumber_cache")
 
 get_db_results <- function(conn, query, format) {
   nowcast_query <- dbSendQuery(conn, query)
   result <-dbFetch(nowcast_query, n = -1)
-  attr(result, "serialize_format") <- format
-  result
 }
 get_db_results_memo <- memoize(get_db_results, cache = cache_dir)
 
@@ -85,9 +63,10 @@ clear_cache <- function() {
 ###     format: output format.  Allowed options are csv, json or rds.
 ###     cache: use cached results if available.  Allowed options are TRUE or FALSE (default = TRUE)
 ###     limit: limit the number of rows output.  Allowed options are an integer or NULL for all (default = NULL)
-#* @serializer switch
 #* @get /nowcast_predictions
-get_nowcast_predictions <- function(columns = NULL, years = NULL, countries = NULL, format=c("csv","json","rds"), cache = TRUE, limit = NULL) {
+get_nowcast_predictions <- function(columns = NULL, years = NULL, countries = NULL, format=c("csv","json","rds"), cache = TRUE, limit = NULL, res) {
+
+  res$serializer <- serializers[[format]]
 
   if (is.null(columns)) {
     columns = "*"
