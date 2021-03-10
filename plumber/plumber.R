@@ -1,3 +1,4 @@
+# library(dplyr)
 library(plumber)
 library(DBI)
 library(RPostgreSQL)
@@ -36,6 +37,20 @@ get_db_results <- function(conn, query) {
 }
 get_db_results_memo <- memoize(get_db_results, cache = cache_dir)
 
+get_db_results2 <- function(conn, columns, years, countries) {
+  nowcast_predictions_table <- tbl(conn, "nowcast_boost_augment_predict")
+  if (!is.null(columns)) {
+    nowcast_predictions_table <- select(nowcast_predictions_table, columns)
+  }
+  if (!is.null(years)) {
+    nowcast_predictions_table <- filter(nowcast_predictions_table, report_year %in% years)
+  }
+  if (!is.null(countries)) {
+    nowcast_predictions_table <- filter(nowcast_predictions_table, country_iso3c %in% countries)
+  }
+  dat <- collect(nowcast_predictions_table)
+}
+get_db_results2_memo <- memoize(get_db_results2, cache = cache_dir)
 
 ## API endpoints #######################################
 
@@ -93,6 +108,30 @@ get_nowcast_predictions <- function(columns = NULL, years = NULL, countries = NU
     result <- get_db_results_memo(conn, query)
   } else {
     result <- get_db_results(conn, query)
+  }
+
+  if (cache) {
+    serialize_repel_data_memo(result, format)
+  } else {
+    serialize_repel_data(result, format)
+  }
+}
+
+### /nowcast_predictions2  - returns rows from db query of nowcast_boost_augment_predict table
+### parameters:
+###     columns: comma separated list of columns desired or NULL for all (default = NULL)
+###     years: comma separated list of years desired or NULL for all (default = NULL)
+###     countries: comma separated list of countries desired or NULL for all (default = NULL)
+###     format: output format.  Allowed options are csv, json or rds.
+###     cache: use cached results if available.  Allowed options are TRUE or FALSE (default = TRUE)
+#' @serializer contentType list(type="application/octet-stream")
+#* @get /nowcast_predictions2
+get_nowcast_predictions2 <- function(columns = NULL, years = NULL, countries = NULL, format=c("csv","json","rds"), cache = TRUE) {
+
+  if (cache) {
+    result <- get_db_results2_memo(conn, columns, years, countries)
+  } else {
+    result <- get_db2_results(conn, columns, years, countries)
   }
 
   if (cache) {
