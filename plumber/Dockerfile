@@ -9,15 +9,11 @@ RUN apt-get update -qq && apt-get install -y \
   libpq-dev \
   postgresql-client
 
-
-RUN install2.r -s plumber stringr RPostgres DBI arkdb here env memoise
-RUN R -e 'install.packages("readr")'
-RUN R -e 'install.packages("dplyr")'
+RUN install2.r -s plumber RPostgreSQL DBI arkdb here env memoise
 
 EXPOSE 8000
 
 COPY plumber.R /
 COPY .env /
 
-ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(commandArgs()[4]); pr$run(host='0.0.0.0', port=8000)"]
-CMD ["/plumber.R"]
+ENTRYPOINT ["R", "-e", "pr <- plumber::plumb('plumber.R'); pr$run(host='0.0.0.0', port=8000)"]
