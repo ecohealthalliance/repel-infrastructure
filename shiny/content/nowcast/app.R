@@ -11,10 +11,21 @@ library(shiny)
 library(tidyverse)
 library(rnaturalearth)
 library(leaflet)
+library(ggiraph)
+library(patchwork)
+library(glue)
 
 admin <- ne_countries(type='countries', scale = 'medium', returnclass = "sf") %>%
     filter(name != "Antarctica") %>%
     select(country_iso3c = iso_a3, geometry)
+
+
+conn <- repeldata::repel_remote_conn(
+    host = "localhost",
+    port = 22053,
+    user = "repel_reader",
+    password = "yellow555zephyr222camera"
+)
 
 nowcast_predicted_sum <- read_csv(here::here("shiny", "content", "nowcast", "data", "nowcast_predicted_sum.csv")) %>%
     mutate(status_coalesced = factor(status_coalesced, levels = c("reported present", "unreported, predicted present",  "reported absent", "unreported, predicted absent")))
