@@ -86,10 +86,9 @@ services:
       context: './plumber'
     volumes:
       - ./plumber/plumber_cache:/plumber_cache
-    restart: on-failure
+    restart: always
     depends_on:
       - postgres
-      - shinyserver
     env_file: .env
     networks:
       - repel-servers

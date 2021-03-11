@@ -25,27 +25,25 @@ serializers <- list(
 
 cache_dir <- cachem::cache_disk("/plumber_cache")
 
-get_db_results <- function(conn, query, format) {
-  nowcast_query <- dbSendQuery(conn, query)
-  result <-dbFetch(nowcast_query, n = -1)
+
+get_db_results <- function(conn, columns, years, countries, limit) {
+
+  columns_vec = unlist(str_split(columns, ","))
+  years_vec = unlist(str_split(years, ","))
+  country_vec = unlist(str_split(countries, ","))
+
+  nowcast_predictions <- tbl(conn, "nowcast_boost_augment_predict") %>%
+                         select(columns_vec) %>%
+                         filter(report_year %in% years_vec) %>%
+                         filter(country_iso3c %in% country_vec)
+
+  if (!is.null(limit)) {
+    nowcast_predictions <- nowcast_predictions %>% head(strtoi(limit))
+  }
+
+  dat <- collect(nowcast_predictions)
 }
 get_db_results_memo <- memoize(get_db_results, cache = cache_dir)
-
-get_db_results2 <- function(conn, columns, years, countries) {
-  nowcast_predictions_table <- tbl(conn, "nowcast_boost_augment_predict")
-  if (!is.null(columns)) {
-    # nowcast_predictions_table <- select(nowcast_predictions_table, columns)
-    nowcast_predictions_table %>% select(unlist(str_split(columns, ","), use.names=FALSE))
-  }
-#  if (!is.null(years)) {
-#    nowcast_predictions_table <- filter(nowcast_predictions_table, report_year %in% years)
-#  }
-#  if (!is.null(countries)) {
-#    nowcast_predictions_table <- filter(nowcast_predictions_table, country_iso3c %in% countries)
-#  }
-#  dat <- collect(nowcast_predictions_table)
-}
-get_db_results2_memo <- memoize(get_db_results2, cache = cache_dir)
 
 ## API endpoints #######################################
 
@@ -55,6 +53,7 @@ clear_cache <- function() {
   cache_dir$reset()
 }
 
+
 ### /nowcast_predictions  - returns rows from db query of nowcast_boost_augment_predict table
 ### parameters:
 ###     columns: comma separated list of columns desired or NULL for all (default = NULL)
@@ -62,71 +61,15 @@ clear_cache <- function() {
 ###     countries: comma separated list of countries desired or NULL for all (default = NULL)
 ###     format: output format.  Allowed options are csv, json or rds.
 ###     cache: use cached results if available.  Allowed options are TRUE or FALSE (default = TRUE)
-###     limit: limit the number of rows output.  Allowed options are an integer or NULL for all (default = NULL)
+###     limit: limit the number of rows output or NULL for all (default = NULL)
 #* @get /nowcast_predictions
 get_nowcast_predictions <- function(columns = NULL, years = NULL, countries = NULL, format=c("csv","json","rds"), cache = TRUE, limit = NULL, res) {
 
   res$serializer <- serializers[[format]]
 
-  if (is.null(columns)) {
-    columns = "*"
-  }
-
-  if (is.null(years)) {
-    years = ""
-  }
-
-  if (is.null(countries)) {
-    countries = ""
-  } else {
-    countries_list = strsplit(countries, split=",")[[1]]
-    countries = paste("'",countries_list,"'", sep='', collapse=",")
-  }
-
-  if (years == "" & countries == ""){
-    where_clause = ""
-  } else if (years == "") {
-    where_clause = paste("WHERE country_iso3c IN (", countries, ")")
-  } else if (countries == "") {
-    where_clause = paste("WHERE report_year IN (", years, ")")
-  } else {
-    where_clause = paste("WHERE country_iso3c IN (", countries, ") AND report_year in (", years, ")")
-  }
-
-  limit_str = ""
-  if (!is.null(limit)) {
-    limit_str = paste("LIMIT ", limit)
-  }
-
-  query = paste("SELECT", columns, "FROM nowcast_boost_augment_predict", where_clause, limit_str, sep=" ")
-
   if (cache) {
-    result <- get_db_results_memo(conn, query, format)
+    result <- get_db_results_memo(conn, columns, years, countries, limit)
   } else {
-    result <- get_db_results(conn, query, format)
-  }
-}
-
-### /nowcast_predictions2  - returns rows from db query of nowcast_boost_augment_predict table
-### parameters:
-###     columns: comma separated list of columns desired or NULL for all (default = NULL)
-###     years: comma separated list of years desired or NULL for all (default = NULL)
-###     countries: comma separated list of countries desired or NULL for all (default = NULL)
-###     format: output format.  Allowed options are csv, json or rds.
-###     cache: use cached results if available.  Allowed options are TRUE or FALSE (default = TRUE)
-#' @serializer contentType list(type="application/octet-stream")
-#* @get /nowcast_predictions2
-get_nowcast_predictions2 <- function(columns = NULL, years = NULL, countries = NULL, format=c("csv","json","rds"), cache = TRUE) {
-
-  if (cache) {
-    result <- get_db_results2_memo(conn, columns, years, countries)
-  } else {
-    result <- get_db2_results(conn, columns, years, countries)
-  }
-
-  if (cache) {
-    serialize_repel_data_memo(result, format)
-  } else {
-    serialize_repel_data(result, format)
+    result <- get_db_results(conn, columns, years, countries, limit)
   }
 }
