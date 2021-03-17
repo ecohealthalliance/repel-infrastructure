@@ -22,5 +22,8 @@ services:
   nginx:
     entrypoint: "bash -c"
     command: "exit 0"
+  plumber:
+    ports:
+      - 22091:8000
 volumes:
   postgres_db_vol:
