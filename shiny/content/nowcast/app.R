@@ -10,7 +10,6 @@
 library(shiny)
 library(tidyverse)
 library(rnaturalearth)
-library(rnaturalearthdata)
 library(leaflet)
 
 admin <- ne_countries(type='countries', scale = 'medium', returnclass = "sf") %>%

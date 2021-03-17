@@ -1,6 +1,5 @@
 library(tidyverse)
 library(rnaturalearth)
-library(rnaturalearthdata)
 library(sf)
 library(RColorBrewer)
 
