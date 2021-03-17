@@ -24,28 +24,47 @@ pal <- colorFactor(palette = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3"), doma
 
 oie_diseases <- repelpredict:::get_oie_high_importance_diseases()
 
-# bring in render map
+ui <- navbarPage("REPEL Nowcast", id="nav",
 
-ui <- fluidPage(
-    navbarPage("REPEL Nowcast", id="main",
-               tabPanel("Map",
-                        # dropdown
-                        selectInput(inputId = "select_disease", label = "Select OIE disease", choices = oie_diseases),
-                        sliderInput(inputId = "select_year", label = "Select year", min = min(nowcast_predicted_sum$report_year), max = max(nowcast_predicted_sum$report_year), value = 2019, sep = ""),
-                        radioButtons(inputId = "select_semester", label = "Select semester", choices = c("Jan - June", "July - Dec"), inline = TRUE),
-                        leafletOutput(outputId = "diseasemap", height=1000)),
-               tabPanel("Time series", plotOutput("data")))
+                 tabPanel("Interactive map",
+                          div(class="outer",
+
+                              tags$head(
+                                  # Include custom CSS from https://github.com/rstudio/shiny-examples/tree/master/063-superzip-example
+                                  includeCSS("styles.css"),
+                                  includeScript("gomap.js")
+                              ),
+
+                              # If not using custom CSS, set height of leafletOutput to a number instead of percent
+                              leafletOutput("map", width="100%", height="100%"),
+
+                              # Shiny versions prior to 0.11 should use class = "modal" instead.
+                              absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+                                            draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
+                                            width = 330, height = "auto",
+
+                                            h2("Nowcast explorer"),
+
+                                            selectInput(inputId = "select_disease", label = "Select OIE disease", choices = oie_diseases),
+                                            sliderInput(inputId = "select_year", label = "Select year", min = min(nowcast_predicted_sum$report_year), max = max(nowcast_predicted_sum$report_year), value = 2019, sep = ""),
+                                            radioButtons(inputId = "select_semester", label = "Select semester", choices = c("Jan - June", "July - Dec"), inline = TRUE)
+                              )
+                          )
+                 ),
+
+                 tabPanel("Time series", plotOutput("data"))
+
 )
+
 
 server <- function(input, output) {
 
-    output$diseasemap <- renderLeaflet({
-
+    output$map <- renderLeaflet({
         select_semester <- switch(input$select_semester, "Jan - June" = 1, "July - Dec" = 2)
 
         mapdat <- nowcast_predicted_sum %>%
             filter(disease == input$select_disease, report_year == input$select_year, report_semester == select_semester) #%>%
-           # filter(disease == oie_diseases[[1]], report_year == 2019, report_semester == 1)
+        # filter(disease == oie_diseases[[1]], report_year == 2019, report_semester == 1)
 
         admin_mapdat <- admin %>%
             right_join(mapdat) %>%
@@ -53,7 +72,7 @@ server <- function(input, output) {
 
         leaflet() %>%
             addProviderTiles("CartoDB.DarkMatter") %>%
-            # setView(lng = 144, lat = -37, zoom = 1) %>%
+            setView(lng = 30, lat = 30, zoom = 2) %>%
             addPolygons(data = admin_mapdat, weight = 0.5, smoothFactor = 0.5,
                         opacity = 0.5,  color = ~fill_color,
                         fillOpacity = 0.75, fillColor = ~fill_color,
