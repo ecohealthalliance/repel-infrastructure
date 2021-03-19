@@ -32,10 +32,16 @@ get_db_results <- function(conn, columns, years, countries, limit) {
   years_vec = unlist(str_split(years, ","))
   country_vec = unlist(str_split(countries, ","))
 
-  nowcast_predictions <- tbl(conn, "nowcast_boost_augment_predict") %>%
-                         select(columns_vec) %>%
-                         filter(report_year %in% years_vec) %>%
-                         filter(country_iso3c %in% country_vec)
+  nowcast_predictions <- tbl(conn, "nowcast_boost_augment_predict")
+  if (length(columns_vec))
+    nowcast_predictions <- nowcast_predictions %>%
+    select(columns_vec)
+  if (length(country_vec))
+    nowcast_predictions <- nowcast_predictions %>%
+    filter(country_iso3c %in% country_vec)
+  if (length(years_vec))
+    nowcast_predictions <- nowcast_predictions %>%
+    filter(report_year %in% years_vec)
 
   if (!is.null(limit)) {
     nowcast_predictions <- nowcast_predictions %>% head(strtoi(limit))
@@ -63,7 +69,7 @@ clear_cache <- function() {
 ###     cache: use cached results if available.  Allowed options are TRUE or FALSE (default = TRUE)
 ###     limit: limit the number of rows output or NULL for all (default = NULL)
 #* @get /nowcast_predictions
-get_nowcast_predictions <- function(columns = NULL, years = NULL, countries = NULL, format=c("csv","json","rds"), cache = TRUE, limit = NULL, res) {
+get_nowcast_predictions <- function(columns = NULL, years = NULL, countries = NULL, format="csv", cache = TRUE, limit = NULL, res) {
 
   res$serializer <- serializers[[format]]
 
