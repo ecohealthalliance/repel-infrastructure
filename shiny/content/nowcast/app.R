@@ -14,18 +14,21 @@ library(leaflet)
 library(ggiraph)
 library(patchwork)
 library(glue)
+library(stringi)
+library(promises)
+library(future)
+source('functions.R')
 
 admin <- ne_countries(type='countries', scale = 'medium', returnclass = "sf") %>%
     filter(name != "Antarctica") %>%
     select(country_iso3c = iso_a3, geometry)
 
-
-conn <- repeldata::repel_remote_conn(
-    host = "localhost",
-    port = 22053,
-    user = "repel_reader",
-    password = "yellow555zephyr222camera"
-)
+# conn <- repeldata::repel_remote_conn(
+#     host = "localhost",
+#     port = 22053,
+#     user = "repel_reader",
+#     password = "yellow555zephyr222camera"
+# )
 
 nowcast_predicted_sum <- read_csv(here::here("shiny", "content", "nowcast", "data", "nowcast_predicted_sum.csv")) %>%
     mutate(status_coalesced = factor(status_coalesced, levels = c("reported present", "unreported, predicted present",  "reported absent", "unreported, predicted absent")))
@@ -33,6 +36,7 @@ nowcast_predicted_sum <- read_csv(here::here("shiny", "content", "nowcast", "dat
 pal <- colorFactor(palette = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3"), domain = levels(nowcast_predicted_sum$status_coalesced))
 
 oie_diseases <- repelpredict:::get_oie_high_importance_diseases()
+names(oie_diseases) <- stri_trans_totitle(stri_replace_all_fixed(oie_diseases, "_", " "))
 
 ui <- navbarPage("REPEL Nowcast", id="nav",
 
@@ -62,7 +66,7 @@ ui <- navbarPage("REPEL Nowcast", id="nav",
                           )
                  ),
 
-                 tabPanel("Time series", plotOutput("data"))
+                 tabPanel("Time series", girafeOutput("timeseries_plot"))
 
 )
 
@@ -86,11 +90,22 @@ server <- function(input, output) {
             addPolygons(data = admin_mapdat, weight = 0.5, smoothFactor = 0.5,
                         opacity = 0.5,  color = ~fill_color,
                         fillOpacity = 0.75, fillColor = ~fill_color,
-                        label = ~tooltip_lab) %>%
+                        label = ~tooltip_lab, layerId = ~country_iso3c) %>%
             addLegend(pal = pal, values = levels(nowcast_predicted_sum$status_coalesced), position = "bottomright",
                       labFormat = labelFormat(transform = function(x) levels(nowcast_predicted_sum$status_coalesced)))
     })
 
+
+    observeEvent(input$map_shape_click, {
+        cat("Country: ", input$map_shape_click$id, "\n")
+    })
+
+    timeseries_country <- eventReactive(input$map_shape_click, {
+        filter(nowcast_predicted_sum, disease == input$select_disease, country_iso3c == input$map_shape_click$id)
+    })
+    output$timeseries_plot <- renderGirafe({
+        nowcast_timeline_plot(timeseries_country())
+    })
 
 
 }
