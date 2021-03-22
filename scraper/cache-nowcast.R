@@ -79,16 +79,40 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_
     mutate(db_disease_status_etag = aws_disease_status_etag,  db_cases_etag = aws_cases_etag)
 
   dbWriteTable(conn, name = "nowcast_boost_augment_predict", forecasted_repeldat, overwrite = TRUE)
+
+  # simple output (used in shiny app) -----------------------------------------------------------------
+
+  nowcast_predicted <- tbl(conn, "nowcast_boost_augment_predict")  %>%
+    select(report_year, report_semester, disease, country_iso3c, taxa,
+           unreported, actual_cases = cases, actual_status = disease_status,  predicted_cases) %>%
+    filter(disease %in% oie_diseases) %>%
+    collect() %>%
+    mutate(predicted_status = predicted_cases > 0,
+           actual_status = as.logical(actual_status),
+           unreported = as.logical(unreported)) %>%
+    group_by(country_iso3c, disease, report_year, report_semester) %>%
+    summarize(predicted_status = any(predicted_status), actual_status = any2(actual_status),
+              predicted_cases = sum(predicted_cases), actual_cases = sum2(actual_cases), unreported = all(unreported)) %>%
+    ungroup()  %>%
+    mutate(status_coalesced = case_when(
+      actual_status == TRUE ~ "reported present",
+      actual_status == FALSE ~ "reported absent",
+      unreported == TRUE & predicted_status == TRUE ~ "unreported, predicted present",
+      unreported == TRUE & predicted_status == FALSE ~ "unreported, predicted absent",
+    )) %>%
+    mutate(status_coalesced = factor(status_coalesced, levels = c("reported present", "unreported, predicted present",  "reported absent", "unreported, predicted absent"))) %>%
+    mutate(cases_coalesced = coalesce(actual_cases, predicted_cases))
+
+  dbWriteTable(conn, name = "nowcast_boost_predict_clean", nowcast_predicted, overwrite = TRUE)
+
 }
 
+# # patch until this is added in augment
+# conn <- wahis_db_connect()
+# forecasted_repeldat <- dbReadTable(conn, name = "nowcast_boost_augment_predict")
+# forecasted_repeldat <- forecasted_repeldat %>%
+#   mutate(unreported = ifelse(is.na(cases) & is.na(disease_status), 1, 0))
+#
+# dbWriteTable(conn, name = "nowcast_boost_augment_predict", forecasted_repeldat, overwrite = TRUE)
+
 dbDisconnect(conn)
-
-# patch until this is added in augment
-conn <- wahis_db_connect()
-forecasted_repeldat <- dbReadTable(conn, name = "nowcast_boost_augment_predict")
-forecasted_repeldat <- forecasted_repeldat %>%
-  mutate(unreported = ifelse(is.na(cases) & is.na(disease_status), 1, 0))
-
-dbWriteTable(conn, name = "nowcast_boost_augment_predict", forecasted_repeldat, overwrite = TRUE)
-dbDisconnect(conn)
-
