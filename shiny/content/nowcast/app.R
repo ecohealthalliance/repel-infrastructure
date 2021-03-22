@@ -39,7 +39,7 @@ pal <- colorFactor(palette = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3"), doma
 oie_diseases <- repelpredict:::get_oie_high_importance_diseases()
 names(oie_diseases) <- stri_trans_totitle(stri_replace_all_fixed(oie_diseases, "_", " "))
 
-cases_plots <- read_rds(here::here("shiny", "content", "nowcast", "data", "cases_plots.rds"))
+plots <- read_rds(here::here("shiny", "content", "nowcast", "data", "plots.rds"))
 
 ui <- navbarPage("REPEL Nowcast", id="nav",
 
@@ -76,12 +76,16 @@ ui <- navbarPage("REPEL Nowcast", id="nav",
 
 server <- function(input, output) {
 
+    # try with interactive graphs now
+    # maybe observe events and renedering on fly is faster?
+
+
     output$map <- renderLeaflet({
         select_semester <- switch(input$select_semester, "Jan - June" = 1, "July - Dec" = 2)
 
         mapdat <- nowcast_predicted_sum %>%
-            filter(disease == input$select_disease, report_year == input$select_year, report_semester == select_semester) #%>%
-       # filter(disease == oie_diseases[[1]], report_year == 2019, report_semester == 1)
+        filter(disease == input$select_disease, report_year == input$select_year, report_semester == select_semester) #%>%
+    #   filter(disease == oie_diseases[[1]], report_year == 2019, report_semester == 1)
 
         admin_mapdat <- admin %>%
             right_join(mapdat) %>%
@@ -91,7 +95,7 @@ server <- function(input, output) {
             select(disease, country_iso3c) %>%
             mutate(lab = paste(disease, country_iso3c, sep = "_")) %>%
             pull(lab)
-        p_all <- cases_plots[plot_labs]
+        p_all <- plots[plot_labs]
 
         leaflet() %>%
             addProviderTiles("CartoDB.DarkMatter") %>%
@@ -99,11 +103,12 @@ server <- function(input, output) {
             addPolygons(data = admin_mapdat, weight = 0.5, smoothFactor = 0.5,
                         opacity = 0.5,  color = ~fill_color,
                         fillOpacity = 0.75, fillColor = ~fill_color,
-                      # popup = ~tooltip_lab,
+                        label = ~tooltip_lab,
                         layerId = ~country_iso3c,
-                       group = "polygons"
+                      popup = popupGraph(p_all, type = "svg")# prerender popup? - as svg files, save to static path, popup html per ny leaflet
+               #        group = "polygons"
                         ) %>%
-            addPopupGraphs(p_all, group = 'polygons') %>%
+           # addPopupGraphs(p_all, group = 'polygons') %>%
             addLegend(pal = pal, values = levels(nowcast_predicted_sum$status_coalesced), position = "bottomright",
                       labFormat = labelFormat(transform = function(x) levels(nowcast_predicted_sum$status_coalesced)))
     })
@@ -120,12 +125,6 @@ server <- function(input, output) {
         nowcast_timeline_plot(timeseries_country())
     })
 
-    # cases_plot <- reactive({
-    #     disease <- input$select_disease
-    #     country_iso3c <- input$map_shape_click$id
-    #     p <- cases_plots[[paste(disease, country_iso3c, sep = "_")]]
-    #     list(p=p)
-    # })
 
 
 
