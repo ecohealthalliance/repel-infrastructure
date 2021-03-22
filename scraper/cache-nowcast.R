@@ -5,6 +5,8 @@ source(here::here(paste0(dir, "packages.R")))
 source(here::here(paste0(dir, "functions.R")))
 library(repelpredict)
 
+oie_diseases <- repelpredict:::get_oie_high_importance_diseases()
+
 # Connect to database ----------------------------
 message("Connect to database")
 conn <- wahis_db_connect()
@@ -100,19 +102,11 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_
       unreported == TRUE & predicted_status == TRUE ~ "unreported, predicted present",
       unreported == TRUE & predicted_status == FALSE ~ "unreported, predicted absent",
     )) %>%
-    mutate(status_coalesced = factor(status_coalesced, levels = c("reported present", "unreported, predicted present",  "reported absent", "unreported, predicted absent"))) %>%
-    mutate(cases_coalesced = coalesce(actual_cases, predicted_cases))
+    mutate(status_coalesced = factor(status_coalesced, levels = c("reported present", "unreported, predicted present",  "reported absent", "unreported, predicted absent"))) #%>%
+   # mutate(cases_coalesced = coalesce(actual_cases, predicted_cases))
 
-  dbWriteTable(conn, name = "nowcast_boost_predict_clean", nowcast_predicted, overwrite = TRUE)
+  dbWriteTable(conn, name = "nowcast_boost_predict_oie_diseases", nowcast_predicted, overwrite = TRUE)
 
 }
-
-# # patch until this is added in augment
-# conn <- wahis_db_connect()
-# forecasted_repeldat <- dbReadTable(conn, name = "nowcast_boost_augment_predict")
-# forecasted_repeldat <- forecasted_repeldat %>%
-#   mutate(unreported = ifelse(is.na(cases) & is.na(disease_status), 1, 0))
-#
-# dbWriteTable(conn, name = "nowcast_boost_augment_predict", forecasted_repeldat, overwrite = TRUE)
 
 dbDisconnect(conn)
