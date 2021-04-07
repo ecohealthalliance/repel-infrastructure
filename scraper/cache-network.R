@@ -51,8 +51,26 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag !=
     mutate(predicted_outbreak_probability = forecasted_repeldat[[2]]) %>%
     mutate(db_network_etag = aws_network_etag)
 
+  # write_rds(forecasted_repeldat2, "tmp_forecasted_data.rds")
+  # forecasted_repeldat2 <- read_rds("tmp_forecasted_data.rds")
+
   dbWriteTable(conn, name = "network_lme_augment_predict", forecasted_repeldat2, overwrite = TRUE)
+
+# disaggregate country imports
+  augmented_data_disagg <- repel_augment(model_object, conn, newdata = forecasted_repeldat2, sum_country_imports = FALSE)
+
+  augmented_data_disagg2 <- augmented_data_disagg %>%
+    select(country_iso3c, disease, month, country_origin, outbreak_start, shared_borders_from_outbreaks, ots_trade_dollars_from_outbreaks, fao_livestock_heads_from_outbreaks)
+
+  dbWriteTable(conn, name = "network_lme_augment_disaggregated", augmented_data_disagg2, overwrite = TRUE)
 
 }
 
+# set grant permissions
+dbExecute(conn, "grant select on all tables in schema public to repel_reader")
+dbExecute(conn, "grant select on all tables in schema public to repeluser")
+
+
 dbDisconnect(conn)
+
+
