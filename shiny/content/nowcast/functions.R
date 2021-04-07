@@ -34,3 +34,34 @@ nowcast_timeline_plot <- function(nowcast_predict_df) {
          width_svg = 10, height_svg = 4)
 
 }
+
+
+nowcast_plot_html_string <- function (graphs, width = 300, height = 300,
+                                      popTemplate = "popup-graph-mod.brew", ...)
+{
+  lapply(1:length(graphs), function(i) {
+    inch_wdth = width/72
+    inch_hght = height/72
+    lns <- svglite::svgstring(width = inch_wdth, height = inch_hght,
+                              standalone = FALSE)
+    print(graphs[[i]])
+    dev.off()
+    svg_str <- lns()
+    svg_id <- paste0("x", uuid::UUIDgenerate())
+    svg_str <- gsub(x = svg_str, pattern = "<svg ", replacement = sprintf("<svg id='%s'",
+                                                                          svg_id))
+    svg_css_rule <- sprintf("#%1$s line, #%1$s polyline, #%1$s polygon, #%1$s path, #%1$s rect, #%1$s circle {",
+                            svg_id)
+    svg_str <- gsub(x = svg_str, pattern = "line, polyline, polygon, path, rect, circle \\{",
+                    replacement = svg_css_rule)
+    pop = sprintf("<div style='width: %dpx; height: %dpx;'>%s</div>",
+                  width, height, svg_str)
+    # popTemplate = system.file("templates/popup-graph.brew",
+    #                           package = "leafpop")
+    myCon = textConnection("outputObj", open = "w")
+    brew::brew(popTemplate, output = myCon)
+    outputObj = outputObj
+    close(myCon)
+    return(paste(outputObj, collapse = " "))
+  })
+}
