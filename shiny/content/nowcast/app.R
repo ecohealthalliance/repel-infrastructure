@@ -32,14 +32,27 @@ admin <- ne_countries(type='countries', scale = 'medium', returnclass = "sf") %>
 # )
 
 nowcast_predicted_sum <- read_csv(here::here("shiny", "content", "nowcast", "data", "nowcast_predicted_sum.csv")) %>%
-    mutate(status_coalesced = factor(status_coalesced, levels = c("reported present", "unreported, predicted present",  "reported absent", "unreported, predicted absent")))
+    group_by(country_iso3c, disease) %>%
+    mutate(status_coalesced = if_else(rep(all(predicted_cases == 0) & all(cases_coalesced == 0), n()), rep("never reported or predicted", n()), status_coalesced)) %>%
+    ungroup() %>%
+    mutate(status_coalesced = factor(status_coalesced, levels = c("reported present", "unreported, predicted present",  "reported absent", "unreported, predicted absent", "never reported or predicted"))) %>%
+    mutate(popup_html = if_else(status_coalesced != "never reported or predicted",
+    glue('
+        <div class="scrollableContainer">
+            <table class="popup scrollable" id="popup">
+            <iframe src="girafes/{disease}_{country_iso3c}.html" width="1000px" height="600px" frameborder="0"></iframe>
+            </table>
+            </div>
+            '),
+    ""))
 
-pal <- colorFactor(palette = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3"), domain = levels(nowcast_predicted_sum$status_coalesced))
+
+pal <- colorFactor(palette = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3", "#B8C2CF"), domain = levels(nowcast_predicted_sum$status_coalesced))
 
 oie_diseases <- repelpredict:::get_oie_high_importance_diseases()
 names(oie_diseases) <- stri_trans_totitle(stri_replace_all_fixed(oie_diseases, "_", " "))
 
-plots <- read_rds(here::here("shiny", "content", "nowcast", "data", "plots.rds"))
+#plots <- read_rds(here::here("shiny", "content", "nowcast", "data", "plots.rds"))
 
 ui <- navbarPage("REPEL Nowcast", id="nav",
 
@@ -49,6 +62,7 @@ ui <- navbarPage("REPEL Nowcast", id="nav",
                               tags$head(
                                   # Include custom CSS from https://github.com/rstudio/shiny-examples/tree/master/063-superzip-example
                                   includeCSS("styles.css"),
+                                  includeCSS("leaflet-popup.css"),
                                   includeScript("gomap.js")
                               ),
 
@@ -69,7 +83,7 @@ ui <- navbarPage("REPEL Nowcast", id="nav",
                           )
                  ),
 
-                 tabPanel("Time series", girafeOutput("timeseries_plot"))
+                 tabPanel("About")
 
 )
 
@@ -84,18 +98,18 @@ server <- function(input, output) {
         select_semester <- switch(input$select_semester, "Jan - June" = 1, "July - Dec" = 2)
 
         mapdat <- nowcast_predicted_sum %>%
-        filter(disease == input$select_disease, report_year == input$select_year, report_semester == select_semester) #%>%
-    #   filter(disease == oie_diseases[[1]], report_year == 2019, report_semester == 1)
+        filter(disease == input$select_disease, report_year == input$select_year, report_semester == select_semester)
+    #   filter(disease == oie_diseases[[1]], report_year == 2019, report_semester == 1) %>%
 
         admin_mapdat <- admin %>%
             right_join(mapdat) %>%
-            left_join(tibble(fill_color = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3"), status_coalesced =  levels(nowcast_predicted_sum$status_coalesced)))
+            left_join(tibble(fill_color = c("#E31A1C", "#FB9A99", "#1F78B4", "#A6CEE3", "#B8C2CF"), status_coalesced =  levels(nowcast_predicted_sum$status_coalesced)))
 
-        plot_labs <-   mapdat %>%
-            select(disease, country_iso3c) %>%
-            mutate(lab = paste(disease, country_iso3c, sep = "_")) %>%
-            pull(lab)
-        p_all <- plots[plot_labs]
+        # plot_labs <-   mapdat %>%
+        #     select(disease, country_iso3c) %>%
+        #     mutate(lab = paste(disease, country_iso3c, sep = "_")) %>%
+        #     pull(lab)
+        # p_all <- plots[plot_labs]
 
         leaflet() %>%
             addProviderTiles("CartoDB.DarkMatter") %>%
@@ -105,30 +119,14 @@ server <- function(input, output) {
                         fillOpacity = 0.75, fillColor = ~fill_color,
                         label = ~tooltip_lab,
                         layerId = ~country_iso3c,
-                      popup = popupGraph(p_all, type = "svg")# prerender popup? - as svg files, save to static path, popup html per ny leaflet
+                        popup = ~popup_html,
+               #       popup = popupGraph(p_all, type = "svg")# prerender popup? - as svg files, save to static path, popup html per ny leaflet
                #        group = "polygons"
                         ) %>%
            # addPopupGraphs(p_all, group = 'polygons') %>%
             addLegend(pal = pal, values = levels(nowcast_predicted_sum$status_coalesced), position = "bottomright",
                       labFormat = labelFormat(transform = function(x) levels(nowcast_predicted_sum$status_coalesced)))
     })
-
-    observeEvent(input$map_shape_click, {
-        cat("Country: ", input$map_shape_click$id, "\n")
-    })
-
-    timeseries_country <- eventReactive(input$map_shape_click, {
-        filter(nowcast_predicted_sum, disease == input$select_disease, country_iso3c == input$map_shape_click$id)
-    })
-
-    output$timeseries_plot <- renderGirafe({
-        nowcast_timeline_plot(timeseries_country())
-    })
-
-
-
-
-
 }
 # User options: Select Disease
 # Map: showing currently reported, not currently reported/predicted
