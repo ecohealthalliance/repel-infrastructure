@@ -26,7 +26,8 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag !=
   # Cache database predictions ---------------------------------------------------
 
   model_object <-  network_lme_model(
-    network_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds")
+    network_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds"),
+    network_scaling_values = aws.s3::s3readRDS(bucket = "repeldb/models", object = "network_scaling_values.rds")
   )
 
   # get full database
@@ -46,8 +47,10 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag !=
                                         newdata = repeldat,
                                         use_cache = FALSE)
 
-  #TODO move network_recipe into augment?
-  forecasted_repeldat2 <- repelpredict:::network_recipe(forecasted_repeldat[[1]], predictor_vars = c("shared_borders_from_outbreaks", "ots_trade_dollars_from_outbreaks", "fao_livestock_heads_from_outbreaks")) %>%
+  predictor_vars = c("shared_borders_from_outbreaks", "ots_trade_dollars_from_outbreaks", "fao_livestock_heads_from_outbreaks")
+
+  forecasted_repeldat2 <- forecasted_repeldat[[1]] %>%
+    select(country_iso3c, disease, month, outbreak_start, !!predictor_vars) %>%
     mutate(predicted_outbreak_probability = forecasted_repeldat[[2]]) %>%
     mutate(db_network_etag = aws_network_etag)
 
