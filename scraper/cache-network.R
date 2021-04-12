@@ -33,8 +33,6 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag !=
   # get full database
   repeldat <- repelpredict::repel_split(model_object, conn)
 
-  # run prediction (slow)
-
   # augment then predict
   # augmented_data <- repel_augment(model_object, conn, newdata = repeldat)
   # write_rds(augmented_data, "tmp_augmented_data.rds")
@@ -47,10 +45,10 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag !=
                                         newdata = repeldat,
                                         use_cache = FALSE)
 
-  predictor_vars = c("shared_borders_from_outbreaks", "ots_trade_dollars_from_outbreaks", "fao_livestock_heads_from_outbreaks")
+  predictor_vars <- c("shared_borders_from_outbreaks", "ots_trade_dollars_from_outbreaks", "fao_livestock_heads_from_outbreaks")
 
   forecasted_repeldat2 <- forecasted_repeldat[[1]] %>%
-    select(country_iso3c, disease, month, outbreak_start, !!predictor_vars) %>%
+    select(country_iso3c, disease, month, outbreak_start, outbreak_subsequent_month, endemic, !!predictor_vars) %>%
     mutate(predicted_outbreak_probability = forecasted_repeldat[[2]]) %>%
     mutate(db_network_etag = aws_network_etag)
 
