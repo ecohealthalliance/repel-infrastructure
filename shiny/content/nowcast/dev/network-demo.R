@@ -9,22 +9,32 @@ source(here::here("shiny", "content", "nowcast",'functions.R'))
 
 # Read cached data
 conn <- repeldata::repel_remote_conn()
-network_lme_augment_predict <- DBI::dbReadTable(conn, name = "network_lme_augment_predict") %>% as_tibble()
-network_lme_augment_disaggregated <- DBI::dbReadTable(conn, name = "network_lme_augment_disaggregated") %>% as_tibble()
+network_lme_augment_predict0 <- DBI::dbReadTable(conn, name = "network_lme_augment_predict") %>% as_tibble() %>% select(-db_network_etag)
+network_lme_augment_disaggregated0 <- DBI::dbReadTable(conn, name = "network_lme_augment_disaggregated") %>% as_tibble()
 repeldata::repel_remote_disconnect()
 
 # Focus on OIE
 oie_diseases <- repelpredict:::get_oie_high_importance_diseases()
 names(oie_diseases) <- stri_trans_totitle(stri_replace_all_fixed(oie_diseases, "_", " "))
 
+# Filter data for example cases
 disease_select <- "highly_pathogenic_avian_influenza"
 month_select <- "2018-07-01"
+
+network_lme_augment_predict <-  network_lme_augment_predict0 %>%
+  filter(disease == disease_select,
+         month == month_select)
+
+network_lme_augment_disaggregated <- network_lme_augment_disaggregated0 %>%
+  filter(disease == disease_select,
+         month == month_select)
 
 # Get model coeffs
 model_object <-  network_lme_model(
   network_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds"),
   network_scaling_values = aws.s3::s3readRDS(bucket = "repeldb/models", object = "network_scaling_values.rds")
 )
+
 lme_mod <- model_object$network_model
 randef <- ranef(lme_mod)
 randef_disease <- randef$disease %>%
@@ -37,21 +47,16 @@ admin <- ne_countries(type='countries', scale = 'medium', returnclass = "sf") %>
   filter(name != "Antarctica") %>%
   select(country_iso3c = iso_a3, geometry)
 
-basemap_probability <- network_lme_augment_predict %>%
-  filter(disease %in% oie_diseases) %>%
-  filter(disease == disease_select, # select disease
-         month == month_select)  # select month
-  # (germany has a very high prob and then next month there's an outbreak)
-basemap_probability <- left_join(admin, basemap_probability)
+basemap_probability <- left_join(admin, network_lme_augment_predict) ## for plotting risk of outbreak in countries without outbreats
 
-basemap_status <- basemap_probability %>%
+basemap_status <- basemap_probability %>% ## for plotting if country already has outbreak, or if disease was never in country (which is currently NA for predicted risk)
   mutate(disease_country_combo_unreported = is.na(predicted_outbreak_probability)) %>%
   mutate(reported_outbreak = endemic|outbreak_subsequent_month|outbreak_start) %>%
   mutate(reported_outbreak = replace_na(reported_outbreak, FALSE)) %>%
   filter(disease_country_combo_unreported | reported_outbreak) %>%
   mutate(cat_status = if_else(disease_country_combo_unreported, "Disease never in country", "Current Outbreak"))
 
-# for import/exports, id countries with current outbreaks
+# for import/exports, first id countries with current outbreaks
 country_outbreaks <- basemap_status %>%
   as_tibble() %>%
   filter(cat_status == "Current Outbreak") %>%
@@ -65,24 +70,21 @@ country_trade_disagg <- network_lme_augment_disaggregated %>%
   select(-outbreak_start) %>%
   left_join(randef_disease) %>%
   mutate(rel_import = value * coef) %>%
-  group_by(country_iso3c, disease, month, country_origin) %>%
+  group_by(country_iso3c, disease, month, country_origin) %>% ## summarizing relative importance over variables, by country import/export combo
   summarize(country_rel_import = sum(rel_import)) %>%
-  ungroup() %>%
-  filter(disease == disease_select, # select disease
-         month == month_select)  # select month
+  ungroup()
 
 country_import_weights <- country_trade_disagg %>%
   left_join(country_outbreaks,  by = c("country_iso3c", "disease", "month")) %>%
   filter(is.na(cat_status)) %>%
   select(-cat_status) %>%
-  arrange(country_iso3c, -country_rel_import)
+  arrange(country_iso3c, -country_rel_import) ## country_iso3c is the country with a given probability of disease arrival, country_origin is the country that has the disease and is exporting to country_iso3c
 
-country_export_weights <- country_trade_disagg %>%
+country_export_weights <- country_trade_disagg %>% ## country_origin is the country that is contributing (exporting) risk
   arrange(country_origin, -country_rel_import)
 
 # Get overall variable importance for each country (dot plot)
 var_importance <- network_lme_augment_predict %>%
-  select(-db_network_etag) %>%
   pivot_longer(cols = c("shared_borders_from_outbreaks", "ots_trade_dollars_from_outbreaks", "fao_livestock_heads_from_outbreaks"),
                names_to = "variable", values_to = "value") %>%
   select(-outbreak_start) %>%
@@ -90,11 +92,10 @@ var_importance <- network_lme_augment_predict %>%
   mutate(variable_importance = value * coef) %>%
   mutate(pos = variable_importance > 0) %>%
   mutate(country_name = countrycode::countrycode(country_iso3c, origin = "iso3c", destination = "country.name")) %>%
-  filter(disease == disease_select, # select disease
-         month == month_select)  %>% # select month
-  mutate(disease_name = stri_trans_totitle(stri_replace_all_fixed(disease, "_", " ")))
+  mutate(disease_name = stri_trans_totitle(stri_replace_all_fixed(disease, "_", " "))) %>%
+  mutate(variable = stri_trans_totitle(stri_replace_all_fixed(variable, "_", " ")))
 
-# save dot plots
+# generate dot plots
 dot_plots <- var_importance %>%
   filter(country_iso3c %in% c("CHN", "DEU", "IND", "IRN", "USA")) %>%  # example countries
   group_split(country_iso3c, disease, month) %>%
@@ -119,12 +120,10 @@ dot_plots <- var_importance %>%
       NULL
   })
 
-
-
 # Leaflet
 probability_pal <- colorNumeric(palette = "viridis", domain =  na.omit(basemap_probability$predicted_outbreak_probability), na.color = "transparent")
 status_pal <- colorFactor(palette = c("#a83434", "#7f7f7f"),
-                                  levels = sort(unique(basemap_status$cat_status)))
+                          levels = sort(unique(basemap_status$cat_status)))
 leaflet() %>%
   addProviderTiles("CartoDB.DarkMatter") %>%
   setView(lng = 30, lat = 30, zoom = 1.5) %>%
