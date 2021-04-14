@@ -89,21 +89,37 @@ var_importance <- network_lme_augment_predict %>%
   left_join(randef_disease) %>%
   mutate(variable_importance = value * coef) %>%
   mutate(pos = variable_importance > 0) %>%
+  mutate(country_name = countrycode::countrycode(country_iso3c, origin = "iso3c", destination = "country.name")) %>%
   filter(disease == disease_select, # select disease
-         month == month_select)  # select month
+         month == month_select)  %>% # select month
+  mutate(disease_name = stri_trans_totitle(stri_replace_all_fixed(disease, "_", " ")))
 
-# ggplot(tmp) +
-#   geom_vline(aes(xintercept = 0), color = "gray50") +
-#   geom_point(aes(x = variable_importance, y = variable, color = pos), size = 2) +
-#   geom_segment(aes(x = variable_importance, xend = 0, y = variable, yend = variable, color = pos)) +
-#   scale_color_manual(values = c("TRUE" = "#0072B2", "FALSE" = "#D55E00")) +
-#   labs(y = "", x = "Variable importance", title = glue::glue("2019 ASF Outbreak in {country_name} Variable Importance ({outbreak_prob} probability outbreak)")) +
-#   theme_minimal() +
-#   theme(legend.position = "none",
-#         axis.text = element_text(size = 10),
-#         title = element_text(size = 10),
-#         plot.title.position = "plot") +
-#   NULL
+# save dot plots
+dot_plots <- var_importance %>%
+  filter(country_iso3c %in% c("CHN", "DEU", "IND", "IRN", "USA")) %>%  # example countries
+  group_split(country_iso3c, disease, month) %>%
+  map(., function(df){
+
+    country_name <- unique(df$country_name)
+    month <- unique(df$month)
+    disease_name <- unique(df$disease_name)
+    outbreak_prob <- paste0(100 *  signif(unique(df$predicted_outbreak_probability), 2) , "%")
+
+    ggplot(df) +
+      geom_vline(aes(xintercept = 0), color = "gray50") +
+      geom_point(aes(x = variable_importance, y = variable, color = pos), size = 2) +
+      geom_segment(aes(x = variable_importance, xend = 0, y = variable, yend = variable, color = pos)) +
+      scale_color_manual(values = c("TRUE" = "#0072B2", "FALSE" = "#D55E00")) +
+      labs(y = "", x = "Variable importance", title = glue::glue("{month} {disease_name} outbreak probability in {country_name}: {outbreak_prob}")) +
+      theme_minimal() +
+      theme(legend.position = "none",
+            axis.text = element_text(size = 10),
+            title = element_text(size = 10),
+            plot.title.position = "plot") +
+      NULL
+  })
+
+
 
 # Leaflet
 probability_pal <- colorNumeric(palette = "viridis", domain =  na.omit(basemap_probability$predicted_outbreak_probability), na.color = "transparent")
