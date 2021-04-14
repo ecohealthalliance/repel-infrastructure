@@ -51,7 +51,13 @@ basemap_status <- basemap_probability %>%
   filter(disease_country_combo_unreported | reported_outbreak) %>%
   mutate(cat_status = if_else(disease_country_combo_unreported, "Disease never in country", "Current Outbreak"))
 
-# Set up data for import weights
+# for import/exports, id countries with current outbreaks
+country_outbreaks <- basemap_status %>%
+  as_tibble() %>%
+  filter(cat_status == "Current Outbreak") %>%
+  distinct(country_iso3c, disease, month, cat_status)
+
+# Set up data for import/export weights
 country_trade_disagg <- network_lme_augment_disaggregated %>%
   drop_na(country_origin) %>%
   pivot_longer(cols = c("shared_borders_from_outbreaks", "ots_trade_dollars_from_outbreaks", "fao_livestock_heads_from_outbreaks"),
@@ -63,13 +69,16 @@ country_trade_disagg <- network_lme_augment_disaggregated %>%
   summarize(country_rel_import = sum(rel_import)) %>%
   ungroup() %>%
   filter(disease == disease_select, # select disease
-         month == month_select) %>%  # select month
+         month == month_select)  # select month
+
+country_import_weights <- country_trade_disagg %>%
+  left_join(country_outbreaks,  by = c("country_iso3c", "disease", "month")) %>%
+  filter(is.na(cat_status)) %>%
+  select(-cat_status) %>%
   arrange(country_iso3c, -country_rel_import)
 
- #TODO: filter for countries that do not have current outbreak
-
-# Set up data for export weights
-
+country_export_weights <- country_trade_disagg %>%
+  arrange(country_origin, -country_rel_import)
 
 # Get overall variable importance for each country (dot plot)
 
