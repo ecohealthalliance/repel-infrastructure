@@ -81,6 +81,29 @@ country_export_weights <- country_trade_disagg %>%
   arrange(country_origin, -country_rel_import)
 
 # Get overall variable importance for each country (dot plot)
+var_importance <- network_lme_augment_predict %>%
+  select(-db_network_etag) %>%
+  pivot_longer(cols = c("shared_borders_from_outbreaks", "ots_trade_dollars_from_outbreaks", "fao_livestock_heads_from_outbreaks"),
+               names_to = "variable", values_to = "value") %>%
+  select(-outbreak_start) %>%
+  left_join(randef_disease) %>%
+  mutate(variable_importance = value * coef) %>%
+  mutate(pos = variable_importance > 0) %>%
+  filter(disease == disease_select, # select disease
+         month == month_select)  # select month
+
+# ggplot(tmp) +
+#   geom_vline(aes(xintercept = 0), color = "gray50") +
+#   geom_point(aes(x = variable_importance, y = variable, color = pos), size = 2) +
+#   geom_segment(aes(x = variable_importance, xend = 0, y = variable, yend = variable, color = pos)) +
+#   scale_color_manual(values = c("TRUE" = "#0072B2", "FALSE" = "#D55E00")) +
+#   labs(y = "", x = "Variable importance", title = glue::glue("2019 ASF Outbreak in {country_name} Variable Importance ({outbreak_prob} probability outbreak)")) +
+#   theme_minimal() +
+#   theme(legend.position = "none",
+#         axis.text = element_text(size = 10),
+#         title = element_text(size = 10),
+#         plot.title.position = "plot") +
+#   NULL
 
 # Leaflet
 probability_pal <- colorNumeric(palette = "viridis", domain =  na.omit(basemap_probability$predicted_outbreak_probability), na.color = "transparent")
