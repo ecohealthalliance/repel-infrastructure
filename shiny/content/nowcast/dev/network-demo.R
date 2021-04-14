@@ -83,7 +83,7 @@ country_export_weights <- country_trade_disagg %>%
 # Get overall variable importance for each country (dot plot)
 
 # Leaflet
-probability_pal <- colorNumeric(palette = "viridis", domain = network_lme_augment_predict$predicted_outbreak_probability, na.color = "transparent")
+probability_pal <- colorNumeric(palette = "viridis", domain =  na.omit(basemap_probability$predicted_outbreak_probability), na.color = "transparent")
 status_pal <- colorFactor(palette = c("#a83434", "#7f7f7f"),
                                   levels = sort(unique(basemap_status$cat_status)))
 leaflet() %>%
@@ -96,9 +96,9 @@ leaflet() %>%
   addPolygons(data = basemap_status, weight = 0.5, smoothFactor = 0.5,
               opacity = 0.2, color = "white",
               fillOpacity = 1, fillColor = ~status_pal(cat_status)) %>%
-  addLegend_decreasing(pal = probability_pal, values = network_lme_augment_predict$predicted_outbreak_probability,
+  addLegend_decreasing(pal = probability_pal, values = na.omit(basemap_probability$predicted_outbreak_probability),
                        position = "bottomright", decreasing = TRUE, title = "Predicted outbreak probability") %>%
-  addLegend_decreasing(pal = status_pal, values = unique(basemap_status$cat_status),
+  addLegend_decreasing(pal = status_pal, values = unique(basemap_status$cat_status),opacity = 0.8,
                        position = "bottomright", decreasing = FALSE, title = "")
 
 
