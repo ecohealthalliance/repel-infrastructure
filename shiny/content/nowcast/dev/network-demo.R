@@ -5,6 +5,8 @@ library(leafpop)
 library(stringi)
 library(repelpredict)
 library(lme4)
+library(mapdeck)
+library(sf)
 source(here::here("shiny", "content", "nowcast",'functions.R'))
 
 # Read cached data
@@ -97,7 +99,9 @@ var_importance <- network_lme_augment_predict %>%
 
 # generate dot plots
 dot_plots <- var_importance %>%
-  filter(country_iso3c %in% c("CHN", "DEU", "IND", "IRN", "USA")) %>%  # example countries
+  filter(country_iso3c %in% c("DEU", "IRN", "USA")) %>%  # example countries
+  mutate(variable = recode(variable, "Shared Borders From Outbreaks" = "Border Contact", "Ots Trade Dollars From Outbreaks" = "Economic Trade",
+                             "Fao Livestock Heads From Outbreaks" = "Livestock Imports")) %>%
   group_split(country_iso3c, disease, month) %>%
   map(., function(df){
 
@@ -113,31 +117,82 @@ dot_plots <- var_importance %>%
       scale_color_manual(values = c("TRUE" = "#0072B2", "FALSE" = "#D55E00")) +
       labs(y = "", x = "Variable importance", title = glue::glue("{month} {disease_name} outbreak probability in {country_name}: {outbreak_prob}")) +
       theme_minimal() +
-      theme(legend.position = "none",
-            axis.text = element_text(size = 10),
-            title = element_text(size = 10),
+      theme(text = element_text(family = "Avenir Medium"),
+            legend.position = "none",
+            axis.text = element_text(size = 15),
+            axis.title = element_text(size = 16),
+            title = element_text(size = 17),
             plot.title.position = "plot") +
       NULL
   })
+dot_plots[[1]]
 
+dot_plots[[2]]
 # Leaflet
-probability_pal <- colorNumeric(palette = "viridis", domain =  na.omit(basemap_probability$predicted_outbreak_probability), na.color = "transparent")
+probability_pal <- colorNumeric(palette = "viridis", domain =  c(0,1), na.color = "000000")
 status_pal <- colorFactor(palette = c("#a83434", "#7f7f7f"),
                           levels = sort(unique(basemap_status$cat_status)))
-leaflet() %>%
-  addProviderTiles("CartoDB.DarkMatter") %>%
-  setView(lng = 30, lat = 30, zoom = 1.5) %>%
-  addPolygons(data = basemap_probability, weight = 0.5, smoothFactor = 0.5,
-              opacity = 0.2, color = "white",
-              fillOpacity = 0.75, fillColor = ~probability_pal(predicted_outbreak_probability),
-              layerId = ~country_iso3c) %>%
-  addPolygons(data = basemap_status, weight = 0.5, smoothFactor = 0.5,
-              opacity = 0.2, color = "white",
-              fillOpacity = 1, fillColor = ~status_pal(cat_status)) %>%
-  addLegend_decreasing(pal = probability_pal, values = na.omit(basemap_probability$predicted_outbreak_probability),
-                       position = "bottomright", decreasing = TRUE, title = "Predicted outbreak probability") %>%
-  addLegend_decreasing(pal = status_pal, values = unique(basemap_status$cat_status),opacity = 0.8,
-                       position = "bottomright", decreasing = FALSE, title = "")
+# leaflet() %>%
+#   addProviderTiles("CartoDB.DarkMatter") %>%
+#   setView(lng = 30, lat = 30, zoom = 1.5) %>%
+#   addPolygons(data = basemap_probability, weight = 0.5, smoothFactor = 0.5,
+#               opacity = 0.2, color = "white",
+#               fillOpacity = 0.75, fillColor = ~sqrt(probability_pal(predicted_outbreak_probability)),
+#               layerId = ~country_iso3c) %>%
+#   addPolygons(data = basemap_status, weight = 0.5, smoothFactor = 0.5,
+#               opacity = 0.2, color = "white",
+#               fillOpacity = 1, fillColor = ~status_pal(cat_status)) %>%
+#   addLegend_decreasing(pal = probability_pal, values = sqrt(na.omit(basemap_probability$predicted_outbreak_probability)),
+#                        position = "bottomright", decreasing = TRUE, title = "Predicted outbreak probability") %>%
+#   addLegend_decreasing(pal = status_pal, values = unique(basemap_status$cat_status),opacity = 0.8,
+#                        position = "bottomright", decreasing = FALSE, title = "")
 
+admin_centers <- admin %>%
+  mutate(geometry = sf::st_centroid(geometry)) # fix for exact centroids
 
+country_select = "IRN"
+arc_data <- country_import_weights %>%
+  filter(disease == disease_select,
+         country_iso3c == country_select,
+         month == month_select,
+         country_rel_import > 0) %>%
+  arrange(desc(country_rel_import)) %>%
+  rename(country_destination = country_iso3c) %>%
+  left_join(select(admin_centers, country_destination = country_iso3c, destination = geometry)) %>%
+  left_join(select(admin_centers, country_origin = country_iso3c, origin = geometry)) %>%
+  st_as_sf()
 
+import_pal <- colorNumeric(palette = "inferno", domain =  na.omit(arc_data$country_rel_import), na.color = "#000000")
+arc_data <- arc_data %>%
+  mutate(arc_col = import_pal(country_rel_import))
+
+basemap_probability <- basemap_probability %>%
+  left_join(as_tibble(basemap_status) %>% select(country_iso3c, cat_status)) %>%
+  mutate(prob_col = probability_pal(sqrt(predicted_outbreak_probability)),
+         status_col = status_pal(cat_status),
+         fill_col = if_else(cat_status %in% "Current Outbreak", status_col, prob_col))
+
+import_pal <- colorNumeric(palette = "inferno", domain =  na.omit(arc_data$country_rel_import), na.color = "#000000")
+arc_col = viridis::inferno(5)[4]
+md <- mapdeck(
+  style = mapdeck_style("dark"),
+  pitch = 30
+) %>%
+  add_polygon(data = basemap_probability,
+              id = "outbreak_prob",
+              stroke_colour = "#FFFFFF",
+              stroke_opacity = 0.2,
+              stroke_width = 10000,
+              fill_colour = "fill_col",
+              legend = mapdeck_legend(
+                legend_element(
+                  title = "Outbreak Probability",
+                  variables = rev(0:5/5),
+                  colours = rev(probability_pal(sqrt(0:5/5))),
+                  colour_type = "fill",
+                  variable_type = "category"
+                )
+              )) %>%
+  add_arc(data = arc_data, origin = "origin", destination = "destination", stroke_from = arc_col, stroke_to = arc_col, layer_id ="arcs", stroke_width = 10,
+          height = 0.1)
+md
