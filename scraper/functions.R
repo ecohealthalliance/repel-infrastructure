@@ -24,7 +24,7 @@ wahis_db_connect <- function(){
     user = Sys.getenv("POSTGRES_USER"),
     password = Sys.getenv("POSTGRES_PASSWORD"),
     dbname = Sys.getenv("POSTGRES_DB")
-    )
+  )
   if (require("connections")) {
     connections::connection_view(conn, name = "repel", connection_code = "repel")
   }
@@ -89,4 +89,9 @@ field_check <- function(conn, table_regex){
 
 any2 <- function(x) ifelse(all(is.na(x)), NA, any(x, na.rm = TRUE))
 sum2 <- function(x) ifelse(all(is.na(x)), NA, sum(x, na.rm = TRUE))
+
+grant_table_permissions <- function(conn){
+  DBI::dbExecute(conn, "grant select on all tables in schema public to repel_reader")
+  DBI::dbExecute(conn, "grant select on all tables in schema public to repeluser")
+}
 
