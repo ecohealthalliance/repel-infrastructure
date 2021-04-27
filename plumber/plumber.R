@@ -8,14 +8,18 @@ library(memoise)
 
 ## util functions ################################
 
-conn <- dbConnect(
-  RPostgres::Postgres(),
-  host = Sys.getenv("POSTGRES_HOST"),
-  port = Sys.getenv("POSTGRES_PORT"),
-  user = Sys.getenv("POSTGRES_USER"),
-  password = Sys.getenv("POSTGRES_PASSWORD"),
-  dbname = Sys.getenv("POSTGRES_DB")
-)
+
+while(is.null(conn) || inherits(conn, "try-error")) {
+  conn <- try(dbConnect(
+    RPostgres::Postgres(),
+    host = Sys.getenv("POSTGRES_HOST"),
+    port = Sys.getenv("POSTGRES_PORT"),
+    user = Sys.getenv("POSTGRES_USER"),
+    password = Sys.getenv("POSTGRES_PASSWORD"),
+    dbname = Sys.getenv("POSTGRES_DB")
+  ))
+  Sys.sleep(10)
+}
 
 serializers <- list(
   "json" = serializer_json(),
