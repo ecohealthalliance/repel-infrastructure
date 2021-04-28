@@ -9,7 +9,7 @@ library(memoise)
 ## util functions ################################
 
 
-while(is.null(conn) || inherits(conn, "try-error")) {
+while(!exists("conn") || is.null(conn) || inherits(conn, "try-error")) {
   conn <- try(dbConnect(
     RPostgres::Postgres(),
     host = Sys.getenv("POSTGRES_HOST"),
@@ -17,7 +17,7 @@ while(is.null(conn) || inherits(conn, "try-error")) {
     user = Sys.getenv("POSTGRES_USER"),
     password = Sys.getenv("POSTGRES_PASSWORD"),
     dbname = Sys.getenv("POSTGRES_DB")
-  ))
+  ), silent = TRUE)
   Sys.sleep(10)
 }
 
