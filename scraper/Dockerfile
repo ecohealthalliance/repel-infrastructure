@@ -33,7 +33,7 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
  && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
  && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
-RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env connections furrr future aws.s3 raster ncdf4 rpostgis
+RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env connections furrr future aws.s3 raster ncdf4 rpostgis randgeo
 
 ARG GITHUB_PAT
 ENV GITHUB_PAT=${GITHUB_PAT}
