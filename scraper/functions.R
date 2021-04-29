@@ -7,12 +7,11 @@ wahis_db_connect <- function(){
   base:: readRenviron(env_file)
 
   # set host and port depending on if running dev or production
-  dev_host <- stringr::str_extract( Sys.info()["nodename"], "aegypti|prospero")
   if(is.na(dev_host)){
     host <- Sys.getenv("POSTGRES_HOST")
     port <- Sys.getenv("POSTGRES_PORT")
   }else{
-    host <- paste0(dev_host, ".ecohealthalliance.org")
+    host <- "0.0.0.0"
     port <- "22053"
   }
 
