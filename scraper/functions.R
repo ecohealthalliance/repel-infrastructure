@@ -1,33 +1,43 @@
 `%||%` <- function(a, b) if (is.null(a)) return(b) else return(a)
 
 # Connect to WAHIS Database
-wahis_db_connect <- function(){
+wahis_db_connect <- function(try_local = TRUE){
   # read env file
   env_file <- stringr::str_remove(here::here(".env"), "scraper/")
-  base:: readRenviron(env_file)
+  base::readRenviron(env_file)
 
-  # set host and port depending on if running dev or production
-  if(is.na(dev_host)){
-    host <- Sys.getenv("POSTGRES_HOST")
-    port <- Sys.getenv("POSTGRES_PORT")
-  }else{
-    host <- "0.0.0.0"
-    port <- "22053"
+
+  # Try a local host, otherwise connect to production
+  if(try_local) {
+    message("Attempting to connect to local REPEL db at 0.0.0.0:22053")
+    conn <- try(dbConnect(
+      RPostgres::Postgres(),
+      host = "0.0.0.0",
+      port = "22053",
+      user = Sys.getenv("POSTGRES_USER"),
+      password = Sys.getenv("POSTGRES_PASSWORD"),
+      dbname = Sys.getenv("POSTGRES_DB")
+    ), silent = FALSE)
   }
 
-  # connect
-  conn <- dbConnect(
-    RPostgres::Postgres(),
-    host = host,
-    port = port,
-    user = Sys.getenv("POSTGRES_USER"),
-    password = Sys.getenv("POSTGRES_PASSWORD"),
-    dbname = Sys.getenv("POSTGRES_DB")
-    )
+  if(inherits(conn, "try-error")) {
+    message(glue::glue('Attempting to connect to REPEL db at {Sys.getenv("POSTGRES_HOST")}:{Sys.getenv("POSTGRES_PORT")}'))
+    conn <- dbConnect(
+      RPostgres::Postgres(),
+      host = Sys.getenv("POSTGRES_HOST"),
+      port = Sys.getenv("POSTGRES_PORT"),
+      user = Sys.getenv("POSTGRES_USER"),
+      password = Sys.getenv("POSTGRES_PASSWORD"),
+      dbname = Sys.getenv("POSTGRES_DB")
+    ), silent = TRUE)
+  }
+
+
   if (require("connections")) {
     connections::connection_view(conn, name = "repel", connection_code = "repel")
   }
-
+  info <- dbGetInfo(conn)
+  message(glue::glue("Connected to database \"{info$dbname}\" at {info$host}:{info$port}"))
   return(conn)
 }
 
