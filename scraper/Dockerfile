@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   parallel \
   libglpk-dev \
   libnode-dev \
-  udunits2-devel
+  libudunits2-dev
 
 RUN pip3 install pymongo docker
 

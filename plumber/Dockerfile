@@ -8,7 +8,7 @@ RUN apt-get update -qq && apt-get install -y \
   unixodbc-dev \
   libpq-dev \
   postgresql-client \
-  udunits2-devel
+  libudunits2-dev
 
 RUN install2.r -s plumber RPostgreSQL DBI arkdb here env memoise
 
