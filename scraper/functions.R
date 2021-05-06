@@ -9,7 +9,7 @@ wahis_db_connect <- function(host_location = c("reservoir", "local", "remote")){
 
   # assign host name and port
   host_location <- match.arg(host_location)
-  host_name <- switch(host_location,
+  host <- switch(host_location,
                       "local" = "0.0.0.0",
                       "reservoir" =  paste0( stringr::str_extract( Sys.info()["nodename"], "aegypti|prospero"), ".ecohealthalliance.org"),
                       "remote" = Sys.getenv("POSTGRES_HOST"))
@@ -18,10 +18,10 @@ wahis_db_connect <- function(host_location = c("reservoir", "local", "remote")){
                  "reservoir" =  "22053",
                  "remote" = Sys.getenv("POSTGRES_PORT"))
 
-  message(glue::glue('Attempting to connect to REPEL db at {host_name}:{port}'))
+  message(glue::glue('Attempting to connect to REPEL db at {host}:{port}'))
   conn <- dbConnect(
     RPostgres::Postgres(),
-    host = host_name,
+    host = host,
     port = port,
     user = Sys.getenv("POSTGRES_USER"),
     password = Sys.getenv("POSTGRES_PASSWORD"),
