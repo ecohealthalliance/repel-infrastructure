@@ -9,7 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libpq-dev \
   python3-psycopg2 \
   python3-pip \
-  parallel
+  parallel \
+  libglpk-dev \
+  libnode-dev \
+  libudunits2-dev
 
 RUN pip3 install pymongo docker
 
@@ -33,7 +36,7 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
  && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
  && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
-RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env connections furrr future aws.s3
+RUN install2.r -s curl rvest xml2 stringi RPostgres DBI arkdb DT here env connections furrr future aws.s3 raster ncdf4 rpostgis randgeo
 
 ARG GITHUB_PAT
 ENV GITHUB_PAT=${GITHUB_PAT}
