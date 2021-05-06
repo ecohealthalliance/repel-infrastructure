@@ -1,3 +1,5 @@
 repeldb/.env filter=git-crypt diff=git-crypt
 .env filter=git-crypt diff=git-crypt
 rshinyauth0/.env filter=git-crypt diff=git-crypt
+shiny/content/nowcast/.Renviron filter=git-crypt diff=git-crypt
+plumber/.env filter=git-crypt diff=git-crypt

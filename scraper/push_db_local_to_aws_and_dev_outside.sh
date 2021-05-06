@@ -8,7 +8,7 @@ set_local_env () {
   export PGUSER=$POSTGRES_USER
   export PGPASSWORD=$POSTGRES_PASSWORD
   export PGPORT=22053
-  export PGHOST=prospero.ecohealthalliance.org
+  export PGHOST=0.0.0.0
   export PGDATABASE=$POSTGRES_DB
 }
 
