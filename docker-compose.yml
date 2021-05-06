@@ -2,7 +2,7 @@ version: '3'
 
 services:
   base:
-    image: ecohealthalliance/repel-base
+    image: ghcr.io/ecohealthalliance/repel-base
     build:
       context: .
       dockerfile: "Dockerfile.base"
@@ -12,7 +12,7 @@ services:
     command: "exit 0"
     env_file: .env
   postgres:
-    image: ecohealthalliance/repel-postgres
+    image: ghcr.io/ecohealthalliance/repel-postgres
     build:
       context: './postgres'
     volumes:
@@ -25,7 +25,7 @@ services:
       - promed-net
       - repel-servers
   cron:
-    image: ecohealthalliance/repel-cron
+    image: ghcr.io/ecohealthalliance/repel-cron
     build:
       context: './cron'
     links:
@@ -37,7 +37,7 @@ services:
     networks:
       - repel-servers
   scraper:
-    image: ecohealthalliance/repel-scraper
+    image: ghcr.io/ecohealthalliance/repel-scraper
     build:
       context: './scraper'
       args:
@@ -56,7 +56,7 @@ services:
       - promed-net
       - repel-servers
   rshinyauth0:
-    image: ecohealthalliance/repel-rshinyauth0
+    image: ghcr.io/ecohealthalliance/repel-rshinyauth0
     build:
       context: './rshinyauth0'
     restart: on-failure
@@ -68,7 +68,7 @@ services:
     networks:
       - repel-servers
   shinyserver:
-    image: ecohealthalliance/repel-shiny
+    image: ghcr.io/ecohealthalliance/repel-shiny
     build:
       context: './shiny'
       args:
@@ -80,7 +80,7 @@ services:
     networks:
       - repel-servers
   nginx:
-    image: ecohealthalliance/repel-nginx
+    image: ghcr.io/ecohealthalliance/repel-nginx
     build:
       context: './nginx'
     restart: on-failure
@@ -91,7 +91,7 @@ services:
     networks:
       - repel-servers
   plumber:
-    image: ecohealthalliance/repel-plumber
+    image: ghcr.io/ecohealthalliance/repel-plumber
     build:
       context: './plumber'
     volumes:

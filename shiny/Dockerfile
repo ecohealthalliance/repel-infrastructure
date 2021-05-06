@@ -1,4 +1,4 @@
-FROM ecohealthalliance/repel-base
+FROM ghcr.io/ecohealthalliance/repel-base
 
 ENV S6_VERSION=v1.21.7.0
 ENV SHINY_SERVER_VERSION=latest

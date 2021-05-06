@@ -1,4 +1,4 @@
-FROM ecohealthalliance/repel-base
+FROM ghcr.io/ecohealthalliance/repel-base
 
 EXPOSE 8000
 

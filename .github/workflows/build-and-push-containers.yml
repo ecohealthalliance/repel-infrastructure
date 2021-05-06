@@ -1,10 +1,11 @@
-name: build-containers
+name: build-and-push-containers
 
 on:
   push:
     branches:
-      - '*'
-      - '!master'
+      - main
+      - master
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,3 +31,5 @@ jobs:
           export $(egrep -v '^#' .env | xargs)
           echo $GCR_PAT | docker login ghcr.io -u $GCR_USER --password-stdin
           docker-compose push
+      - name: Deploy containers
+        run: ./deploy.sh

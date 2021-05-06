@@ -32,7 +32,6 @@ RUN install2.r -s \
   curl \
   DBI \
   DT \
-  env \
   furrr \
   future \
   ggiraph \
@@ -43,6 +42,7 @@ RUN install2.r -s \
   plumber \
   randgeo \
   raster \
+  renv \
   RColorBrewer \
   rnaturalearth \
   rpostgis \

@@ -1,4 +1,4 @@
-FROM ecohealthalliance/repel-base
+FROM ghcr.io/ecohealthalliance/repel-base
 MAINTAINER noam.ross@gmail.com
 
 ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.1.9/supercronic-linux-amd64 \

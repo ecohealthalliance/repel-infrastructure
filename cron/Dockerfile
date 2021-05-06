@@ -1,4 +1,4 @@
-FROM ecohealthalliance/repel-postgres
+FROM ghcr.io/ecohealthalliance/repel-postgres
 MAINTAINER noam.ross@gmail.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
