@@ -1,0 +1,62 @@
+FROM rocker/geospatial:4.0.4
+MAINTAINER noam.ross@gmail.com
+
+ARG GITHUB_PAT
+ENV GITHUB_PAT=${GITHUB_PAT}
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  awscli \
+  curl \
+  git-core \
+  libcurl4-gnutls-dev \
+  libglpk-dev \
+  libnode-dev \
+  libpq-dev \
+  libsodium-dev \
+  libssl-dev \
+  libudunits2-dev \
+  parallel \
+  postgresql-client \
+  python3-pip \
+  python3-psycopg2 \
+  unixodbc-dev \
+  xz-utils
+
+RUN pip3 install pymongo docker
+
+RUN install2.r -s \
+  arkdb \
+  aws.s3 \
+  brms \
+  connections \
+  curl \
+  DBI \
+  DT \
+  env \
+  furrr \
+  future \
+  ggiraph \
+  here \
+  memoise \
+  ncdf4 \
+  patchwork \
+  plumber \
+  randgeo \
+  raster \
+  RColorBrewer \
+  rnaturalearth \
+  rpostgis \
+  RPostgres \
+  RPostgreSQL \
+  rvest \
+  stringi \
+  tidymodels \
+  xml2
+
+RUN installGithub.r -u FALSE \
+  ecohealthalliance/wahis \
+  noamross/scrapetools \
+  ecohealthalliance/repeldata@duckdb \
+  ecohealthalliance/repelpredict@network \
+  ropenscilabs/rnaturalearthdata
+
