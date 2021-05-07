@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch:
+    branches:
+      - '*'
 
 jobs:
   build:
@@ -31,5 +34,3 @@ jobs:
           export $(egrep -v '^#' .env | xargs)
           echo $GCR_PAT | docker login ghcr.io -u $GCR_USER --password-stdin
           docker-compose push
-      - name: Deploy containers
-        run: ./deploy.sh

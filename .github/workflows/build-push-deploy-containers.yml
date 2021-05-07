@@ -1,13 +1,10 @@
-name: build-containers
+name: build-and-push-containers
 
 on:
-  push:
-    branches:
-      - '*'
-      - '!master'
   workflow_dispatch:
     branches:
-      - '*'
+      - main
+      - master
 
 jobs:
   build:
@@ -29,3 +26,10 @@ jobs:
           echo $GCR_PAT | docker login ghcr.io -u $GCR_USER --password-stdin
           docker-compose pull || true
           docker-compose build --progress plain
+      - name: Push the containers
+        run: |
+          export $(egrep -v '^#' .env | xargs)
+          echo $GCR_PAT | docker login ghcr.io -u $GCR_USER --password-stdin
+          docker-compose push
+      - name: Deploy containers
+        run: ./deploy.sh
