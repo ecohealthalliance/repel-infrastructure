@@ -1,0 +1,120 @@
+---
+- hosts: server-aws
+
+  tasks:
+    - name: install system packages
+      apt:
+        name:
+          - python3-pip
+          - python3-setuptools
+          - python3-pexpect
+          - unzip
+        state: present
+        update_cache: yes
+    - name: add docker gpg apt key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: add docker repo
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu bionic stable
+        state: present
+    - name: update apt and install docker-ce
+      apt: update_cache=yes name=docker-ce state=present
+    - name: install Docker module for Python
+      pip:
+        name:
+          - docker
+          - docker-compose
+    - name: create directory
+      file:
+        path: /root/docker/
+        state: directory
+        owner: root
+        group: root
+        mode: 0775
+    - name: copy cron directory to host
+      become: yes
+      copy:
+        src: "./{{ item }}"
+        dest: "/root/docker/"
+        owner: root
+        group: root
+        mode: 0755
+      loop:
+        - "cron"
+        - "nginx"
+        - "plumber"
+        - "postgres"
+        - "rshinyauth0"
+        - "scraper"
+        - "shiny"
+    - name: copy docker-compose files to host
+      become: yes
+      copy:
+        src: "./docker-compose{{ item }}"
+        dest: /root/docker
+        owner: root
+        group: root
+        mode: 0755
+      loop:
+        - "-local.yml"
+        - "-minlocal.yml"
+        - "-production.yml"
+        - ".yml"
+
+    - name: copy .env file to host
+      copy:
+        src: ./.env
+        dest: /root/docker
+        owner: root
+        group: root
+        mode: 0700
+#    - name: source and export env vars
+#      command: "set -a; source .env; set +a"
+
+    - name: copy environment var substitution script
+      copy:
+        src: ./envsub_compose_files.sh
+        dest: /root/docker
+        owner: root
+        group: root
+        mode: 0755
+    - name: replace env vars in docker-compose files
+      command: /root/docker/envsub_compose_files.sh
+
+    - name: deploy docker-compose stack
+      docker_compose:
+        project_src: /root/docker
+        state: present
+        files:
+          - docker-compose.yml
+          - docker-compose-minlocal.yml
+
+#    - name: build docker image
+#      community.general.docker_image:
+#        name: cron
+#        build:
+#          path: /root/docker/cron
+#          nocache: yes
+#        source: build
+#    - name: start wabnet
+#      docker_service:
+#        project_src: /wabnet-compose
+#        build: yes
+
+#        files:
+#          - docker-compose.yml
+#          - docker-compose-minlocal.yml
+
+#    - name: build docker image
+#      community.general.docker_image:
+#        name: rsconnect
+#        build:
+#          path: /root/docker/test/rsconnect
+#          nocache: yes
+#        source: build
+#    - name: start connect service
+#      docker_service:
+#        project_src: /root/docker/test/rsconnect
+#        build: yes
