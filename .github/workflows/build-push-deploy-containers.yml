@@ -3,8 +3,7 @@ name: build-and-push-containers
 on:
   workflow_dispatch:
     branches:
-      - main
-      - master
+      - '*'
 
 jobs:
   build:
