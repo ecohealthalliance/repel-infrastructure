@@ -7,96 +7,101 @@ source(here::here(paste0(dir, "functions.R")))
 # Connect to database ----------------------------
 message("Connect to database")
 conn <- wahis_db_connect()
+# db_tables <- dbListTables(conn)
+
+#TODO remove init script
 
 # Finding unfetched reports in database ----------------------------
 message("Finding unfetched reports in database")
 
 # Update db with latest outbreak reports list
-new_ids <- scrape_outbreak_report_list()
+reports <- scrape_outbreak_report_list()
 
-current_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
-  mutate(id = as.integer(id)) %>%
-  filter(in_database == TRUE) %>%
-  pull(id)
-
-# new IDs only go back ~ 1 yr. Check that there is no gap in coverage. If there is, then add all integers between last report in DB and oldest report in new IDs.
-if(min(new_ids) > max(current_ids)) {
-  new_ids <- c(new_ids, seq(max(current_ids), min(new_ids)))
+if(dbExistsTable(conn, "outbreak_reports_ingest_status_log")){
+  current_report_info_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
+    mutate(report_info_id = as.integer(report_info_id)) %>%
+    filter(!ingest_error) %>%
+    pull(report_info_id)
+}else{
+  current_report_info_ids <- NA_integer_
 }
 
-reports_to_get <- tibble(id = setdiff(new_ids, current_ids)) %>%
-  mutate(url =  paste0("https://www.oie.int/wahis_2/public/wahid.php/Reviewreport/Review?reportid=", id))
+new_ids <- setdiff(reports$report_info_id, current_report_info_ids)
+
+reports_to_get <- tibble(report_info_id = new_ids) %>%
+  mutate(url =  paste0("https://wahis.oie.int/pi/getReport/", report_info_id))
 
 # Pulling reports ----------------------------
 message("Pulling ", nrow(reports_to_get), " reports")
 
 report_resps <- map_curl(
   urls = reports_to_get$url,
-  .f = function(x) wahis::safe_ingest_outbreak(x$content),
-  .host_con = 6L,
-  .delay = 2L,
+  .f = function(x) wahis::safe_ingest_outbreak(x),
+  .host_con = 8L, # can turn up
+  .delay = 1L, # can turn down
   .timeout = nrow(reports_to_get)*120L,
-  .handle_opts = list(low_speed_limit = 100, low_speed_time = 300),
+  .handle_opts = list(low_speed_limit = 100, low_speed_time = 300), # bytes/sec
   .retry = 3
 )
 
-# write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
-# report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
-
-report_resps <- map_if(report_resps, is.null,
-                       function(x) list(ingest_status = "failed to fetch"))
+write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
+report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
 
 # Update ingest log -------------------------------------------------------
+ingest_error <- map_lgl(report_resps, function(x){
+  !is.null(x$ingest_status) && str_detect(x$ingest_status, "ingestion error") |
+    !is.null(x$message) && str_detect(x$message, "Endpoint request timed out")
+})
 
-ingest_status_log <- reports_to_get %>%
-  select(id) %>%
-  mutate(ingest_status = map_chr(report_resps, ~.x$ingest_status)) %>%
-  mutate(in_database = ingest_status == "available") %>%
-  mutate(ingest_error = ifelse(!in_database, ingest_status, NA)) %>%
-  select(-ingest_status)
+outbreak_reports_ingest_status_log <- reports_to_get %>%
+  select(report_info_id) %>%
+  mutate(ingest_error = ingest_error)
 
 # Updating database  ----------------------------
-if(any(unique(ingest_status_log$in_database))){ # check if there are any non-error responses
+if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if there are any non-error responses
   message("Updating database")
 
   # tables
-  outbreak_report_tables <- wahis::transform_outbreak_reports(report_resps)
+  outbreak_report_tables <- transform_outbreak_reports(report_resps, reports)
+  outbreak_report_tables$outbreak_reports_ingest_status_log <- outbreak_reports_ingest_status_log
 
   if(!is.null(outbreak_report_tables)){
-    iwalk(outbreak_report_tables[c("outbreak_reports_events", "outbreak_reports_outbreaks", "outbreak_reports_outbreaks_summary",  "outbreak_reports_laboratories")],
+    iwalk(outbreak_report_tables[c("outbreak_reports_events", # report_id
+                                   "outbreak_reports_outbreaks", # report_id
+                                   "outbreak_reports_diseases_unmatched", # disease
+                                   "outbreak_reports_ingest_status_log")], # report_info_id
           function(x, y){
+            idfield <- switch(y,
+                              "outbreak_reports_events" =  "report_id",
+                              "outbreak_reports_outbreaks" = "report_id",
+                              "outbreak_reports_diseases_unmatched" = "disease",
+                              "outbreak_reports_ingest_status_log" = "report_info_id")
+            if(is.null(x)) return()
+            if(!dbExistsTable(conn, y)){
+              dbWriteTable(conn,  name = y, value = x)
+            }else{
             update_sql_table(conn,  y, x,
-                             c("id"), fill_col_na = TRUE)
+                             c(idfield), fill_col_na = TRUE)
             Sys.sleep(1)
+            }
           })
   }
-
-  # unmatched diseases
-  update_sql_table(conn, table = "outbreak_reports_diseases_unmatched",
-                   updates = outbreak_report_tables[[ "outbreak_reports_diseases_unmatched"]],
-                   id_fields = "disease")
-
-  # ingest log
-  update_sql_table(conn, table = "outbreak_reports_ingest_status_log",
-                   updates = ingest_status_log,
-                   id_fields = c("id"))
 
   message("Done updating outbreak reports.")
 
   # Schema lookup -----------------------------------------------------------
-  field_check(conn, "outbreak_reports_")
+ # field_check(conn, "outbreak_reports_")
 
   # Generate QA report ------------------------------------------------------
   assert_that(dbExistsTable(conn, "outbreak_reports_events"))
   assert_that(dbExistsTable(conn, "outbreak_reports_ingest_status_log"))
   assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks"))
-  assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks_summary"))
 
-  safely(rmarkdown::render, quiet = FALSE)(
-    here::here(paste0(dir, "qa-outbreak-reports.Rmd")),
-    output_file = paste0("outbreak-report-qa.html"),
-    output_dir = here::here(paste0(dir, "reports"))
-  )
+  # safely(rmarkdown::render, quiet = FALSE)(
+  #   here::here(paste0(dir, "qa-outbreak-reports.Rmd")),
+  #   output_file = paste0("outbreak-report-qa.html"),
+  #   output_dir = here::here(paste0(dir, "reports"))
+  # )
 
 }
 dbDisconnect(conn)
