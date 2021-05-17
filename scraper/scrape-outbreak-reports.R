@@ -7,9 +7,6 @@ source(here::here(paste0(dir, "functions.R")))
 # Connect to database ----------------------------
 message("Connect to database")
 conn <- wahis_db_connect()
-# db_tables <- dbListTables(conn)
-
-#TODO remove init script
 
 # Finding unfetched reports in database ----------------------------
 message("Finding unfetched reports in database")
@@ -17,11 +14,11 @@ message("Finding unfetched reports in database")
 # Update db with latest outbreak reports list
 reports <- scrape_outbreak_report_list()
 
-# if(dbExistsTable(conn, "outbreak_reports_ingest_status_log")){
-current_report_info_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
-  mutate(report_info_id = as.integer(report_info_id)) %>%
-  filter(!ingest_error) %>%
-  pull(report_info_id)
+if(dbExistsTable(conn, "outbreak_reports_ingest_status_log")){
+  current_report_info_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
+    mutate(report_info_id = as.integer(report_info_id)) %>%
+    filter(!ingest_error) %>%
+    pull(report_info_id)
 }else{
   current_report_info_ids <- NA_integer_
 }
@@ -34,19 +31,19 @@ reports_to_get <- tibble(report_info_id = new_ids) %>%
 # Pulling reports ----------------------------
 message("Pulling ", nrow(reports_to_get), " reports")
 
-# need to add language here?
-# report_resps <- split(reports_to_get, (1:nrow(reports_to_get)-1) %/% 100) %>% # batching by 100s
-map(function(reports_to_get_split){
-  map_curl(
-    urls = reports_to_get_split$url,
-    .f = function(x) wahis::safe_ingest_outbreak(x),
-    .host_con = 8L, # can turn up
-    .delay = 0.5,
-    #.timeout = nrow(reports_to_get)*120L,
-    .handle_opts = list(low_speed_limit = 100, low_speed_time = 300), # bytes/sec
-    .retry = 2
-  )
-})
+report_resps <- split(reports_to_get, (1:nrow(reports_to_get)-1) %/% 100) %>% # batching by 100s
+  map(function(reports_to_get_split){
+    map_curl(
+      urls = reports_to_get_split$url,
+      .f = function(x) wahis::safe_ingest_outbreak(x),
+      .host_con = 8L, # can turn up
+      .delay = 0.5,
+      #.timeout = nrow(reports_to_get)*120L,
+      .handle_opts = list(low_speed_limit = 100, low_speed_time = 300), # bytes/sec
+      .retry = 2
+      # need to add language here?
+    )
+  })
 
 # write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
 # report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
@@ -54,14 +51,11 @@ map(function(reports_to_get_split){
 report_resps <- reduce(report_resps, c)
 
 # Update ingest log -------------------------------------------------------
-ingest_error <- map_lgl(report_resps, function(x){
-  !is.null(x$ingest_status) && str_detect(x$ingest_status, "ingestion error") |
+outbreak_reports_ingest_status_log <- map_dfr(report_resps, function(x){
+  ingest_error <-  !is.null(x$ingest_status) && str_detect(x$ingest_status, "ingestion error") |
     !is.null(x$message) && str_detect(x$message, "Endpoint request timed out")
+  tibble(report_info_id = x$report_info_id, ingest_error)
 })
-
-outbreak_reports_ingest_status_log <- reports_to_get %>%
-  select(report_info_id) %>%
-  mutate(ingest_error = ingest_error)
 
 # write_rds(outbreak_reports_ingest_status_log, here::here("scraper", "scraper_files_for_testing/outbreak_reports_ingest_status_log.rds"))
 # outbreak_reports_ingest_status_log <-read_rds(here::here("scraper", "scraper_files_for_testing/outbreak_reports_ingest_status_log.rds"))
