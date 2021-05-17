@@ -18,7 +18,7 @@ aws_network_etag <- aws.s3::head_object(bucket = "repeldb/models", object = "lme
 if(dbExistsTable(conn,  "network_lme_augment_predict")){
 
   forecasted_repeldat <- dbReadTable(conn, name = "network_lme_augment_predict")
-  db_network_etag <- unique(forecasted_repeldat$db_disease_status_etag)
+  db_network_etag <- unique(forecasted_repeldat$db_network_etag)
 }
 
 if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag != aws_network_etag ){
@@ -45,32 +45,28 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag !=
                                         newdata = repeldat,
                                         use_cache = FALSE)
 
-  predictor_vars <- c("shared_borders_from_outbreaks", "ots_trade_dollars_from_outbreaks", "fao_livestock_heads_from_outbreaks")
-
   forecasted_repeldat2 <- forecasted_repeldat[[1]] %>%
     select(country_iso3c, disease, month, outbreak_start, outbreak_subsequent_month, endemic, !!predictor_vars) %>%
     mutate(predicted_outbreak_probability = forecasted_repeldat[[2]]) %>%
     mutate(db_network_etag = aws_network_etag)
 
-  # write_rds(forecasted_repeldat2, "tmp_forecasted_data.rds")
+  write_rds(forecasted_repeldat2, "tmp_forecasted_data.rds")
   # forecasted_repeldat2 <- read_rds("tmp_forecasted_data.rds")
 
   dbWriteTable(conn, name = "network_lme_augment_predict", forecasted_repeldat2, overwrite = TRUE)
 
-# disaggregate country imports
+  # disaggregate country imports
   augmented_data_disagg <- repel_augment(model_object, conn, newdata = forecasted_repeldat2, sum_country_imports = FALSE)
 
   augmented_data_disagg2 <- augmented_data_disagg %>%
-    select(country_iso3c, disease, month, country_origin, outbreak_start, shared_borders_from_outbreaks, ots_trade_dollars_from_outbreaks, fao_livestock_heads_from_outbreaks)
+    drop_na(country_origin)
 
   dbWriteTable(conn, name = "network_lme_augment_disaggregated", augmented_data_disagg2, overwrite = TRUE)
 
 }
 
 # set grant permissions
-dbExecute(conn, "grant select on all tables in schema public to repel_reader")
-dbExecute(conn, "grant select on all tables in schema public to repeluser")
-
+grant_table_permissions(conn)
 
 dbDisconnect(conn)
 

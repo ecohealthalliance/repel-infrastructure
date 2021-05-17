@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:4.0.2
+FROM rocker/geospatial:4.0.2
 MAINTAINER noam.ross@gmail.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   python3-pip \
   parallel \
   libglpk-dev \
-  libnode-dev
+  libnode-dev \
+  libudunits2-dev
 
 RUN pip3 install pymongo docker
 

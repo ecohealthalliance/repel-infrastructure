@@ -7,7 +7,8 @@ RUN apt-get update -qq && apt-get install -y \
   libsodium-dev \
   unixodbc-dev \
   libpq-dev \
-  postgresql-client
+  postgresql-client \
+  libudunits2-dev
 
 RUN install2.r -s plumber RPostgreSQL DBI arkdb here env memoise
 

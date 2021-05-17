@@ -1,21 +1,24 @@
 `%||%` <- function(a, b) if (is.null(a)) return(b) else return(a)
 
 # Connect to WAHIS Database
-wahis_db_connect <- function(){
+wahis_db_connect <- function(host_location = c("reservoir", "local", "remote")){
+
   # read env file
   env_file <- stringr::str_remove(here::here(".env"), "scraper/")
-  base:: readRenviron(env_file)
+  base::readRenviron(env_file)
 
-  # set host and port depending on if running dev or production
-  if(is.na(dev_host)){
-    host <- Sys.getenv("POSTGRES_HOST")
-    port <- Sys.getenv("POSTGRES_PORT")
-  }else{
-    host <- "0.0.0.0"
-    port <- "22053"
-  }
+  # assign host name and port
+  host_location <- match.arg(host_location)
+  host <- switch(host_location,
+                      "local" = "0.0.0.0",
+                      "reservoir" =  paste0( stringr::str_extract( Sys.info()["nodename"], "aegypti|prospero"), ".ecohealthalliance.org"),
+                      "remote" = Sys.getenv("POSTGRES_HOST"))
+  port <- switch(host_location,
+                 "local" = "22053",
+                 "reservoir" =  "22053",
+                 "remote" = Sys.getenv("POSTGRES_PORT"))
 
-  # connect
+  message(glue::glue('Attempting to connect to REPEL db at {host}:{port}'))
   conn <- dbConnect(
     RPostgres::Postgres(),
     host = host,
@@ -23,11 +26,14 @@ wahis_db_connect <- function(){
     user = Sys.getenv("POSTGRES_USER"),
     password = Sys.getenv("POSTGRES_PASSWORD"),
     dbname = Sys.getenv("POSTGRES_DB")
-    )
+  )
+
   if (require("connections")) {
     connections::connection_view(conn, name = "repel", connection_code = "repel")
   }
 
+  info <- dbGetInfo(conn)
+  message(glue::glue("Connected to database \"{info$dbname}\" at {info$host}:{info$port}"))
   return(conn)
 }
 
@@ -88,4 +94,9 @@ field_check <- function(conn, table_regex){
 
 any2 <- function(x) ifelse(all(is.na(x)), NA, any(x, na.rm = TRUE))
 sum2 <- function(x) ifelse(all(is.na(x)), NA, sum(x, na.rm = TRUE))
+
+grant_table_permissions <- function(conn){
+  DBI::dbExecute(conn, "grant select on all tables in schema public to repel_reader")
+  DBI::dbExecute(conn, "grant select on all tables in schema public to repeluser")
+}
 
