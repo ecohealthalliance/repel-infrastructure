@@ -1,6 +1,7 @@
 ---
-- hosts: server-aws
-
+- hosts: repel-aws
+  vars:
+    base_docker_dir: "/root/docker"
   tasks:
     - name: install system packages
       apt:
@@ -28,7 +29,7 @@
           - docker-compose
     - name: create directory
       file:
-        path: /root/docker/
+        path: "{{ base_docker_dir }}"
         state: directory
         owner: root
         group: root
@@ -37,7 +38,7 @@
       become: yes
       copy:
         src: "./{{ item }}"
-        dest: "/root/docker/"
+        dest: "{{ base_docker_dir }}"
         owner: root
         group: root
         mode: 0755
@@ -53,7 +54,7 @@
       become: yes
       copy:
         src: "./docker-compose{{ item }}"
-        dest: /root/docker
+        dest: "{{ base_docker_dir }}"
         owner: root
         group: root
         mode: 0755
@@ -66,7 +67,7 @@
     - name: copy .env file to host
       copy:
         src: ./.env
-        dest: /root/docker
+        dest: "{{ base_docker_dir }}"
         owner: root
         group: root
         mode: 0700
@@ -76,20 +77,21 @@
     - name: copy environment var substitution script
       copy:
         src: ./envsub_compose_files.sh
-        dest: /root/docker
+        dest: "{{ base_docker_dir }}"
         owner: root
         group: root
         mode: 0755
     - name: replace env vars in docker-compose files
-      command: /root/docker/envsub_compose_files.sh
+      command: "{{ base_docker_dir }}/envsub_compose_files.sh"
 
     - name: deploy docker-compose stack
       docker_compose:
-        project_src: /root/docker
+        project_src: "{{ base_docker_dir }}"
         state: present
+        debug: yes
         files:
           - docker-compose.yml
-          - docker-compose-minlocal.yml
+          - docker-compose-local.yml
 
 #    - name: build docker image
 #      community.general.docker_image:
