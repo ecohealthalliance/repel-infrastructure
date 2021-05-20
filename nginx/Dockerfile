@@ -1,4 +1,4 @@
-FROM linuxserver/letsencrypt
+FROM linuxserver/swag
 
 RUN mkdir -p /config/nginx/site-confs/
 COPY ./site-confs/ /config/nginx/site-confs/

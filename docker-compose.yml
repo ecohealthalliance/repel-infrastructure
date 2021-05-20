@@ -77,7 +77,7 @@ services:
     env_file: .env
     environment:
       EMAIL: young@ecohealthalliance.org
-      URL: ${HOSTNAME}.ecohealthalliance.org
+      URL: ${NGINX_URL}
     networks:
       - repel-servers
   plumber:

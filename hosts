@@ -1,2 +1,2 @@
 [repel-aws]
-54.198.0.175 ansible_ssh_private_key_file=/Users/young/Desktop/repel-aws.pem ansible_ssh_user=ubuntu
+54.158.127.254 ansible_ssh_private_key_file=/Users/young/Desktop/repel-aws.pem ansible_ssh_user=ubuntu
