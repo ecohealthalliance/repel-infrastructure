@@ -70,9 +70,7 @@ services:
     networks:
       - repel-servers
   nginx:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/nginx
-    build:
-      context: './nginx'
+    image: linuxserver/swag
     restart: on-failure
     env_file: .env
     environment:
