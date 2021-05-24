@@ -39,8 +39,8 @@ sshpass -p "${DEPLOYMENT_SERVER_PASS}" \
         -o PubkeyAuthentication=no \
         ${DEPLOYMENT_SERVER_USER}@${DEPLOYMENT_SERVER_URL} \
         "echo ${DEPLOYMENT_SERVER_PASS} | sudo -S ls \
-          && echo ${CI_REGISTRY_PASSWORD} \
-            | sudo docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}; \
+          && echo ${DOCKER_REGISTRY_PASSWORD} \
+            | sudo docker login ${DOCKER_REGISTRY} -u ${DOCKER_REGISTRY_USER} --password-stdin; \
               cd ${DEPLOYMENT_SERVER_DIR}; \
               sudo docker-compose pull; \
               sudo docker-compose -f docker-compose.yml -f docker-compose-production.yml up -d;"

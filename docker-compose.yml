@@ -1,8 +1,18 @@
 version: '3'
 
 services:
+  base:
+    image: ghcr.io/ecohealthalliance/repel-base
+    build:
+      context: .
+      dockerfile: "Dockerfile.base"
+      args:
+        - GITHUB_PAT=${GITHUB_PAT}
+    entrypoint: "bash -c"
+    command: "exit 0"
+    env_file: .env
   postgres:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-postgres
+    image: ghcr.io/ecohealthalliance/repel-postgres
     build:
       context: './postgres'
     volumes:
@@ -15,7 +25,7 @@ services:
       - promed-net
       - repel-servers
   cron:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-cron
+    image: ghcr.io/ecohealthalliance/repel-cron
     build:
       context: './cron'
     links:
@@ -27,7 +37,7 @@ services:
     networks:
       - repel-servers
   scraper:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-scraper
+    image: ghcr.io/ecohealthalliance/repel-scraper
     build:
       context: './scraper'
       args:
@@ -46,7 +56,7 @@ services:
       - promed-net
       - repel-servers
   rshinyauth0:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/repel-rshinyauth0
+    image: ghcr.io/ecohealthalliance/repel-rshinyauth0
     build:
       context: './rshinyauth0'
     restart: on-failure
@@ -58,7 +68,7 @@ services:
     networks:
       - repel-servers
   shinyserver:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/shiny
+    image: ghcr.io/ecohealthalliance/repel-shiny
     build:
       context: './shiny'
       args:
@@ -79,7 +89,7 @@ services:
     networks:
       - repel-servers
   plumber:
-    image: registry.gitlab.com/ecohealthalliance/repel-infrastructure/plumber
+    image: ghcr.io/ecohealthalliance/repel-plumber
     build:
       context: './plumber'
     volumes:

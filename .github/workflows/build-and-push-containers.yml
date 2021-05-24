@@ -1,0 +1,34 @@
+name: build-and-push-containers
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Decrypt repository using symmetric key
+        env:
+          GIT_CRYPT_KEY64: ${{ secrets.GIT_CRYPT_KEY64 }}
+        run: |
+          sudo apt-get install git-crypt
+          echo $GIT_CRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
+          rm git_crypt_key.key git_crypt_key.key64
+      - name: Pull and build containers
+        run: |
+          export $(egrep -v '^#' .env | xargs)
+          echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
+          docker-compose pull || true
+          docker-compose build --progress plain
+      - name: Push the containers
+        run: |
+          export $(egrep -v '^#' .env | xargs)
+          echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
+          docker-compose push
