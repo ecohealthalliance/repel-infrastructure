@@ -34,7 +34,7 @@
         owner: root
         group: root
         mode: 0775
-    - name: copy cron directory to host
+    - name: copy service directories to host
       become: yes
       copy:
         src: "./{{ item }}"
@@ -50,20 +50,21 @@
         - "rshinyauth0"
         - "scraper"
         - "shiny"
-    - name: copy docker-compose files to host
+    - name: copy docker files to host
       become: yes
       copy:
-        src: "./docker-compose{{ item }}"
+        src: "./{{ item }}"
         dest: "{{ base_docker_dir }}"
         owner: root
         group: root
         mode: 0755
       loop:
-        - "-local.yml"
-        - "-minlocal.yml"
-        - "-production.yml"
-        - "-production-aws.yml"
-        - ".yml"
+        - "docker-compose-local.yml"
+        - "docker-compose-minlocal.yml"
+        - "docker-compose-production.yml"
+        - "docker-compose-production-aws.yml"
+        - "docker-compose.yml"
+        - "Dockerfile.base"
     - name: deploy docker-compose stack
       docker_compose:
         project_src: "{{ base_docker_dir }}"
