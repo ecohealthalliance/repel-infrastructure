@@ -1,16 +1,4 @@
-FROM rocker/tidyverse:4.0.4
-
-RUN apt-get update -qq && apt-get install -y \
-  git-core \
-  libssl-dev \
-  libcurl4-gnutls-dev \
-  libsodium-dev \
-  unixodbc-dev \
-  libpq-dev \
-  postgresql-client \
-  libudunits2-dev
-
-RUN install2.r -s plumber RPostgreSQL DBI arkdb here env memoise
+FROM ghcr.io/ecohealthalliance/repel-base
 
 EXPOSE 8000
 
