@@ -1,4 +1,4 @@
-name: build-and-push-containers
+name: build-push-deploy-aws-containers
 
 on:
   workflow_dispatch:
