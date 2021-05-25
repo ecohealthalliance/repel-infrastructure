@@ -1,14 +1,20 @@
 #!/bin/bash
 # copy local repel database to dev and AWS
 
+if [[ "$#" -ne 2 ]]
+then
+  echo "Usage: $0 <host> <port>"
+fi
+args=("$@")
+
 set -e
 # functions to test environment variables to local or dev server
 
 set_local_env () {
   export PGUSER=$POSTGRES_USER
   export PGPASSWORD=$POSTGRES_PASSWORD
-  export PGPORT=22053
-  export PGHOST=0.0.0.0
+  export PGPORT=${args[1]}
+  export PGHOST=${args[0]}
   export PGDATABASE=$POSTGRES_DB
 }
 
@@ -55,12 +61,6 @@ psql <<EOF
 \connect postgres;
 drop database repel;
 alter database repeltmp rename to repel;
-grant connect on database repel to repel_reader;
-grant usage on schema public to repel_reader;
-grant select on all tables in schema public to repel_reader;
-grant connect on database repel to repeluser;
-grant usage on schema public to repeluser;
-grant select on all tables in schema public to repeluser;
 EOF
 # make sure last commands succeeded
 if [[ $? -ne 0 ]]
