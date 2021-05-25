@@ -1,4 +1,4 @@
-FROM rocker/geospatial:4.0.4
+FROM rocker/geospatial:4.1.0
 MAINTAINER noam.ross@gmail.com
 
 ARG GITHUB_PAT
