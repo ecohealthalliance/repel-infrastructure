@@ -24,6 +24,6 @@ jobs:
             [repel-aws]
             54.158.127.254
           options: |
-            --private-key ./repel-aws.pem
+            --key-file ./repel-aws.pem
             -u ubuntu
             -v
