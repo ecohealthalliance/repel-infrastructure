@@ -1,0 +1,23 @@
+name: deploy-aws-containers
+
+on:
+  workflow_dispatch:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Deploy containers to AWS instance
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: deploy-repel-aws.yml
+          directory: ./
+          key: ./repel-aws.pem
+          inventory: |
+            [repel-aws]
+            54.158.127.254
+          options: |
+            --vvv
