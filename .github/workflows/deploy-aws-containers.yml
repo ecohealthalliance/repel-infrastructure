@@ -15,6 +15,7 @@ jobs:
           ls -al
           chmod 600 repel-aws.pem
           ls -al
+          head -n 2 repel-aws.pem
       - name: Deploy containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
         with:
