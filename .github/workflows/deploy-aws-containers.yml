@@ -13,7 +13,7 @@ jobs:
       - name: restrict pem file permissions
         run: |
           ls -al
-          chmod 600 repel-aws.pem
+          chmod 400 repel-aws.pem
           ls -al
       - name: Deploy containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
