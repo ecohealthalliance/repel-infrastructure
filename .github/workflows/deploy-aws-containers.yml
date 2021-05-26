@@ -15,9 +15,10 @@ jobs:
         with:
           playbook: deploy-repel-aws.yml
           directory: ./
-          key: ./repel-aws.pem
           inventory: |
             [repel-aws]
             54.158.127.254
           options: |
+            --private-key repel-aws.pem
+            -u ubuntu
             -v
