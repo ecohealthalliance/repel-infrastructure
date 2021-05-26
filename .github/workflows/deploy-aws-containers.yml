@@ -15,7 +15,6 @@ jobs:
           ls -al
           chmod 600 repel-aws.pem
           ls -al
-          head -n 2 repel-aws.pem
       - name: Deploy containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -23,8 +22,6 @@ jobs:
           directory: ./
           inventory: |
             [repel-aws]
-            54.158.127.254
+            54.158.127.254 ansible_ssh_private_key_file=repel-aws.pem ansible_ssh_user=ubuntu
           options: |
-            --key-file ./repel-aws.pem
-            -u ubuntu
             -v
