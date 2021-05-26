@@ -20,4 +20,4 @@ jobs:
             [repel-aws]
             54.158.127.254
           options: |
-            --vvv
+            -v
