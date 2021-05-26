@@ -4,7 +4,6 @@
 .Ruserdata
 .vault
 *.key
-*.pem
 *.retry
 .imported_roles
 repeldb/backups
