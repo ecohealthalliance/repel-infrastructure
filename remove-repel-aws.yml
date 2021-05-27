@@ -1,0 +1,24 @@
+---
+- hosts: repel-aws
+  vars:
+    base_docker_dir: "/root/docker"
+  tasks:
+    - name: deploy docker-compose stack
+      become: yes
+      docker_compose:
+        project_src: "{{ base_docker_dir }}"
+        state: absent
+        debug: yes
+        files:
+          - docker-compose.yml
+          - docker-compose-production-aws.yml
+    - name: prune everything
+      become: yes
+      docker_prune:
+        containers: yes
+        images: yes
+        images_filter:
+          dangling: false
+        networkds: yes
+        volumes: yes
+        builder_cache: yes
