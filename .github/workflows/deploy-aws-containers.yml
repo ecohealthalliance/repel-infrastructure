@@ -10,22 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - name: Decrypt repository using symmetric key
+        env:
+          GIT_CRYPT_KEY64: ${{ secrets.GIT_CRYPT_KEY64 }}
+        run: |
+          sudo apt-get install git-crypt
+          echo $GIT_CRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
+          rm git_crypt_key.key git_crypt_key.key64
       - name: restrict pem file permissions
         run: |
           ls -al
           chmod 400 repel-aws.pem
           ls -al
-      - name: test ssh
-        run: |
-          ssh -i repel-aws.pem ubuntu@54.158.127.254
-          exit
-#      - name: Deploy containers to AWS instance
-#        uses: dawidd6/action-ansible-playbook@v2
-#        with:
-#          playbook: deploy-repel-aws.yml
-#          directory: ./
-#          inventory: |
-#            [repel-aws]
-#            54.158.127.254 ansible_ssh_private_key_file=repel-aws.pem ansible_ssh_user=ubuntu
-#          options: |
-#            -v
+      - name: Deploy containers to AWS instance
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: deploy-repel-aws.yml
+          directory: ./
+          inventory: |
+            [repel-aws]
+            54.158.127.254 ansible_ssh_private_key_file=repel-aws.pem ansible_ssh_user=ubuntu
+          options: |
+            -v
