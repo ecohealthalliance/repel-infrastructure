@@ -29,6 +29,10 @@ RUN chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-outbreak-reports.
 RUN chmod +x /home/rstudio/repel-infrastructure/scraper/cache-nowcast.R
 RUN chmod +x /home/rstudio/repel-infrastructure/scraper/push_db_local_to_aws_and_dev_outside.sh
 
+RUN chmod +x /home/rstudio/repel-infrastructure/scraper/test-scraper.R \
+  && cd /home/rstudio/repel-infrastructure/scraper \
+  && ./test-scraper.R
+
 CMD ["/home/rstudio/repel-infrastructure/scraper/start.sh"]
 
 # USER rstudio:rstudio
