@@ -3,7 +3,7 @@
   vars:
     base_docker_dir: "/root/docker"
   tasks:
-    - name: deploy docker-compose stack
+    - name: bring down docker-compose stack
       become: yes
       docker_compose:
         project_src: "{{ base_docker_dir }}"
@@ -17,8 +17,8 @@
       docker_prune:
         containers: yes
         images: yes
-        images_filter:
+        images_filters:
           dangling: false
-        networkds: yes
+        networks: yes
         volumes: yes
         builder_cache: yes
