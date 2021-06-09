@@ -75,8 +75,10 @@ xz /tmp/all_pg_local.dmp
 aws s3 cp /tmp/all_pg_local.dmp.xz s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz
 
 # remove existing csv files from AWS then copy local ones
-
 aws s3 rm s3://${AWS_BUCKET}/csv --recursive
+
+# set s3 bucket policy
+aws s3api put-bucket-policy --bucket ${AWS_BUCKET} --policy file://csv_policy.json
 
 # The `sem` command allows up to `j` jobs to be run in the background,
 # Then `sem --wait` pauses execution until they are all done.  Doing this to
@@ -88,7 +90,7 @@ set_local_env
 
 psql -Atc "select tablename from pg_tables where schemaname='public'" |\
   while read TBL; do
-    sem -j 10 "psql -c \"COPY $TBL TO STDOUT WITH NULL AS 'NA' CSV HEADER\" | xz -9 -c | aws s3 cp - s3://${AWS_BUCKET}/csv/${TBL}.csv.xz"
+    sem -j 10 "psql -c \"COPY $TBL TO STDOUT WITH NULL AS 'NA' CSV HEADER\" | xz -9 -c | aws s3 cp - s3://${AWS_BUCKET}/csv/${TBL}.csv.xz --acl public-read"
   done
 sem --wait
 
