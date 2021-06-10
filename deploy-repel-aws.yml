@@ -65,6 +65,7 @@
         - "docker-compose.yml"
         - "Dockerfile.base"
     - name: log into docker registry
+      become: yes
       docker_login:
         registry: "{{ DOCKER_REGISTRY }}"
         username: "{{ DOCKER_REGISTRY_USER }}"
