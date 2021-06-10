@@ -2,6 +2,8 @@
 - hosts: repel-aws
   vars:
     base_docker_dir: "/root/docker"
+  vars_files:
+    - .env
   tasks:
     - name: install system packages
       become: yes
@@ -62,6 +64,11 @@
         - "docker-compose-production-aws.yml"
         - "docker-compose.yml"
         - "Dockerfile.base"
+    - name: log into docker registry
+      docker_login:
+        registry: {{ DOCKER_REGISTRY }}
+        username: {{ DOCKER_REGISTRY_USER }}
+        password: {{ DOCKER_REGISTRY_PASSWORD }}
     - name: deploy docker-compose stack
       become: yes
       docker_compose:
