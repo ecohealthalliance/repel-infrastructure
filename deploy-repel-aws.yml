@@ -66,9 +66,9 @@
         - "Dockerfile.base"
     - name: log into docker registry
       docker_login:
-        registry: {{ DOCKER_REGISTRY }}
-        username: {{ DOCKER_REGISTRY_USER }}
-        password: {{ DOCKER_REGISTRY_PASSWORD }}
+        registry: "{{ DOCKER_REGISTRY }}"
+        username: "{{ DOCKER_REGISTRY_USER }}"
+        password: "{{ DOCKER_REGISTRY_PASSWORD }}"
     - name: deploy docker-compose stack
       become: yes
       docker_compose:
