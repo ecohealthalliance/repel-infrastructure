@@ -69,6 +69,7 @@
         registry: "{{ DOCKER_REGISTRY }}"
         username: "{{ DOCKER_REGISTRY_USER }}"
         password: "{{ DOCKER_REGISTRY_PASSWORD }}"
+        reauthorize: yes
     - name: deploy docker-compose stack
       become: yes
       docker_compose:
