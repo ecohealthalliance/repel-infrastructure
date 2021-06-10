@@ -3,7 +3,7 @@
   vars:
     base_docker_dir: "/root/docker"
   vars_files:
-    - .env
+    - .env-ansible
   tasks:
     - name: install system packages
       become: yes

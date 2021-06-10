@@ -1,4 +1,5 @@
 repeldb/.env filter=git-crypt diff=git-crypt
 .env filter=git-crypt diff=git-crypt
+.env-ansible filter=git-crypt diff=git-crypt
 rshinyauth0/.env filter=git-crypt diff=git-crypt
 *.pem filter=git-crypt diff=git-crypt
