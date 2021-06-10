@@ -22,10 +22,6 @@ jobs:
           chmod 400 repel-aws.pem
       - name: Deploy containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
-        docker_login:
-          registry: ${{ secrets.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKER_REGISTRY_USER }}
-          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
         with:
           playbook: deploy-repel-aws.yml
           directory: ./
