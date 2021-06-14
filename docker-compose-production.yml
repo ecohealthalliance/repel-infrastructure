@@ -4,6 +4,8 @@ services:
   postgres:
     ports:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
+    environment:
+      - IS_PROD=no
   cron:
     volumes:
       - /var/log/repel:/var/log/shared
