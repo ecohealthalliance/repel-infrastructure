@@ -8,16 +8,15 @@ export PGDATABASE="$POSTGRES_DB"
 
 if [ "$RESTORE_PG_FROM_AWS" == "1" ]
 then
-  echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET"
   dropdb $POSTGRES_DB || true
   if [ "$IS_PROD" == "yes" ]
   then
-    aws s3 cp s3://${AWS_BUCKET_PROD}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
-    touch /tmp/bucket_prod
+    ${TARGET_BUCKET} = ${AWS_BUCKET_PROD}
   else
-    aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
-    touch /tmp/bucket_not_prod
+    ${TARGET_BUCKET} = ${AWS_BUCKET}
   fi
+  echo "Restoring database $PGDATABASE from S3 bucket $TARG_BUCKET"
+  aws s3 cp s3://${TARGET_BUCKET}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
   unxz /tmp/repel_backup.dmp.xz
   createdb $POSTGRES_DB || { echo "Error: failed to create repel database!" && exit 1; }
   psql -f /tmp/repel_backup.dmp postgres || { echo "Error: failed to restore repel database from backup!" && exit 1; }
