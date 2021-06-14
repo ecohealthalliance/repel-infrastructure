@@ -28,14 +28,19 @@ jobs:
           export $(egrep -v '^#' .env | xargs)
           echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
           docker-compose push
+      - name: restrict pem file permissions
+        run: |
+          chmod 400 repel-aws.pem
       - name: Deploy containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: deploy-repel-aws.yml
           directory: ./
-          key: ./repel-aws.pem
           inventory: |
             [repel-aws]
-            54.158.127.254
+            54.158.127.254 ansible_ssh_private_key_file=repel-aws.pem ansible_ssh_user=ubuntu
           options: |
             -v
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PAT: ${{ secrets.GH_PAT }}
