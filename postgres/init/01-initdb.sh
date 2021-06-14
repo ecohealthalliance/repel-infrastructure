@@ -11,11 +11,11 @@ then
   dropdb $POSTGRES_DB || true
   if [ "$IS_PROD" == "yes" ]
   then
-    ${TARGET_BUCKET} = ${AWS_BUCKET_PROD}
+    export TARGET_BUCKET="$AWS_BUCKET_PROD"
   else
-    ${TARGET_BUCKET} = ${AWS_BUCKET}
+    export TARGET_BUCKET="$AWS_BUCKET"
   fi
-  echo "Restoring database $PGDATABASE from S3 bucket $TARG_BUCKET"
+  echo "Restoring database $PGDATABASE from S3 bucket $TARGET_BUCKET"
   aws s3 cp s3://${TARGET_BUCKET}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
   unxz /tmp/repel_backup.dmp.xz
   createdb $POSTGRES_DB || { echo "Error: failed to create repel database!" && exit 1; }
