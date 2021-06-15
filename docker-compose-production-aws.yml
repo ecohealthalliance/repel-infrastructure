@@ -3,7 +3,7 @@ version: '3'
 services:
   postgres:
     ports:
-      - '${POSTGRES_EXTERNAL_PORT}:5432'
+      - "${POSTGRES_EXTERNAL_PORT}:5432"
     environment:
       - IS_PROD=yes
   cron:
