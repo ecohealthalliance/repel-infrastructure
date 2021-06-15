@@ -9,8 +9,10 @@ services:
   cron:
     entrypoint: "bash -c"
     command: "exit 0"
-#    volumes:
-#      - /var/log/repel:/var/log/shared
+    environment:
+      - IS_PROD=yes
+    volumes:
+      - /var/log/repel:/var/log/shared
   shinyserver:
     volumes:
       - /var/log/repel:/srv/repel-shiny-server/logs
