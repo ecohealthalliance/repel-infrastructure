@@ -7,8 +7,6 @@ services:
     environment:
       - IS_PROD=yes
   cron:
-    entrypoint: "bash -c"
-    command: "exit 0"
     environment:
       - IS_PROD=yes
     volumes:

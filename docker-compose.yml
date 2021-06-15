@@ -32,6 +32,8 @@ services:
       context: './cron'
     links:
       - postgres:postgres
+    environment:
+      - IS_PROD=no
     env_file: .env
     restart: on-failure
     depends_on:
