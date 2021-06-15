@@ -20,6 +20,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_KEY }}
         aws-region: us-east-1
 
-    - name: Copy files to the test website with the AWS CLI
+    - name: Copy db backup from dev bucket to production bucket
       run: |
         aws s3 cp s3://repeldb/dumps/repel_backup.dmp.xz s3://repeldb-prod/dumps/repel_backup.dmp.xz
