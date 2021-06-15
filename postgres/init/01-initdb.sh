@@ -11,12 +11,16 @@ then
   dropdb $POSTGRES_DB || true
   if [ "$IS_PROD" == "yes" ]
   then
-    echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET_PROD"
-    aws s3 cp s3://${AWS_BUCKET_PROD}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
+    echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET_PROD $AWS_BUCKET"
+    #    aws s3 cp s3://${AWS_BUCKET_PROD}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
+    target_bucket=${AWS_BUCKET_PROD}
   else
     echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET"
-    aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
+    #    aws s3 cp s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
+    target_bucket=${AWS_BUCKET}
   fi
+  echo "target_bucket is $target_bucket"
+  aws s3 cp s3://${target_bucket}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
   unxz /tmp/repel_backup.dmp.xz
   createdb $POSTGRES_DB || { echo "Error: failed to create repel database!" && exit 1; }
   psql -f /tmp/repel_backup.dmp postgres || { echo "Error: failed to restore repel database from backup!" && exit 1; }
