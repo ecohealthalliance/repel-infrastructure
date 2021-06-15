@@ -20,6 +20,11 @@ then
     target_bucket=${AWS_BUCKET}
   fi
   echo "target_bucket is $target_bucket"
+  if [ "$target_bucket" == ""]
+  then
+    echo "Error: target_bucket empty so cannot proceed!"
+    exit 1;
+  fi
   aws s3 cp s3://${target_bucket}/dumps/${PGDUMP_FILENAME}.xz /tmp/repel_backup.dmp.xz
   unxz /tmp/repel_backup.dmp.xz
   createdb $POSTGRES_DB || { echo "Error: failed to create repel database!" && exit 1; }
