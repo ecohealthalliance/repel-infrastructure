@@ -42,7 +42,7 @@
         owner: root
         group: root
         mode: 0775
-    - name: copy service directories to host
+    - name: copy service directories and files to host
       become: yes
       copy:
         src: "./{{ item }}"
@@ -64,6 +64,7 @@
         - "docker-compose-production-aws.yml"
         - "docker-compose.yml"
         - "Dockerfile.base"
+        - ".env"
     - name: log into docker registry
       become: yes
       docker_login:
