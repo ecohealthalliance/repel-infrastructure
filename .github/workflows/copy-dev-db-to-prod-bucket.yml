@@ -22,4 +22,4 @@ jobs:
 
     - name: Copy files to the test website with the AWS CLI
       run: |
-        aws s3 cp s3://repeldb/dumps/repel_backup.dmp.xz s3://repeldb_prod/dumps/repel_backup.dmp.xz
+        aws s3 cp s3://repeldb/dumps/repel_backup.dmp.xz s3://repeldb-prod/dumps/repel_backup.dmp.xz
