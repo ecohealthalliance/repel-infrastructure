@@ -17,7 +17,7 @@ if [ "$BACKUP_PG" == "1" ]; then
     target_bucket=${AWS_BUCKET}
   fi
   echo "Dumping $PGDATABASE and archiving on S3 bucket $target_bucket"
-#  pg_dumpall | xz -9 -c > /tmp/tmp.sql.xz
-#  aws s3 cp /tmp/tmp.sql.xz s3://${target_bucket}/dumps/${PGDUMP_FILENAME}.xz
-#  rm /tmp/tmp.sql.xz
+  pg_dumpall | xz -9 -c > /tmp/tmp.sql.xz
+  aws s3 cp /tmp/tmp.sql.xz s3://${target_bucket}/dumps/${PGDUMP_FILENAME}.xz
+  rm /tmp/tmp.sql.xz
 fi
