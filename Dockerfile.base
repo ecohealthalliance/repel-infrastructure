@@ -18,7 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   parallel \
   postgresql-client \
   python3-pip \
-  python3-psycopg2 \
+  python3-dev \
+  libpq-dev \
   unixodbc-dev \
   xz-utils
 
@@ -59,4 +60,3 @@ RUN installGithub.r -u FALSE \
   ecohealthalliance/repeldata \
   ecohealthalliance/repelpredict@network \
   ropenscilabs/rnaturalearthdata
-
