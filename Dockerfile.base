@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   python3-pip \
   python3-dev \
   libpq-dev \
-  python3-Psycopg2 \
+  python3-psycopg2 \
   unixodbc-dev \
   xz-utils
 
