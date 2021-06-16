@@ -19,12 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   postgresql-client \
   python3-pip \
   python3-dev \
-  libpq-dev \
-  python3-psycopg2 \
   unixodbc-dev \
   xz-utils
 
-RUN pip3 install pymongo docker
+RUN pip3 install pymongo docker Psycopg2
 
 RUN install2.r -s \
   arkdb \
