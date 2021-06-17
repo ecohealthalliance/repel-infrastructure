@@ -16,11 +16,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       awscli \
       curl \
       parallel \
-      cron \
  && rm -rf /var/lib/apt/lists/*
 
 # set time zone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+COPY gen_certs.sh gen_certs.sh
+RUN ./gen_certs.sh
 
 ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.1.9/supercronic-linux-amd64 \
    SUPERCRONIC=supercronic-linux-amd64 \
@@ -36,8 +38,4 @@ COPY . /
 
 RUN mkdir /var/log/shared
 
-RUN chmod +x /start.sh
-RUN nohup /start.sh
-
-COPY gen_certs.sh gen_certs.sh
-RUN ./gen_certs.sh
+CMD ["supercronic", "/backup-schedule.cron"]
