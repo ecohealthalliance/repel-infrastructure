@@ -6,9 +6,6 @@ services:
       - "${POSTGRES_EXTERNAL_PORT}:5432"
     environment:
       - IS_PROD=yes
-  cron:
-    environment:
-      - IS_PROD=yes
     volumes:
       - /var/log/repel:/var/log/shared
   shinyserver:
