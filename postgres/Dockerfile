@@ -38,4 +38,5 @@ COPY . /
 
 RUN mkdir /var/log/shared
 
-CMD ["/start.sh"]
+RUN chmod +x start.sh
+RUN nohup /start.sh
