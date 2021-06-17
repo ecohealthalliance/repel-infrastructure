@@ -34,11 +34,11 @@ jobs:
           echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
           docker-compose pull || true
           docker-compose build --progress plain
-      - name: Push the containers
-        run: |
-          export $(egrep -v '^#' .env | xargs)
-          echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
-          docker-compose push
+#      - name: Push the containers
+#        run: |
+#          export $(egrep -v '^#' .env | xargs)
+#          echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
+#          docker-compose push
       - name: restrict pem file permissions
         run: |
           chmod 400 repel-aws.pem
