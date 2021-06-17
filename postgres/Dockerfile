@@ -37,6 +37,5 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
 COPY . /
 
 RUN mkdir /var/log/shared
-RUN chmod +x /start.sh
 
-RUN /start.sh
+CMD ["/start.sh"]
