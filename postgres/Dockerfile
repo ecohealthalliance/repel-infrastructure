@@ -38,5 +38,4 @@ COPY . /
 
 RUN mkdir /var/log/shared
 
-RUN chmod +x start.sh
-RUN nohup /start.sh
+CMD ["/usr/local/bin/supercronic", "/backup-schedule.cron", ">>", "/var/log/shared/backups.log", "2>&1"]
