@@ -38,4 +38,5 @@ COPY . /
 
 RUN mkdir /var/log/shared
 
-CMD ["/usr/local/bin/supercronic", "/backup-schedule.cron", ">>", "/var/log/shared/backups.log", "2>&1"]
+RUN chmod +x /start.sh
+ENTRYPOINT ["/start.sh"]
