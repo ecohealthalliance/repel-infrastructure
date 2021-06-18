@@ -6,4 +6,4 @@ export PGPORT=$POSTGRES_PORT
 export PGHOST=$POSTGRES_HOST
 export PGDATABASE=$POSTGRES_DB
 
-/usr/local/bin/supercronic backup-schedule.cron >> /var/log/shared/backups.log 2>&1 &
+/usr/local/bin/supercronic backup-schedule.cron >> /var/log/shared/backups.log 2>&1
