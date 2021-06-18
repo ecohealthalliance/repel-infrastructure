@@ -26,6 +26,18 @@ services:
     networks:
       - promed-net
       - repel-servers
+  cron:
+    image: ghcr.io/ecohealthalliance/repel-cron
+    build:
+      context: './cron'
+    links:
+      - postgres:postgres
+    env_file: .env
+    restart: on-failure
+    depends_on:
+      - postgres
+    networks:
+      - repel-servers
   scraper:
     image: ghcr.io/ecohealthalliance/repel-scraper
     build:
