@@ -18,6 +18,11 @@ if [ "$BACKUP_PG" == "1" ]; then
   fi
   echo "Dumping $PGDATABASE and archiving on S3 bucket $target_bucket"
   pg_dumpall | xz -9 -c > /tmp/tmp.sql.xz
+  if [ $? -ne 0 -o ${PIPESTATUS[0]} -ne 0 ]
+  then
+    echo "database dump failed! see cron/backup-db-to-aws.sh"
+    exit 1
+  fi
   aws s3 cp /tmp/tmp.sql.xz s3://${target_bucket}/dumps/${PGDUMP_FILENAME}.xz
   rm /tmp/tmp.sql.xz
 fi
