@@ -27,7 +27,7 @@ jobs:
           aws-region: us-east-1
       - name: Copy db backup from dev bucket to production bucket
         run: |
-          aws s3 cp s3://repeldb/dumps/repel_backup.dmp.xz s3://repeldb-prod/dumps/repel_backup.dmp.xz
+          aws s3 sync s3://repeldb s3://repeldb-prod --exclude "*repeldb-logs/*"
       - name: Pull and build containers
         run: |
           export $(egrep -v '^#' .env | xargs)
