@@ -1,5 +1,8 @@
-FROM ghcr.io/ecohealthalliance/repel-postgres
+# FROM ghcr.io/ecohealthalliance/repel-postgres
+FROM ubuntu:20.04
 MAINTAINER noam.ross@gmail.com
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   postgresql-client \
