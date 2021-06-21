@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/dotenv-action
+
+      - name: add dotenv-action
+        uses: actions/dotenv-action
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
