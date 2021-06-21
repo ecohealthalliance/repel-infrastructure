@@ -1,0 +1,17 @@
+name: test-read-env
+
+on:
+  workflow_dispatch:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/dotenv-action
+
+      # Runs a single command using the runners shell
+      - name: Run a one-line script
+        run: echo TZ is ${{ steps.dotenv.outputs.TZ }}
