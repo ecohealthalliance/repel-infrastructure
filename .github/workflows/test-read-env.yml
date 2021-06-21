@@ -10,6 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Decrypt repository using symmetric key
+        env:
+          GIT_CRYPT_KEY64: ${{ secrets.GIT_CRYPT_KEY64 }}
+        run: |
+          sudo apt-get install git-crypt
+          echo $GIT_CRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
+          rm git_crypt_key.key git_crypt_key.key64
 
       - name: add dotenv-action
         id: dotenv
