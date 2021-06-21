@@ -19,11 +19,14 @@ jobs:
           sudo apt-get install git-crypt
           echo $GIT_CRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
           rm git_crypt_key.key git_crypt_key.key64
+      - name: add dotenv-action
+        id: dotenv
+        uses: ./.github/actions/dotenv-action
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_KEY }}
+          aws-access-key-id: ${{ steps.dotenv.outputs.AWS_ID }}
+          aws-secret-access-key: ${{ steps.dotenv.outputs.AWS_KEY }}
           aws-region: us-east-1
       - name: Copy db backup from dev bucket to production bucket
         run: |
