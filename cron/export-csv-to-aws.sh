@@ -11,8 +11,10 @@ export PGDATABASE=$POSTGRES_DB
 if [ "$IS_PROD" == "yes" ]
 then
   target_bucket=${AWS_BUCKET_PROD}
+  n_cores=1
 else
   target_bucket=${AWS_BUCKET}
+  n_cores=10
 fi
 
 # Backup the whole DB to S3
@@ -27,7 +29,7 @@ aws s3 rm s3://${target_bucket}/csv --recursive
 # allow parallel, but limited, connections to the database.
 psql -Atc "select tablename from pg_tables where schemaname='public'" |\
   while read TBL; do
-    sem -j 10 "psql -c \"COPY $TBL TO STDOUT WITH NULL AS 'NA' CSV HEADER\" | xz -9 -c | aws s3 cp - s3://${target_bucket}/csv/${TBL}.csv.xz --acl public-read"
+    sem -j ${n_cores} "psql -c \"COPY $TBL TO STDOUT WITH NULL AS 'NA' CSV HEADER\" | xz -9 -c | aws s3 cp - s3://${target_bucket}/csv/${TBL}.csv.xz --acl public-read"
   done
 fi
 sem --wait
