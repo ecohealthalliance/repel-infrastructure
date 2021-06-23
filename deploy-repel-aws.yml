@@ -1,10 +1,15 @@
 ---
 - hosts: repel-aws
-  vars:
-    base_docker_dir: "/root/docker"
-  vars_files:
-    - .env-ansible
   tasks:
+    - name: Get env file content
+      become: yes
+      slurp:
+        src: /root/docker/.env
+      register: env_file_content
+    - name: Parse env file and load into fact
+      become: yes
+      set_fact:
+        env_vars: "{{ ('{' + (env_file_content.content | b64decode).split('\n') | select | map('regex_replace', '([^=]*)=(.*)', '\"\\1\": \"\\2\"') | join(',') + '}') | from_json }}"
     - name: install system packages
       become: yes
       apt:
@@ -37,7 +42,7 @@
     - name: create directory
       become: yes
       file:
-        path: "{{ base_docker_dir }}"
+        path: "{{ env_vars['PRODUCTION_BASE_DOCKER_DIR'] }}"
         state: directory
         owner: root
         group: root
@@ -46,7 +51,7 @@
       become: yes
       copy:
         src: "./{{ item }}"
-        dest: "{{ base_docker_dir }}"
+        dest: "{{ env_vars['PRODUCTION_BASE_DOCKER_DIR'] }}"
         owner: root
         group: root
         mode: 0755
@@ -68,14 +73,14 @@
     - name: log into docker registry
       become: yes
       docker_login:
-        registry: "{{ DOCKER_REGISTRY }}"
-        username: "{{ DOCKER_REGISTRY_USER }}"
-        password: "{{ DOCKER_REGISTRY_PASSWORD }}"
+        registry: "{{ env_vars['DOCKER_REGISTRY'] }}"
+        username: "{{ env_vars['DOCKER_REGISTRY_USER'] }}"
+        password: "{{ env_vars['DOCKER_REGISTRY_PASSWORD'] }}"
         reauthorize: yes
     - name: deploy docker-compose stack
       become: yes
       docker_compose:
-        project_src: "{{ base_docker_dir }}"
+        project_src: "{{ env_vars['PRODUCTION_BASE_DOCKER_DIR'] }}"
         state: present
         debug: yes
         files:

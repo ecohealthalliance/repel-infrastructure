@@ -17,6 +17,9 @@ jobs:
           sudo apt-get install git-crypt
           echo $GIT_CRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
           rm git_crypt_key.key git_crypt_key.key64
+      - name: add dotenv-action
+        id: dotenv
+        uses: ./.github/actions/dotenv-action
       - name: restrict pem file permissions
         run: |
           chmod 400 repel-aws.pem
@@ -27,7 +30,7 @@ jobs:
           directory: ./
           inventory: |
             [repel-aws]
-            54.158.127.254 ansible_ssh_private_key_file=repel-aws.pem ansible_ssh_user=ubuntu
+            ${{ steps.dotenv.outputs.PRODUCTION_SERVER_URL }} ansible_ssh_private_key_file=${{ steps.dotenv.outputs.PRODUCTION_PEM }} ansible_ssh_user=${{ steps.dotenv.outputs.PRODUCTION_SSH_USER }}
           options: |
             -v
         env:
