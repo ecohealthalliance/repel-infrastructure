@@ -22,7 +22,7 @@ jobs:
         uses: ./.github/actions/dotenv-action
       - name: restrict pem file permissions
         run: |
-          chmod 400 repel-aws.pem
+          chmod 400 ${{ steps.dotenv.outputs.PRODUCTION_PEM }}
       - name: Deploy containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
         with:

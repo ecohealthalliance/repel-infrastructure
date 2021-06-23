@@ -37,6 +37,7 @@ jobs:
           echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
           docker-compose pull || true
           docker-compose build --progress plain
+# uncomment this section when we move default branch to production
 #      - name: Push the containers
 #        run: |
 #          export $(egrep -v '^#' .env | xargs)
@@ -44,7 +45,7 @@ jobs:
 #          docker-compose push
       - name: restrict pem file permissions
         run: |
-          chmod 400 repel-aws.pem
+          chmod 400 ${{ steps.dotenv.outputs.PRODUCTION_PEM }}
       - name: remove containers from AWS instance
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -52,7 +53,7 @@ jobs:
           directory: ./
           inventory: |
             [repel-aws]
-            54.158.127.254 ansible_ssh_private_key_file=repel-aws.pem ansible_ssh_user=ubuntu
+            ${{ steps.dotenv.outputs.PRODUCTION_SERVER_URL }} ansible_ssh_private_key_file=${{ steps.dotenv.outputs.PRODUCTION_PEM }} ansible_ssh_user=${{ steps.dotenv.outputs.PRODUCTION_SSH_USER }}
           options: |
             -v
       - name: Deploy containers to AWS instance
@@ -62,9 +63,8 @@ jobs:
           directory: ./
           inventory: |
             [repel-aws]
-            54.158.127.254 ansible_ssh_private_key_file=repel-aws.pem ansible_ssh_user=ubuntu
+            ${{ steps.dotenv.outputs.PRODUCTION_SERVER_URL }} ansible_ssh_private_key_file=${{ steps.dotenv.outputs.PRODUCTION_PEM }} ansible_ssh_user=${{ steps.dotenv.outputs.PRODUCTION_SSH_USER }}
           options: |
             -v
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_PAT: ${{ secrets.GH_PAT }}
