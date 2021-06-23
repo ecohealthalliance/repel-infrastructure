@@ -1,6 +1,14 @@
 ---
 - hosts: repel-aws
   tasks:
+    - name: copy .env file
+      become: yes
+      copy:
+        src: ./.env
+        dest: "/root/docker"
+        owner: root
+        group: root
+        mode: 0755
     - name: Get env file content
       become: yes
       slurp:
@@ -69,7 +77,6 @@
         - "docker-compose-production-aws.yml"
         - "docker-compose.yml"
         - "Dockerfile.base"
-        - ".env"
     - name: log into docker registry
       become: yes
       docker_login:
