@@ -1,0 +1,14 @@
+---
+- hosts: repel-dev
+  vars:
+    base_docker_dir: "/root/docker"
+  tasks:
+    - name: bring down docker-compose stack
+      become: yes
+      docker_compose:
+        project_src: "{{ base_docker_dir }}"
+        state: absent
+        debug: yes
+        files:
+          - docker-compose.yml
+          - docker-compose-production.yml
