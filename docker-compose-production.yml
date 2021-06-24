@@ -22,9 +22,13 @@ services:
   nginx:
     environment:
       IS_LOCAL: "no"
-      STAGING: "true"
+      STAGING: "false"
+      URL: ${NGINX_URL_DEV}
+      EMAIL: ${ADMIN_EMAIL}
     ports:
       - '80:80'
       - '443:443'
+    volumes:
+      - ./nginx/swag_config:/config
 #    volumes:
 #      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys
