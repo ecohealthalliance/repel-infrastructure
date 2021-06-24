@@ -1,5 +1,5 @@
 ---
-- hosts: repel-aws
+- hosts: repel-dev
   tasks:
     - name: copy .env file
       become: yes
