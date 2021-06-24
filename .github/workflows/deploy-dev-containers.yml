@@ -27,7 +27,7 @@ jobs:
           directory: ./
           inventory: |
             [repel-dev]
-            ${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }}
+            ${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }}
           options: |
             -v
         env:
