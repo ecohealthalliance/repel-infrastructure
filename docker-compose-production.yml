@@ -11,6 +11,10 @@ services:
       - IS_PROD=no
     volumes:
       - /var/log/repel:/var/log/shared
+  rshinyauth0:
+    environment:
+      - AUTH0_CALLBACK_URL=https://kirby.ecohealthalliance.org/callback
+      - LOGOUT_URL=https://kirby.ecohealthalliance.org
   shinyserver:
     volumes:
       - /var/log/repel:/srv/repel-shiny-server/logs
