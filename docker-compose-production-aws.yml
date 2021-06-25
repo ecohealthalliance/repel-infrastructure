@@ -11,6 +11,10 @@ services:
       - IS_PROD=yes
     volumes:
       - /var/log/repel:/var/log/shared
+  rshinyauth0:
+    environment:
+      - AUTH0_CALLBACK_URL=https://repel-aws-2.eha.io/callback
+      - LOGOUT_URL=https://repel-aws-2.eha.io
   shinyserver:
     volumes:
       - /var/log/repel:/srv/repel-shiny-server/logs
