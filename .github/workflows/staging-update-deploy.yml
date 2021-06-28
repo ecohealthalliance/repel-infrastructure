@@ -1,0 +1,56 @@
+name: staging-update-deploy
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Decrypt repository using symmetric key
+        env:
+          GIT_CRYPT_KEY64: ${{ secrets.GIT_CRYPT_KEY64 }}
+        run: |
+          sudo apt-get install git-crypt
+          echo $GIT_CRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
+          rm git_crypt_key.key git_crypt_key.key64
+      - name: add dotenv-action
+        id: dotenv
+        uses: ./.github/actions/dotenv-action
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ steps.dotenv.outputs.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ steps.dotenv.outputs.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Pull and build containers
+        run: |
+          export $(egrep -v '^#' .env | xargs)
+          echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
+          docker-compose pull || true
+          docker-compose build --progress plain
+      - name: bring down staging containers
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: remove-repel-dev.yml
+          directory: ./
+          inventory: |
+            [repel-dev]
+            ${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }}
+          options: |
+            -v
+      - name: Deploy containers to staging server
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: deploy-repel-dev.yml
+          directory: ./
+          inventory: |
+            [repel-dev]
+            ${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }}
+          options: |
+            -v
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
