@@ -4,7 +4,7 @@
     - name: copy .env file
       become: yes
       copy:
-        src: ./.env
+        src: ../.env
         dest: "/root/docker"
         owner: root
         group: root
@@ -58,7 +58,7 @@
     - name: copy service directories and files to host
       become: yes
       copy:
-        src: "./{{ item }}"
+        src: "../{{ item }}"
         dest: "{{ env_vars['PRODUCTION_BASE_DOCKER_DIR'] }}"
         owner: root
         group: root
