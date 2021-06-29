@@ -28,7 +28,7 @@ jobs:
       - name: Deploy containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: ansible/deploy-production.yml
+          playbook: ./ansible/deploy-production.yml
           directory: ./
           inventory: |
             [repel-aws]
