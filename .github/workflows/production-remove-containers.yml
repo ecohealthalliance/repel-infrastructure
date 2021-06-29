@@ -1,4 +1,6 @@
-name: test-dev
+name: production-remove-containers
+
+# manual container removal for production server.  Prunes all images, containers and volumes
 
 on:
   workflow_dispatch:
@@ -20,14 +22,17 @@ jobs:
       - name: add dotenv-action
         id: dotenv
         uses: ./.github/actions/dotenv-action
-      - name: run playbook
+      - name: restrict pem file permissions
+        run: |
+          chmod 400 ${{ steps.dotenv.outputs.PRODUCTION_PEM }}
+      - name: remove containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: test-dev.yml
+          playbook: remove-repel-aws.yml
           directory: ./
           inventory: |
-            [repel-dev]
-            ${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }}
+            [repel-aws]
+            ${{ steps.dotenv.outputs.PRODUCTION_SERVER_URL }} ansible_ssh_private_key_file=${{ steps.dotenv.outputs.PRODUCTION_PEM }} ansible_ssh_user=${{ steps.dotenv.outputs.PRODUCTION_SSH_USER }}
           options: |
             -v
         env:

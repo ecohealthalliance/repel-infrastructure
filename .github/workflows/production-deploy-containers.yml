@@ -1,4 +1,6 @@
-name: remove-aws-containers
+name: production-deploy-containers
+
+# manual deploy action for production server
 
 on:
   workflow_dispatch:
@@ -20,16 +22,18 @@ jobs:
       - name: add dotenv-action
         id: dotenv
         uses: ./.github/actions/dotenv-action
-      - name: shut down repel containers on development server
+      - name: restrict pem file permissions
+        run: |
+          chmod 400 ${{ steps.dotenv.outputs.PRODUCTION_PEM }}
+      - name: Deploy containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: remove-repel-dev.yml
+          playbook: ansible/deploy-production.yml
           directory: ./
           inventory: |
-            [repel-dev]
-            ${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_USER }}
+            [repel-aws]
+            ${{ steps.dotenv.outputs.PRODUCTION_SERVER_URL }} ansible_ssh_private_key_file=${{ steps.dotenv.outputs.PRODUCTION_PEM }} ansible_ssh_user=${{ steps.dotenv.outputs.PRODUCTION_SSH_USER }}
           options: |
             -v
-            -kK
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -18,7 +18,7 @@
         debug: yes
         files:
           - docker-compose.yml
-          - docker-compose-production-aws.yml
+          - docker-compose-production.yml
     - name: prune everything
       become: yes
       docker_prune:

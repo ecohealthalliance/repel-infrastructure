@@ -73,8 +73,8 @@
         - "shiny"
         - "docker-compose-local.yml"
         - "docker-compose-minlocal.yml"
+        - "docker-compose-staging.yml"
         - "docker-compose-production.yml"
-        - "docker-compose-production-aws.yml"
         - "docker-compose.yml"
         - "Dockerfile.base"
     - name: log into docker registry
@@ -93,4 +93,4 @@
         build: yes
         files:
           - docker-compose.yml
-          - docker-compose-production-aws.yml
+          - docker-compose-production.yml

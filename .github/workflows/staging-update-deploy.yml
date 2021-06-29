@@ -1,5 +1,7 @@
 name: staging-update-deploy
 
+# automatic deploy to staging server when staging branch is updated.
+
 on:
   push:
     branches:
@@ -39,17 +41,17 @@ jobs:
           directory: ./
           inventory: |
             [repel-dev]
-            ${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }}
+            ${{ steps.dotenv.outputs.STAGING_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.STAGING_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }}
           options: |
             -v
       - name: Deploy containers to staging server
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: deploy-repel-dev.yml
+          playbook: deploy-staging.yml
           directory: ./
           inventory: |
             [repel-dev]
-            ${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.DEPLOYMENT_SERVER_PASS }}
+            ${{ steps.dotenv.outputs.STAGING_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.STAGING_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }}
           options: |
             -v
         env:

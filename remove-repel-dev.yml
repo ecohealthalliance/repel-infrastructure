@@ -13,9 +13,9 @@
     - name: bring down docker-compose stack
       become: yes
       docker_compose:
-        project_src: "{{ env_vars['DEPLOYMENT_BASE_DOCKER_DIR'] }}"
+        project_src: "{{ env_vars['STAGING_BASE_DOCKER_DIR'] }}"
         state: absent
         debug: yes
         files:
           - docker-compose.yml
-          - docker-compose-production.yml
+          - docker-compose-staging.yml

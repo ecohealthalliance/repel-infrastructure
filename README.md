@@ -17,6 +17,9 @@ OR
 **bring up production workflow**:  
 `docker-compose -f docker-compose.yml -f docker-compose-production.yml up`
 
+**bring up staging workflow**:  
+`docker-compose -f docker-compose.yml -f docker-compose-staging.yml up`
+
 **bring down containers**:  
 `docker-compose down`
 

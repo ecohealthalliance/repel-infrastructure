@@ -1,4 +1,6 @@
-name: remove-aws-containers
+name: staging-deploy-containers
+
+# manual deploy to staging server
 
 on:
   workflow_dispatch:
@@ -20,17 +22,14 @@ jobs:
       - name: add dotenv-action
         id: dotenv
         uses: ./.github/actions/dotenv-action
-      - name: restrict pem file permissions
-        run: |
-          chmod 400 ${{ steps.dotenv.outputs.PRODUCTION_PEM }}
-      - name: remove containers to AWS instance
+      - name: Deploy containers to development server
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: remove-repel-aws.yml
+          playbook: deploy-staging.yml
           directory: ./
           inventory: |
-            [repel-aws]
-            ${{ steps.dotenv.outputs.PRODUCTION_SERVER_URL }} ansible_ssh_private_key_file=${{ steps.dotenv.outputs.PRODUCTION_PEM }} ansible_ssh_user=${{ steps.dotenv.outputs.PRODUCTION_SSH_USER }}
+            [repel-dev]
+            ${{ steps.dotenv.outputs.STAGING_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.STAGING_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }}
           options: |
             -v
         env:
