@@ -26,7 +26,7 @@ jobs:
       - name: shut down repel containers on development server
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: remove-repel-dev.yml
+          playbook: ansible/remove-staging.yml
           directory: ./
           inventory: |
             [repel-dev]

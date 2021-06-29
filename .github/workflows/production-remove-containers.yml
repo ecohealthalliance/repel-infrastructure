@@ -28,7 +28,7 @@ jobs:
       - name: remove containers to AWS instance
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: remove-repel-aws.yml
+          playbook: ansible/remove-production.yml
           directory: ./
           inventory: |
             [repel-aws]
