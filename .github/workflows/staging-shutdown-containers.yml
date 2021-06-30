@@ -1,4 +1,4 @@
-name: staging-remove-containers
+name: staging-shutdown-containers
 
 # manual take down of running REPEL containers.  Same as running 'docker-compose down'.
 #   unlike production version, no pruning is done.
