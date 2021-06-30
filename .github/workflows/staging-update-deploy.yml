@@ -1,11 +1,11 @@
-name: production-update-deploy
+name: staging-update-deploy
 
-# automatic production deploy on update of production branch
+# automatic deploy to staging server when staging branch is updated.
 
 on:
   push:
     branches:
-      - production
+      - staging
 
 jobs:
   build:
@@ -28,42 +28,30 @@ jobs:
           aws-access-key-id: ${{ steps.dotenv.outputs.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ steps.dotenv.outputs.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Copy db backup from dev bucket to production bucket
-        run: |
-          aws s3 sync s3://repeldb s3://repeldb-prod --exclude "*repeldb-logs/*"
       - name: Pull and build containers
         run: |
           export $(egrep -v '^#' .env | xargs)
           echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
           docker-compose pull || true
           docker-compose build --progress plain
-# uncomment this section when we move default branch to production
-#      - name: Push the containers
-#        run: |
-#          export $(egrep -v '^#' .env | xargs)
-#          echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
-#          docker-compose push
-      - name: restrict pem file permissions
-        run: |
-          chmod 400 ${{ steps.dotenv.outputs.PRODUCTION_PEM }}
-      - name: remove containers from AWS instance
+      - name: bring down staging containers
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: ansible/remove-production.yml
+          playbook: ansible/remove-staging.yml
           directory: ./
           inventory: |
-            [repel-aws]
-            ${{ steps.dotenv.outputs.PRODUCTION_SERVER_URL }} ansible_ssh_private_key_file=${{ steps.dotenv.outputs.PRODUCTION_PEM }} ansible_ssh_user=${{ steps.dotenv.outputs.PRODUCTION_SSH_USER }}
+            [repel-dev]
+            ${{ steps.dotenv.outputs.STAGING_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.STAGING_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }}
           options: |
             -v
-      - name: Deploy containers to AWS instance
+      - name: Deploy containers to staging server
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: ansible/deploy-production.yml
+          playbook: deploy-staging.yml
           directory: ./
           inventory: |
-            [repel-aws]
-            ${{ steps.dotenv.outputs.PRODUCTION_SERVER_URL }} ansible_ssh_private_key_file=${{ steps.dotenv.outputs.PRODUCTION_PEM }} ansible_ssh_user=${{ steps.dotenv.outputs.PRODUCTION_SSH_USER }}
+            [repel-dev]
+            ${{ steps.dotenv.outputs.STAGING_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.STAGING_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }}
           options: |
             -v
         env:

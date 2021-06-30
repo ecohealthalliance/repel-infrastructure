@@ -57,5 +57,5 @@ RUN installGithub.r -u FALSE \
   ecohealthalliance/wahis \
   noamross/scrapetools \
   ecohealthalliance/repeldata \
-  ecohealthalliance/repelpredict@network \
+  ecohealthalliance/repelpredict \
   ropenscilabs/rnaturalearthdata

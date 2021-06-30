@@ -1,10 +1,10 @@
 ---
-- hosts: repel-aws
+- hosts: repel-dev
   tasks:
     - name: copy .env file
       become: yes
       copy:
-        src: ./.env
+        src: ../.env
         dest: "/root/docker"
         owner: root
         group: root
@@ -50,7 +50,7 @@
     - name: create directory
       become: yes
       file:
-        path: "{{ env_vars['PRODUCTION_BASE_DOCKER_DIR'] }}"
+        path: "{{ env_vars['STAGING_BASE_DOCKER_DIR'] }}"
         state: directory
         owner: root
         group: root
@@ -58,8 +58,8 @@
     - name: copy service directories and files to host
       become: yes
       copy:
-        src: "./{{ item }}"
-        dest: "{{ env_vars['PRODUCTION_BASE_DOCKER_DIR'] }}"
+        src: "../{{ item }}"
+        dest: "{{ env_vars['STAGING_BASE_DOCKER_DIR'] }}"
         owner: root
         group: root
         mode: 0755
@@ -73,8 +73,8 @@
         - "shiny"
         - "docker-compose-local.yml"
         - "docker-compose-minlocal.yml"
+        - "docker-compose-staging.yml"
         - "docker-compose-production.yml"
-        - "docker-compose-production-aws.yml"
         - "docker-compose.yml"
         - "Dockerfile.base"
     - name: log into docker registry
@@ -87,9 +87,10 @@
     - name: deploy docker-compose stack
       become: yes
       docker_compose:
-        project_src: "{{ env_vars['PRODUCTION_BASE_DOCKER_DIR'] }}"
+        project_src: "{{ env_vars['STAGING_BASE_DOCKER_DIR'] }}"
         state: present
         debug: yes
+        build: yes
         files:
           - docker-compose.yml
-          - docker-compose-production-aws.yml
+          - docker-compose-staging.yml

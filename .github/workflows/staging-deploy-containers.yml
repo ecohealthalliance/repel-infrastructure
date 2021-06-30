@@ -1,0 +1,36 @@
+name: staging-deploy-containers
+
+# manual deploy to staging server
+
+on:
+  workflow_dispatch:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Decrypt repository using symmetric key
+        env:
+          GIT_CRYPT_KEY64: ${{ secrets.GIT_CRYPT_KEY64 }}
+        run: |
+          sudo apt-get install git-crypt
+          echo $GIT_CRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
+          rm git_crypt_key.key git_crypt_key.key64
+      - name: add dotenv-action
+        id: dotenv
+        uses: ./.github/actions/dotenv-action
+      - name: Deploy containers to development server
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: deploy-staging.yml
+          directory: ./
+          inventory: |
+            [repel-dev]
+            ${{ steps.dotenv.outputs.STAGING_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.STAGING_SERVER_USER }} ansible_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }} ansible_become_password=${{ steps.dotenv.outputs.STAGING_SERVER_PASS }}
+          options: |
+            -v
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -3,14 +3,18 @@ version: '3'
 services:
   postgres:
     ports:
-      - "${POSTGRES_EXTERNAL_PORT}:5432"
+      - '${POSTGRES_EXTERNAL_PORT}:5432'
     environment:
-      - IS_PROD=yes
+      - IS_PROD=no
   cron:
     environment:
-      - IS_PROD=yes
+      - IS_PROD=no
     volumes:
       - /var/log/repel:/var/log/shared
+  rshinyauth0:
+    environment:
+      - AUTH0_CALLBACK_URL=https://kirby.ecohealthalliance.org/callback
+      - LOGOUT_URL=https://kirby.ecohealthalliance.org
   shinyserver:
     volumes:
       - /var/log/repel:/srv/repel-shiny-server/logs
@@ -23,10 +27,12 @@ services:
     environment:
       IS_LOCAL: "no"
       STAGING: "false"
-      URL: ${NGINX_URL}
+      URL: ${NGINX_URL_STAGING}
       EMAIL: ${ADMIN_EMAIL}
     ports:
       - '80:80'
       - '443:443'
     volumes:
       - ./nginx/swag_config:/config
+#    volumes:
+#      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys

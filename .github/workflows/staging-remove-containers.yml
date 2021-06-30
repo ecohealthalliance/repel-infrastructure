@@ -1,4 +1,7 @@
-name: deploy-aws-containers
+name: staging-remove-containers
+
+# manual take down of running REPEL containers.  Same as running 'docker-compose down'.
+#   unlike production version, no pruning is done.
 
 on:
   workflow_dispatch:
@@ -20,18 +23,16 @@ jobs:
       - name: add dotenv-action
         id: dotenv
         uses: ./.github/actions/dotenv-action
-      - name: restrict pem file permissions
-        run: |
-          chmod 400 ${{ steps.dotenv.outputs.PRODUCTION_PEM }}
-      - name: Deploy containers to AWS instance
+      - name: shut down repel containers on development server
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: deploy-repel-aws.yml
+          playbook: ansible/remove-staging.yml
           directory: ./
           inventory: |
-            [repel-aws]
-            ${{ steps.dotenv.outputs.PRODUCTION_SERVER_URL }} ansible_ssh_private_key_file=${{ steps.dotenv.outputs.PRODUCTION_PEM }} ansible_ssh_user=${{ steps.dotenv.outputs.PRODUCTION_SSH_USER }}
+            [repel-dev]
+            ${{ steps.dotenv.outputs.STAGING_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.STAGING_SERVER_USER }}
           options: |
             -v
+            -kK
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
