@@ -9,7 +9,7 @@ export PGDATABASE="$POSTGRES_DB"
 if [ "$RESTORE_PG_FROM_AWS" == "1" ]
 then
   dropdb $POSTGRES_DB || true
-  if [ "$IS_PROD" == "yes" ]
+  if [ "$WORKFLOW" == "production" ]
   then
     echo "Restoring database $PGDATABASE from S3 bucket $AWS_BUCKET_PROD"
     target_bucket=${AWS_BUCKET_PROD}

@@ -10,7 +10,7 @@ export PGDATABASE=$POSTGRES_DB
 
 # Backup the whole DB to S3
 if [ "$BACKUP_PG" == "1" ]; then
-  if [ "$IS_PROD" == "yes" ]
+  if [ "$WORKFLOW" == "production" ]
   then
     target_bucket=${AWS_BUCKET_PROD}
   else
