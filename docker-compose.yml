@@ -16,7 +16,7 @@ services:
     build:
       context: './postgres'
     environment:
-      - IS_PROD=no
+      - WORKFLOW="local"
     volumes:
       - ./postgres/init:/docker-entrypoint-initdb.d
       - ./postgres/pgconf:/pgconf
@@ -33,6 +33,8 @@ services:
     links:
       - postgres:postgres
     env_file: .env
+    environment:
+      - WORKFLOW="local"
     restart: on-failure
     depends_on:
       - postgres
@@ -46,7 +48,7 @@ services:
         - GITHUB_PAT=${GITHUB_PAT}
     env_file: .env
     environment:
-      - IS_LOCAL=no
+      - WORKFLOW="local"
     links:
       - postgres:postgres
     restart: on-failure
@@ -66,7 +68,6 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
-      IS_LOCAL: "no"
     networks:
       - repel-servers
   shinyserver:

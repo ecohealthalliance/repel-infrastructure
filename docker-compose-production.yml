@@ -5,10 +5,10 @@ services:
     ports:
       - "${POSTGRES_EXTERNAL_PORT}:5432"
     environment:
-      - IS_PROD=yes
+      - WORKFLOW="production"
   cron:
     environment:
-      - IS_PROD=yes
+      - WORKFLOW="production"
     volumes:
       - /var/log/repel:/var/log/shared
   rshinyauth0:
@@ -20,12 +20,13 @@ services:
       - /var/log/repel:/srv/repel-shiny-server/logs
       - /home/repeluser/reports:/srv/repel-shiny-server/reports
   scraper:
+    environment:
+      - WORKFLOW="production"
     volumes:
       - /var/log/repel:/var/log/shared
       - /home/repeluser/reports:/home/rstudio/repel-infrastructure/scraper/reports/
   nginx:
     environment:
-      IS_LOCAL: "no"
       STAGING: "false"
       URL: ${NGINX_URL_PRODUCTION}
       EMAIL: ${ADMIN_EMAIL}

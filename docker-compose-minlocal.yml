@@ -5,7 +5,7 @@ services:
     ports:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
     environment:
-      - IS_PROD=no
+      - WORKFLOW="local"
   cron:
     entrypoint: "bash -c"
     command: "exit 0"

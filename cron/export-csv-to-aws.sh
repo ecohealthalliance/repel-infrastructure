@@ -8,7 +8,7 @@ export PGPORT=$POSTGRES_PORT
 export PGHOST=$POSTGRES_HOST
 export PGDATABASE=$POSTGRES_DB
 
-if [ "$IS_PROD" == "yes" ]
+if [ "$WORKFLOW" == "production" ]
 then
   target_bucket=${AWS_BUCKET_PROD}
   n_cores=1
