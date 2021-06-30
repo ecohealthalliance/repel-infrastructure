@@ -15,6 +15,8 @@ services:
     environment:
       - AUTH0_CALLBACK_URL=https://kirby.ecohealthalliance.org/callback
       - LOGOUT_URL=https://kirby.ecohealthalliance.org
+      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET_STAGING}
+      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID_STAGING}
   shinyserver:
     volumes:
       - /var/log/repel:/srv/repel-shiny-server/logs
