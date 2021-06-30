@@ -1,0 +1,38 @@
+name: staging-shutdown-containers
+
+# manual take down of running REPEL containers.  Same as running 'docker-compose down'.
+#   unlike production version, no pruning is done.
+
+on:
+  workflow_dispatch:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Decrypt repository using symmetric key
+        env:
+          GIT_CRYPT_KEY64: ${{ secrets.GIT_CRYPT_KEY64 }}
+        run: |
+          sudo apt-get install git-crypt
+          echo $GIT_CRYPT_KEY64 > git_crypt_key.key64 && base64 -d git_crypt_key.key64 > git_crypt_key.key && git-crypt unlock git_crypt_key.key
+          rm git_crypt_key.key git_crypt_key.key64
+      - name: add dotenv-action
+        id: dotenv
+        uses: ./.github/actions/dotenv-action
+      - name: shut down repel containers on development server
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ansible/remove-staging.yml
+          directory: ./
+          inventory: |
+            [repel-dev]
+            ${{ steps.dotenv.outputs.STAGING_SERVER_URL }} ansible_ssh_user=${{ steps.dotenv.outputs.STAGING_SERVER_USER }}
+          options: |
+            -v
+            -kK
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
