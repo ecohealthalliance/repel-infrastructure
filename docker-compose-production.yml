@@ -5,10 +5,10 @@ services:
     ports:
       - "${POSTGRES_EXTERNAL_PORT}:5432"
     environment:
-      - WORKFLOW="production"
+      - WORKFLOW=production
   cron:
     environment:
-      - WORKFLOW="production"
+      - WORKFLOW=production
     volumes:
       - /var/log/repel:/var/log/shared
   rshinyauth0:
@@ -23,7 +23,7 @@ services:
       - /home/repeluser/reports:/srv/repel-shiny-server/reports
   scraper:
     environment:
-      - WORKFLOW="production"
+      - WORKFLOW=production
     volumes:
       - /var/log/repel:/var/log/shared
       - /home/repeluser/reports:/home/rstudio/repel-infrastructure/scraper/reports/
