@@ -16,7 +16,7 @@ services:
     build:
       context: './postgres'
     environment:
-      - WORKFLOW="local"
+      - WORKFLOW=local
     volumes:
       - ./postgres/init:/docker-entrypoint-initdb.d
       - ./postgres/pgconf:/pgconf
@@ -34,7 +34,7 @@ services:
       - postgres:postgres
     env_file: .env
     environment:
-      - WORKFLOW="local"
+      - WORKFLOW=local
     restart: on-failure
     depends_on:
       - postgres
@@ -48,7 +48,7 @@ services:
         - GITHUB_PAT=${GITHUB_PAT}
     env_file: .env
     environment:
-      - WORKFLOW="local"
+      - WORKFLOW=local
     links:
       - postgres:postgres
     restart: on-failure
