@@ -25,7 +25,7 @@ jobs:
       - name: Deploy containers to development server
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: deploy-staging.yml
+          playbook: ansible/deploy-staging.yml
           directory: ./
           inventory: |
             [repel-dev]

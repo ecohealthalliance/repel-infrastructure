@@ -5,23 +5,25 @@ services:
     ports:
       - "${POSTGRES_EXTERNAL_PORT}:5432"
     environment:
-      - WORKFLOW="production"
+      - WORKFLOW=production
   cron:
     environment:
-      - WORKFLOW="production"
+      - WORKFLOW=production
     volumes:
       - /var/log/repel:/var/log/shared
   rshinyauth0:
     environment:
       - AUTH0_CALLBACK_URL=https://repel-aws-2.eha.io/callback
       - LOGOUT_URL=https://repel-aws-2.eha.io
+      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET_PRODUCTION}
+      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID_PRODUCTION}
   shinyserver:
     volumes:
       - /var/log/repel:/srv/repel-shiny-server/logs
       - /home/repeluser/reports:/srv/repel-shiny-server/reports
   scraper:
     environment:
-      - WORKFLOW="production"
+      - WORKFLOW=production
     volumes:
       - /var/log/repel:/var/log/shared
       - /home/repeluser/reports:/home/rstudio/repel-infrastructure/scraper/reports/

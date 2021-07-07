@@ -5,7 +5,7 @@ services:
     ports:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
     environment:
-      - WORKFLOW="local"
+      - WORKFLOW=local
   cron:
     entrypoint: "bash -c"
     command: "exit 0"
@@ -23,7 +23,7 @@ services:
       - PASSWORD=${RSTUDIO_PASSWORD}
       - USERID=${USERID}
       - GROUPID=${GROUPID}
-      - WORKFLOW="local"
+      - WORKFLOW=local
     volumes:
       - $HOME/.ssh:/home/${USER}/.ssh
       - $HOME/.Renviron:/home/${USER}/.Renviron
