@@ -24,11 +24,12 @@ There are four workflows for running this code:
 
 1. Use script push_db_local_to_aws_and_dev_outside.sh to push your local database to the staging server and to the staging S3 bucket.
 1. Update staging branch with changes in your development branch:
-   1. Commit all changes to your-dev-branch-name
+   1. Commit all changes to your dev branch
    1. Change to staging branch: `git checkout staging`
    1. Merge your dev branch into staging branch: `git merge your-dev-branch-name`
    1. Commit changes to staging branch: `git commit -a -m 'updated with changes from your-dev-branch-name'`
    1. Push staging update to remote: `git push origin`
+
 A GitHub Action will then automatically deploy the updated staging branch to the staging server.
 
 ## Deployment - Production Server
@@ -40,7 +41,8 @@ Only 'staged' code should be pushed to the production server.
    1. Merge staging into production: `git merge staging`
    1. Commit changes to production branch: `git commit -a -m 'production updated from staging'`
    1. Push production update to remote: `git push origin`
-A GitHub Action will then automatically deploy the updated production branch to the production server. 
+
+A GitHub Action will then automatically deploy the updated production branch to the production server.
 Before deploying it will also pull the contents of the staging S3 bucket into the production S3 bucket.
 
 ## Manual GitHub Actions
