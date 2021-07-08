@@ -19,3 +19,13 @@
         files:
           - docker-compose.yml
           - docker-compose-staging.yml
+    - name: prune all except volumes
+      become: yes
+      docker_prune:
+        containers: yes
+        images: yes
+        images_filters:
+          dangling: false
+        networks: yes
+        volumes: no
+        builder_cache: yes
