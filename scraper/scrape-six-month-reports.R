@@ -30,7 +30,6 @@ reports_to_get <- tibble(report_id = new_ids) %>%
 
 # Pulling reports ----------------------------
 message("Pulling ", nrow(reports_to_get), " reports")
-
 report_resps <- split(reports_to_get, (1:nrow(reports_to_get)-1) %/% 100) %>% # batching by 100s
   map(function(reports_to_get_split){
     map_curl(
@@ -43,6 +42,7 @@ report_resps <- split(reports_to_get, (1:nrow(reports_to_get)-1) %/% 100) %>% # 
       .handle_headers = list(`Accept-Language` = "en")
     )
   })
+#2.5 hrs to run 10k reports 2021-07-08
 
 # write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_six_month.rds"))
 # report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_six_month.rds"))
