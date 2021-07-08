@@ -13,9 +13,21 @@
     - name: bring down docker-compose stack
       become: yes
       docker_compose:
+        timeout: 300
         project_src: "{{ env_vars['STAGING_BASE_DOCKER_DIR'] }}"
         state: absent
         debug: yes
         files:
           - docker-compose.yml
           - docker-compose-staging.yml
+    - name: prune all except volumes
+      become: yes
+      docker_prune:
+        timeout: 300
+        containers: yes
+        images: yes
+        images_filters:
+          dangling: false
+        networks: yes
+        volumes: no
+        builder_cache: yes

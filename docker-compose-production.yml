@@ -13,8 +13,8 @@ services:
       - /var/log/repel:/var/log/shared
   rshinyauth0:
     environment:
-      - AUTH0_CALLBACK_URL=https://repel-aws-2.eha.io/callback
-      - LOGOUT_URL=https://repel-aws-2.eha.io
+      - AUTH0_CALLBACK_URL=https://repel.eha.io/callback
+      - LOGOUT_URL=https://repel.eha.io
       - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET_PRODUCTION}
       - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID_PRODUCTION}
   shinyserver:

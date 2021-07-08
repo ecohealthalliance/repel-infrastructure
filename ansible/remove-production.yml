@@ -13,6 +13,7 @@
     - name: bring down docker-compose stack
       become: yes
       docker_compose:
+        timeout: 300
         project_src: "{{ env_vars['PRODUCTION_BASE_DOCKER_DIR'] }}"
         state: absent
         debug: yes
@@ -22,6 +23,7 @@
     - name: prune everything
       become: yes
       docker_prune:
+        timeout: 300
         containers: yes
         images: yes
         images_filters:
