@@ -11,11 +11,13 @@
         mode: 0755
     - name: Get env file content
       become: yes
+      no_log: true
       slurp:
         src: /root/docker/.env
       register: env_file_content
     - name: Parse env file and load into fact
       become: yes
+      no_log: true
       set_fact:
         env_vars: "{{ ('{' + (env_file_content.content | b64decode).split('\n') | select | map('regex_replace', '([^=]*)=(.*)', '\"\\1\": \"\\2\"') | join(',') + '}') | from_json }}"
     - name: install system packages

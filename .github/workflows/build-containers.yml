@@ -6,6 +6,8 @@ on:
       - '*'
       - '!master'
       - '!main'
+      - '!staging'
+      - '!production'
   workflow_dispatch:
     branches:
       - '*'
