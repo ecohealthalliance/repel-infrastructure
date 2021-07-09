@@ -72,7 +72,7 @@ If there are any issues with the automatic deploy to either the staging or produ
 * production-remove-containers
 * production-deploy-containers
 * staging-shutdown-containers
-* staging_deploy_containers
+* staging-deploy-containers
 
 
 ## PostGIS database setup
