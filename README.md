@@ -20,6 +20,27 @@ There are four workflows for running this code:
 * staging - This is intended for running the code on our staging server.  All services are run, but backups are stored to our staging bucket.
 * production - This is intended for running the code on our production server.  Backups are stored in our production bucket.
 
+## Workflow mechanics
+
+**build**:  
+`docker-compose build`
+
+**bring up local workflow**:  
+`./start-local.sh`
+
+OR
+
+`USERID=$(id -u) GROUPID=$(id -g) docker-compose -f docker-compose.yml -f docker-compose-minlocal.yml up`
+
+**bring up production workflow**:  
+`docker-compose -f docker-compose.yml -f docker-compose-production.yml up`
+
+**bring up staging workflow**:  
+`docker-compose -f docker-compose.yml -f docker-compose-staging.yml up`
+
+**bring down containers**:  
+`docker-compose down`
+
 ## Deployment - Staging Server
 
 1. Use script push_db_local_to_aws_and_dev_outside.sh to push your local database to the staging server and to the staging S3 bucket.
@@ -54,31 +75,9 @@ If there are any issues with the automatic deploy to either the staging or produ
 * staging_deploy_containers
 
 
-
 ## PostGIS database setup
 
 From http://fuzzytolerance.info/blog/2018/12/04/Postgres-PostGIS-in-Docker-for-production/
-
-## Container mechanics
-
-**build**:  
-`docker-compose build`
-
-**bring up local workflow**:  
-`./start-local.sh`
-
-OR
-
-`USERID=$(id -u) GROUPID=$(id -g) docker-compose -f docker-compose.yml -f docker-compose-minlocal.yml up`
-
-**bring up production workflow**:  
-`docker-compose -f docker-compose.yml -f docker-compose-production.yml up`
-
-**bring up staging workflow**:  
-`docker-compose -f docker-compose.yml -f docker-compose-staging.yml up`
-
-**bring down containers**:  
-`docker-compose down`
 
 ## Manually updating database
 
