@@ -117,4 +117,8 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
   # )
 
 }
+
+# grant permissions
+grant_table_permissions(conn)
+
 dbDisconnect(conn)
