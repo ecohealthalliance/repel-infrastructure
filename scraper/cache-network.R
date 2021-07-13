@@ -65,7 +65,7 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag !=
 
 }
 
-# set grant permissions
+# grant permissions
 grant_table_permissions(conn)
 
 dbDisconnect(conn)
