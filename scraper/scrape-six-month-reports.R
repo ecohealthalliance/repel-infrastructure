@@ -68,41 +68,34 @@ if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if t
   # write_rds(six_month_report_tables, here::here("scraper", "scraper_files_for_testing/six_month_report_tables.rds"))
   # six_month_report_tables <- read_rds(here::here("scraper", "scraper_files_for_testing/six_month_report_tables.rds"))
 
-    if(!is.null(six_month_report_tables)){
-    iwalk(six_month_report_tables[c("six_month_reports_summary", # report_id
-                                   "six_month_reports_detail", # report_id
-                                   "six_month_reports_diseases_unmatched"], # disease
-          function(x, y){
-            idfield <- switch(y,
-                              "six_month_reports_summary" =  "report_id",
-                              "six_month_reports_detail" = "report_id",
-                              "six_month_reports_diseases_unmatched" = "disease")
-            if(is.null(x)) return()
-            if(!dbExistsTable(conn, y)){
-              dbWriteTable(conn,  name = y, value = x)
-            }else{
-              update_sql_table(conn,  y, x,
-                               c(idfield), fill_col_na = TRUE)
-              Sys.sleep(1)
-            }
-          })
-  }
+  purrr:::walk(unique(names(six_month_report_tables)), function(y){
 
-  message("Done updating outbreak reports.")
+    x <- reduce(six_month_report_tables[names(six_month_report_tables)== y],
+                bind_rows) %>%
+      distinct()
 
-  # Schema lookup -----------------------------------------------------------
-  # field_check(conn, "outbreak_reports_")
+    if(is.null(x)) return()
 
-  # Generate QA report ------------------------------------------------------
-  assert_that(dbExistsTable(conn, "six_month_reports_summary"))
-  assert_that(dbExistsTable(conn, "six_month_reports_detail"))
-  assert_that(dbExistsTable(conn, "six_month_reports_diseases_unmatched"))
+    idfield <- switch(y,
+                      "six_month_reports_summary" =  "report_id",
+                      "six_month_reports_detail" = "report_id",
+                      "six_month_reports_diseases_unmatched" = "disease")
 
-  # safely(rmarkdown::render, quiet = FALSE)(
-  #   here::here(paste0(dir, "qa-outbreak-reports.Rmd")),
-  #   output_file = paste0("outbreak-report-qa.html"),
-  #   output_dir = here::here(paste0(dir, "reports"))
-  # )
+    if(!dbExistsTable(conn, y)){
+      dbWriteTable(conn,  name = y, value = x)
+    }else{
+      update_sql_table(conn,  y, x,
+                       c(idfield), fill_col_na = TRUE)
+      Sys.sleep(1)
 
+    }
+  })
+
+  message("Done updating six month reports.")
 }
+
+# grant permissions
+grant_table_permissions(conn)
+
 dbDisconnect(conn)
+
