@@ -3,7 +3,9 @@
 
 if [[ "$#" -ne 2 ]]
 then
+  echo "Error: two input parameters are required"
   echo "Usage: $0 <host> <port>"
+  exit 1
 fi
 args=("$@")
 

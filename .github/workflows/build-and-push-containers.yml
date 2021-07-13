@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - production
   workflow_dispatch:
     branches:
       - '*'
