@@ -16,7 +16,7 @@ test_scrape_outbreak_reports <- function(){
 
   report_resps <-  map_curl(
     urls = reports_to_get$url,
-    .f = function(x) wahis::safe_ingest_outbreak(x),
+    .f = function(x) wahis::safe_ingest(x),
     .host_con = 8L, # can turn up
     .delay = 0.5,
     .handle_opts = list(low_speed_limit = 100, low_speed_time = 300), # bytes/sec
