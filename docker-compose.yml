@@ -38,6 +38,7 @@ services:
     restart: on-failure
     depends_on:
       - postgres
+      - base
     networks:
       - repel-servers
   scraper:
@@ -54,6 +55,7 @@ services:
     restart: on-failure
     depends_on:
       - postgres
+      - base
     volumes:
       - ./shiny/content:/var/www/html
     networks:
@@ -100,6 +102,7 @@ services:
     restart: always
     depends_on:
       - postgres
+      - base
     env_file: .env
     networks:
       - repel-servers

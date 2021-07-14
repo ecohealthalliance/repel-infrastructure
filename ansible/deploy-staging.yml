@@ -94,6 +94,8 @@
         debug: yes
         build: yes
         nocache: yes
+        pull: no
+        recreate: "always"
         files:
           - docker-compose.yml
           - docker-compose-staging.yml
