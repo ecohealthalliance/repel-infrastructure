@@ -93,6 +93,7 @@
         state: present
         debug: yes
         build: yes
+        nocache: yes
         files:
           - docker-compose.yml
           - docker-compose-staging.yml
