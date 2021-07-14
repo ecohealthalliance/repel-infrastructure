@@ -54,7 +54,7 @@ RUN install2.r -s \
   xml2
 
 RUN installGithub.r -u FALSE \
-  ecohealthalliance/wahis \
+  ecohealthalliance/wahis@master \
   noamross/scrapetools \
   ecohealthalliance/repeldata \
   ecohealthalliance/repelpredict \
