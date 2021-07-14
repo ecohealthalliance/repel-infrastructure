@@ -17,8 +17,10 @@ aws_network_etag <- aws.s3::head_object(bucket = "repeldb/models", object = "lme
 
 if(dbExistsTable(conn,  "network_lme_augment_predict")){
 
-  forecasted_repeldat <- dbReadTable(conn, name = "network_lme_augment_predict")
-  db_network_etag <- unique(forecasted_repeldat$db_network_etag)
+  db_network_etag <- tbl(conn, "network_lme_augment_predict") %>%
+    distinct(db_network_etag) %>%
+    pull(db_network_etag)
+
 }
 
 if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag != aws_network_etag ){
