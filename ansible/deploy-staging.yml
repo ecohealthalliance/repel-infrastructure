@@ -91,14 +91,14 @@
       docker_compose:
         project_src: "{{ env_vars['STAGING_BASE_DOCKER_DIR'] }}"
         state: present
-         build: yes
-         debug: yes
-         recreate: "always"
-         pull: no
-         services:
-           - base
-         files:
-           - docker-compose.yml
+        build: yes
+        debug: yes
+        recreate: "always"
+        pull: no
+        services:
+          - base
+        files:
+          - docker-compose.yml
     - name: deploy docker-compose stack
       become: yes
       docker_compose:
