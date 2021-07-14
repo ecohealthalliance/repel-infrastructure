@@ -7,14 +7,15 @@ source(here::here(paste0(dir, "tests/test-scrape-six-month-reports.R")))
 
 x <- try(test_scrape_outbreak_reports())
 if (inherits(x, "try-error")) {
-  stop("Outbreak scraper test failed")
+  stop("Outbreak scraper test failed with error:\n", x)
 } else {
   message("Outbreak scraper test passed")
 }
 
 x <- try(test_scrape_six_month_reports())
 if (inherits(x, "try-error")) {
-  stop("Six month scraper test failed")
+  cat(x)
+  stop("Six month scraper test failed:\n", x)
 } else {
   message("Six month scraper test passed")
 }
