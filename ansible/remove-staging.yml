@@ -26,8 +26,6 @@
         timeout: 300
         containers: yes
         images: yes
-        images_filters:
-          dangling: false
         networks: yes
         volumes: no
         builder_cache: yes

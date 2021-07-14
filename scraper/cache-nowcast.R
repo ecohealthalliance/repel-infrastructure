@@ -109,4 +109,7 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_
 
 }
 
+# grant permissions
+grant_table_permissions(conn)
+
 dbDisconnect(conn)

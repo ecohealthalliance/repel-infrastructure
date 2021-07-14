@@ -35,13 +35,12 @@ report_resps <- split(reports_to_get, (1:nrow(reports_to_get)-1) %/% 100) %>% # 
   map(function(reports_to_get_split){
     map_curl(
       urls = reports_to_get_split$url,
-      .f = function(x) wahis::safe_ingest_outbreak(x),
-      .host_con = 8L, # can turn up
+      .f = function(x) wahis::safe_ingest(x),
+      .host_con = 8L,
       .delay = 0.5,
-      #.timeout = nrow(reports_to_get)*120L,
       .handle_opts = list(low_speed_limit = 100, low_speed_time = 300), # bytes/sec
-      .retry = 2
-      # need to add language here?
+      .retry = 2,
+      .handle_headers = list(`Accept-Language` = "en")
     )
   })
 
@@ -117,4 +116,8 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
   # )
 
 }
+
+# grant permissions
+grant_table_permissions(conn)
+
 dbDisconnect(conn)

@@ -28,12 +28,12 @@ jobs:
           aws-access-key-id: ${{ steps.dotenv.outputs.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ steps.dotenv.outputs.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Pull and build containers
-        run: |
-          export $(egrep -v '^#' .env | xargs)
-          echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
-          docker-compose pull || true
-          docker-compose build --progress plain
+#      - name: Pull and build containers
+#        run: |
+#          export $(egrep -v '^#' .env | xargs)
+#          echo $DOCKER_REGISTRY_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_REGISTRY_USER --password-stdin
+#          docker-compose pull || true
+#          docker-compose build --progress plain
       - name: bring down staging containers
         uses: dawidd6/action-ansible-playbook@v2
         with:
