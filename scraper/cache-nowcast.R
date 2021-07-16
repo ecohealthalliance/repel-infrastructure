@@ -19,9 +19,11 @@ aws_cases_etag <- aws.s3::head_object(bucket = "repeldb/models", object = "boost
 
 if(dbExistsTable(conn,  "nowcast_boost_augment_predict")){
 
-  forecasted_repeldat <- dbReadTable(conn, name = "nowcast_boost_augment_predict")
-  db_disease_status_etag <- unique(forecasted_repeldat$db_disease_status_etag)
-  db_cases_etag <- unique(forecasted_repeldat$db_cases_etag)
+  db_etag <- tbl(conn, "nowcast_boost_augment_predict") %>%
+    distinct(db_disease_status_etag, db_cases_etag)
+
+  db_disease_status_etag <- db_etag %>% pull(db_disease_status_etag)
+  db_cases_etag <-  db_etag %>% pull(db_cases_etag)
 
 }
 
@@ -108,5 +110,8 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_disease_status_
   dbWriteTable(conn, name = "nowcast_boost_predict_oie_diseases", nowcast_predicted, overwrite = TRUE)
 
 }
+
+# grant permissions
+grant_table_permissions(conn)
 
 dbDisconnect(conn)

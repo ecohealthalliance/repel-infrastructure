@@ -3,7 +3,9 @@
 
 if [[ "$#" -ne 2 ]]
 then
+  echo "Error: two input parameters are required"
   echo "Usage: $0 <host> <port>"
+  exit 1
 fi
 args=("$@")
 
@@ -18,7 +20,7 @@ set_local_env () {
   export PGDATABASE=$POSTGRES_DB
 }
 
-set_dev_env () {
+set_stage_env () {
   export PGUSER=$POSTGRES_USER
   export PGPASSWORD=$POSTGRES_PASSWORD
   export PGPORT=$STAGING_SERVER_PSQL_PORT
@@ -41,9 +43,15 @@ then
  source .env
 fi
 
+# check that remote db isn't blocked by idle queries before making local db dump
+set_stage_env
+createdb test_create_db || { echo "Error: failed to create test database!" && exit 1; }
+dropdb --if-exists test_create_db
+
+# make local db dumps
 set_local_env
-pg_dump repel > /tmp/repel_backup_local.dmp
-pg_dumpall > /tmp/all_pg_local.dmp
+pg_dump repel >| /tmp/repel_backup_local.dmp
+pg_dumpall >| /tmp/all_pg_local.dmp
 
 filesize_repel=$(stat -c%s "/tmp/repel_backup_local.dmp")
 if (( filesize_repel < 100000)); then
@@ -53,7 +61,7 @@ fi
 
 # set env to dev server and update database
 
-set_dev_env
+set_stage_env
 dropdb --if-exists repeltmp
 createdb repeltmp || { echo "Error: failed to create repel database!" && exit 1; }
 psql repeltmp < /tmp/repel_backup_local.dmp || { echo "Error: failed to restore repel database from backup!" && exit 1; }

@@ -11,11 +11,13 @@
         mode: 0755
     - name: Get env file content
       become: yes
+      no_log: true
       slurp:
         src: /root/docker/.env
       register: env_file_content
     - name: Parse env file and load into fact
       become: yes
+      no_log: true
       set_fact:
         env_vars: "{{ ('{' + (env_file_content.content | b64decode).split('\n') | select | map('regex_replace', '([^=]*)=(.*)', '\"\\1\": \"\\2\"') | join(',') + '}') | from_json }}"
     - name: install system packages
@@ -84,6 +86,19 @@
         username: "{{ env_vars['DOCKER_REGISTRY_USER'] }}"
         password: "{{ env_vars['DOCKER_REGISTRY_PASSWORD'] }}"
         reauthorize: yes
+    - name: build docker base image
+      become: yes
+      docker_compose:
+        project_src: "{{ env_vars['PRODUCTION_BASE_DOCKER_DIR'] }}"
+        state: present
+        build: yes
+        debug: yes
+        recreate: "always"
+        pull: no
+        services:
+          - base
+        files:
+          - docker-compose.yml
     - name: deploy docker-compose stack
       become: yes
       docker_compose:
@@ -91,6 +106,9 @@
         state: present
         debug: yes
         build: yes
+        nocache: yes
+        pull: no
+        recreate: "always"
         files:
           - docker-compose.yml
           - docker-compose-production.yml

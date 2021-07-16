@@ -118,4 +118,7 @@ dbWriteTable(conn,  name = "connect_yearly_vars", value = yearly_dat, overwrite 
 dbWriteTable(conn,  name = "connect_fao_lookup", value = fao_lookup, overwrite = TRUE)
 dbWriteTable(conn,  name = "connect_ots_lookup", value = ots_lookup, overwrite = TRUE)
 
+# grant permissions
+grant_table_permissions(conn)
+
 dbDisconnect(conn)
