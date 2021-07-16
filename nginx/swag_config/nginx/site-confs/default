@@ -32,6 +32,24 @@ server {
 
         client_max_body_size 0;
 
+        location /clear_cache {
+            proxy_set_header Host $host;
+            include /config/nginx/proxy.conf;
+            proxy_pass http://plumber:8000/clear_cache;
+            proxy_redirect http://plumber:8000/clear_cache https://$http_host/clear_cache;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+        }
+
+        location /nowcast_predictions {
+            proxy_set_header Host $host;
+            include /config/nginx/proxy.conf;
+            proxy_pass http://plumber:8000/nowcast_predictions;
+            proxy_redirect http://plumber:8000/nowcast_predictions https://$http_host/nowcast_predictions;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+        }
+
         location / {
               proxy_set_header Host $host;
               include /config/nginx/proxy.conf;
