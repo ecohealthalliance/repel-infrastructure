@@ -36,33 +36,31 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag !=
   # get full database
   repeldat <- repelpredict::repel_split(model_object, conn)
 
-  # augment then predict
-  # augmented_data <- repel_augment(model_object, conn, newdata = repeldat)
-  # write_rds(augmented_data, "tmp_augmented_data.rds")
-  # augmented_data <-read_rds("tmp_augmented_data.rds")
-  # predictions <- repel_predict(model_object, newdata = augmented_data)
-
   # forecast combines augment and predict
-  forecasted_repeldat <- repel_forecast(model_object = model_object,
-                                        conn = conn,
-                                        newdata = repeldat,
-                                        use_cache = FALSE)
+  repel_forecast_out <- repel_forecast(model_object = model_object,
+                                       conn = conn,
+                                       newdata = repeldat,
+                                       use_cache = FALSE)
 
-  forecasted_repeldat2 <- forecasted_repeldat[[1]] %>%
-    mutate(predicted_outbreak_probability = forecasted_repeldat[[2]]) %>%
+  network_lme_augment_predict <- repel_forecast_out[[1]] %>%
+    mutate(predicted_outbreak_probability = repel_forecast_out[[2]]) %>%
     mutate(db_network_etag = aws_network_etag)
 
-  # write_rds(forecasted_repeldat2, "tmp_forecasted_data.rds")
-  # forecasted_repeldat2 <- read_rds("tmp_forecasted_data.rds")
-  dbWriteTable(conn, name = "network_lme_augment_predict", forecasted_repeldat2, overwrite = TRUE)
+  forecasted_predictions <- network_lme_augment_predict %>%
+    distinct(country_iso3c, disease, month, predicted_outbreak_probability)
+
+  # write_rds(network_lme_augment_predict, "tmp_forecasted_data.rds")
+  # network_lme_augment_predict <- read_rds("tmp_forecasted_data.rds")
+  dbWriteTable(conn, name = "network_lme_augment_predict", network_lme_augment_predict, overwrite = TRUE)
 
   ### cache augment with disaggregated country imports
-  augmented_data_disagg <- repel_augment(model_object, conn, newdata = forecasted_repeldat2, sum_country_imports = FALSE)
+  augmented_data_disagg <- repel_augment(model_object, conn, newdata = network_lme_augment_predict, sum_country_imports = FALSE)
 
-  augmented_data_disagg2 <- augmented_data_disagg %>%
-    drop_na(country_origin)
+  network_lme_augment_predict_by_origin <- augmented_data_disagg %>%
+    drop_na(country_origin) %>%
+    left_join(forecasted_predictions)
 
-  dbWriteTable(conn, name = "network_lme_augment_disaggregated", augmented_data_disagg2, overwrite = TRUE)
+  dbWriteTable(conn, name = "network_lme_augment_predict_by_origin", network_lme_augment_predict_by_origin, overwrite = TRUE)
 
   ### cache model coefficients
   lme_mod <- model_object$network_model
@@ -82,6 +80,8 @@ if(!dbExistsTable(conn,  "nowcast_boost_augment_predict")   | db_network_etag !=
 
   dbWriteTable(conn, name = "network_lme_coefficients", randef_disease, overwrite = TRUE)
 
+  network_scaling_values <- model_object$network_scaling_values
+  dbWriteTable(conn, name = "network_lme_scaling_values", network_scaling_values, overwrite = TRUE)
 
 }
 
