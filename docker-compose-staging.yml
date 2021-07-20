@@ -6,7 +6,7 @@ services:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
     environment:
       - WORKFLOW=staging
-      - RESTORE_PG_FROM_AWS=1
+      - RESTORE_PG_FROM_AWS=0
     volumes:
       - postgres_db_vol:/var/lib/postgresql/data
   cron:
