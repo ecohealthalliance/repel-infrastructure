@@ -1,5 +1,6 @@
 #!/bin/bash
 # copy local repel database to dev and AWS
+# to be run from within scraper directory
 
 if [[ "$#" -ne 2 ]]
 then
@@ -33,14 +34,14 @@ echo "Running this script will push your local repel database to the development
 read -p "Are you sure you want to proceed? (Y/N) " -r
 if [[ ! $REPLY == "Y" ]]
 then
-  echo "Exiting without running as requested."
-  exit 0
+ echo "Exiting without running as requested."
+ exit 0
 fi
 
 # set env to local and dump database
 if [ -z "$POSTGRES_USER" ]
 then
- source .env
+ source ../.env
 fi
 
 # check that remote db isn't blocked by idle queries before making local db dump
@@ -50,8 +51,8 @@ dropdb --if-exists test_create_db
 
 # make local db dumps
 set_local_env
-pg_dump repel >| /tmp/repel_backup_local.dmp
-pg_dumpall >| /tmp/all_pg_local.dmp
+pg_dump repel > /tmp/repel_backup_local.dmp
+pg_dumpall > /tmp/all_pg_local.dmp
 
 filesize_repel=$(stat -c%s "/tmp/repel_backup_local.dmp")
 if (( filesize_repel < 100000)); then
@@ -79,6 +80,11 @@ fi
 
 # archive dump and push to AWS
 
+XZ_DUMP_FILE=/tmp/all_pg_local.dmp.xz
+if [ -f "$XZ_DUMP_FILE" ]
+then
+  rm $XZ_DUMP_FILE
+fi
 xz /tmp/all_pg_local.dmp
 aws s3 cp /tmp/all_pg_local.dmp.xz s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz
 
