@@ -6,6 +6,7 @@ services:
       - "${POSTGRES_EXTERNAL_PORT}:5432"
     environment:
       - WORKFLOW=production
+      - RESTORE_PG_FROM_AWS=1
   cron:
     environment:
       - WORKFLOW=production
