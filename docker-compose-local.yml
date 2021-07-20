@@ -6,6 +6,8 @@ services:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
     environment:
       - WORKFLOW=local
+    volumes:
+      - postgres_db_vol:/var/lib/postgresql/data
   cron:
     entrypoint: "bash -c"
     command: "exit 0"
@@ -30,7 +32,6 @@ services:
       - $HOME/.gitconfig:/home/${USER}/.gitconfig
       - $HOME/.gnupg:/home/${USER}/.gnupg
       - $PWD/:/home/${USER}/repel-infrastructure
-      - postgres_db_vol:/var/lib/postgresql/data
       - ./webdocs/logs/:/var/log/shared
       - ./webdocs/reports:/home/rstudio/repel-infrastructure/scraper/reports/
   shinyserver:

@@ -6,7 +6,9 @@ services:
       - '${POSTGRES_EXTERNAL_PORT}:5432'
     environment:
       - WORKFLOW=staging
-      - RESTORE_PG_FROM_AWS=0
+      - RESTORE_PG_FROM_AWS=1
+    volumes:
+      - postgres_db_vol:/var/lib/postgresql/data
   cron:
     environment:
       - WORKFLOW=staging
@@ -40,3 +42,5 @@ services:
       - ./nginx/swag_config:/config
 #    volumes:
 #      - /home/repeluser/letsencrypt/keys:/etc/letsencrypt/keys
+volumes:
+  postgres_db_vol:
