@@ -29,6 +29,6 @@ test_scrape_six_month_reports <- function(){
   # transform - note that aquatic tables will be removed
   six_month_tables <- transform_six_month_reports(six_month_reports = report_resps)
 
-  assert_that(class(six_month_tables) == "list")
+  assert_that(class(six_month_tables) %in% c("list", "NULL"))
 
 }

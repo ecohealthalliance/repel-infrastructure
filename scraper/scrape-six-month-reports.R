@@ -53,8 +53,11 @@ report_resps <- reduce(report_resps, c)
 six_month_reports_ingest_status_log <- map_dfr(report_resps, function(x){
   ingest_error <-  !is.null(x$ingest_status) && str_detect(x$ingest_status, "ingestion error") |
     !is.null(x$message) && str_detect(x$message, "Endpoint request timed out")
-  tibble(report_id = x$reportId, ingest_error)
+  report_id <- x$reportId
+  if(is.null(report_id)) report_id <- NA_integer_
+  tibble(report_id, ingest_error)
 })
+#TODO need to be able to identify which reports caused timeout error
 
 # Updating database  ----------------------------
 if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if there are any non-error responses
