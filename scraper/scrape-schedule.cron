@@ -4,10 +4,6 @@
  5 4 * * 1 cd /home/rstudio/repel-infrastructure/scraper && ./scrape-connect-data.R
 # Run outbreak report scraper daily
  5 0 * * * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-outbreak-reports.R
-# Run nowcast cache daily (it will only update if there is a new model)
- 3 1 * * * cd /home/rstudio/repel-infrastructure/scraper && ./cache-nowcast.R
-# Run network cache daily (it will only update if there is a new model)
- 3 3 * * * cd /home/rstudio/repel-infrastructure/scraper && ./cache-network.R
 # Run promed table update nightly
  0 4 * * * cd /home/rstudio/repel-infrastructure/scraper && ./update_promed_posts.py
 # We need a blank line here for it to be a valid cron file
