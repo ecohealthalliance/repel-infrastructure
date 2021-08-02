@@ -6,7 +6,8 @@ source(here::here(paste0(dir, "functions.R")))
 
 # Connect to database ----------------------------
 message("Connect to database")
-conn <- wahis_db_connect()
+conn <- wahis_db_connect(host_location = "remote")
+#conn <- wahis_db_connect(host_location = "reservoir")
 
 # Finding unfetched reports in database ----------------------------
 message("Finding unfetched reports in database")
