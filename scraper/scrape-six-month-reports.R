@@ -95,6 +95,9 @@ if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if t
   })
 
   message("Done updating six month reports.")
+
+  # add prediction caching
+  # fot this model, it's possible to predict on a subset of data
 }
 
 # grant permissions

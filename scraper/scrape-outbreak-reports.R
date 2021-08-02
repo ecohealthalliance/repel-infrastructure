@@ -178,7 +178,23 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
   network_scaling_values <- model_object$network_scaling_values
   dbWriteTable(conn, name = "network_lme_scaling_values", network_scaling_values, overwrite = TRUE)
 
+
+  ########
   #TODO try alternative which is just predicting on new subset of the data. use init/split to preformat, then predict
+
+  outbreak_reports_events <- outbreak_report_tables[["outbreak_reports_events"]]
+  outbreak_reports_events_for_predict <- outbreak_reports_events %>%
+    mutate(month = lubridate::floor_date(report_date, unit = "month")) %>%
+    distinct(country_iso3c, disease, month)
+
+  # get predictions for the month, disease, country combos represented here
+  forecasted_data <- repel_forecast(model_object = model_object,
+                                    conn = conn,
+                                    newdata = outbreak_reports_events_for_predict,
+                                    use_cache = FALSE)
+
+  # but missing how these events impact other country predictions?
+
 
 }
 
