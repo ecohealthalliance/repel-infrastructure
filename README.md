@@ -100,3 +100,11 @@ To copy your local database to AWS S3 (backup) and the staging server (kirby), r
 ```
 ./push_local_db_to_S3_and_stage_outside.sh prospero.ecohealthalliance.org 22053
 ```
+
+**Update local database from remote**:  
+To update your local database from AWS S3 (backup), run `./pull_db_aws.sh ` _from within the scraper directory_. You will need to specify args host and port, for example:
+
+```
+./pull_db_aws.sh prospero.ecohealthalliance.org 22053
+```
+

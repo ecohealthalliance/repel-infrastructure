@@ -1,12 +1,21 @@
 echo #!/bin/bash
 
 set -e
-set -x
+
+if [[ "$#" -ne 2 ]]
+then
+  echo "Error: two input parameters are required"
+  echo "Usage: $0 <host> <port>"
+  exit 1
+fi
+args=("$@")
+
+source ../.env
 
 export PGUSER=$POSTGRES_USER
 export PGPASSWORD=$POSTGRES_PASSWORD
-export PGPORT=$POSTGRES_PORT
-export PGHOST=$POSTGRES_HOST
+export PGPORT=${args[1]}
+export PGHOST=${args[0]}
 export PGDATABASE=$POSTGRES_DB
 
 # pulls current AWS backup and replaces local repel database with it.
