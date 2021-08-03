@@ -107,7 +107,7 @@ yearly_dat <- yearly_dat %>%
 write_rds(yearly_dat, here(dir, "data-intermediate/connect/yearly-connect.rds"))
 
 # Add to db ---------------------------------------------------------------
-conn <- wahis_db_connect()
+conn <- wahis_db_connect(host_location = "remote")
 static_dat <- read_rds(here(dir, "data-intermediate/connect/static-connect.rds"))
 yearly_dat <- read_rds(here(dir, "data-intermediate/connect/yearly-connect.rds"))
 fao_lookup <- read_csv(here(dir, "data-intermediate/fao-livestock-item-code.csv"))
