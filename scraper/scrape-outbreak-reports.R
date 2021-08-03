@@ -8,13 +8,16 @@ library(repelpredict)
 # Connect to database ----------------------------
 message("Connect to database")
 conn <- wahis_db_connect(host_location = "remote")
-#conn <- wahis_db_connect(host_location = "reservoir")
+# conn <- wahis_db_connect(host_location = "reservoir")
 
 # Finding unfetched reports in database ----------------------------
 message("Finding unfetched reports in database")
 
 # Update db with latest outbreak reports list
 reports <- scrape_outbreak_report_list()
+
+# report_info_id is the id that is inserted into the API url
+# this field is renamed to url_report_id in outbreak_reports_events
 
 if(dbExistsTable(conn, "outbreak_reports_ingest_status_log")){
   current_report_info_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
@@ -27,7 +30,8 @@ if(dbExistsTable(conn, "outbreak_reports_ingest_status_log")){
 
 new_ids <- setdiff(reports$report_info_id, current_report_info_ids)
 
-reports_to_get <- tibble(report_info_id = new_ids) %>%
+reports_to_get <- reports %>%
+  filter(report_info_id %in% new_ids) %>%
   mutate(url =  paste0("https://wahis.oie.int/pi/getReport/", report_info_id))
 
 # Pulling reports ----------------------------
@@ -50,12 +54,13 @@ report_resps <- split(reports_to_get, (1:nrow(reports_to_get)-1) %/% 100) %>% # 
 # report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
 
 report_resps <- reduce(report_resps, c)
+assertthat::are_equal(length(report_resps), nrow(reports_to_get))
 
 # Update ingest log -------------------------------------------------------
-outbreak_reports_ingest_status_log <- map_dfr(report_resps, function(x){
+outbreak_reports_ingest_status_log <- imap_dfr(report_resps, function(x, y){
   ingest_error <-  !is.null(x$ingest_status) && str_detect(x$ingest_status, "ingestion error") |
     !is.null(x$message) && str_detect(x$message, "Endpoint request timed out")
-  tibble(report_info_id = x$report_info_id, ingest_error)
+  reports_to_get[which(names(report_resps) == y), ] %>% mutate(ingest_error = ingest_error)
 })
 
 # write_rds(outbreak_reports_ingest_status_log, here::here("scraper", "scraper_files_for_testing/outbreak_reports_ingest_status_log.rds"))
@@ -181,18 +186,16 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
 
 
   ########
-  #TODO try alternative which is just predicting on new subset of the data. use init/split to preformat, then predict
-
-  outbreak_reports_events <- outbreak_report_tables[["outbreak_reports_events"]]
-  outbreak_reports_events_for_predict <- outbreak_reports_events %>%
-    mutate(month = lubridate::floor_date(report_date, unit = "month")) %>%
-    distinct(country_iso3c, disease, month)
-
-  # get predictions for the month, disease, country combos represented here
-  forecasted_data <- repel_forecast(model_object = model_object,
-                                    conn = conn,
-                                    newdata = outbreak_reports_events_for_predict,
-                                    use_cache = FALSE)
+  # outbreak_reports_events <- outbreak_report_tables[["outbreak_reports_events"]]
+  # outbreak_reports_events_for_predict <- outbreak_reports_events %>%
+  #   mutate(month = lubridate::floor_date(report_date, unit = "month")) %>%
+  #   distinct(country_iso3c, disease, month)
+  #
+  # # get predictions for the month, disease, country combos represented here
+  # forecasted_data <- repel_forecast(model_object = model_object,
+  #                                   conn = conn,
+  #                                   newdata = outbreak_reports_events_for_predict,
+  #                                   use_cache = FALSE)
 
   # but missing how these events impact other country predictions?
 
