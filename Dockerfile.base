@@ -36,6 +36,7 @@ RUN install2.r -s \
   future \
   ggiraph \
   here \
+  lubridate \
   memoise \
   ncdf4 \
   patchwork \

@@ -12,4 +12,5 @@ suppressMessages(suppressWarnings(suppressPackageStartupMessages({
   library(glue)
   library(here)
   library(aws.s3)
+  library(lubridate)
 })))
