@@ -1,5 +1,11 @@
 # REPEL Infrastructure
 
+The Rapid Evaluation of Pathogens to prevent Epidemics in Livestock (REPEL) forecasting system aims to provide rapid, near-term forecasting of veterinary disease spread and impacts to improve situational awareness and support decision-making at early stages of new outbreaks.  REPEL consists of three components: (1) a "nowcast" model estimating disease incidence in countries globally, aiming to provide improved estimates in regions with late or under-reporting, (2) a travel-and-trade model to forecast the most likely paths of spread and locations at risk from disease import, and (3) an impacts model to estimate severity of disease impacts.  All models are being developed as open-source tools that can be incorporated into dashboards and other reporting and decision-making systems.
+
+The REPEL forecasting system is a collection of Docker containers with container interactions defined by Docker Compose.  Each container in the collection defines a Docker Compose service and we define workflows by which containers are running and also how they run.  This allows us to define a production environment that has production, staging and local development workflows.  The production environment is used by our end users.  The staging environment allows us to test and discuss changes to the system among before releasing them to the production environment.  The local development environments are comprised of only the services needed to allow our developers to work.
+
+Please see additional details about REPEL services and workflows below.  
+
 ## Services
 
 REPEL infrastructure is made up of the following services:
@@ -107,4 +113,3 @@ To update your local database from AWS S3 (backup), run `./pull_db_aws.sh ` _fro
 ```
 ./pull_db_aws.sh prospero.ecohealthalliance.org 22053
 ```
-
