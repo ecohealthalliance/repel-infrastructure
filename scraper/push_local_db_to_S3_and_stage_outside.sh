@@ -44,10 +44,11 @@ then
  source ../.env
 fi
 
-# check that remote db isn't blocked by idle queries before making local db dump
+# terminate idle db jobs on staging server
 set_stage_env
-createdb test_create_db || { echo "Error: failed to create test database!" && exit 1; }
-dropdb --if-exists test_create_db
+psql <<EOF
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid IN ( SELECT pid FROM pg_stat_activity WHERE state = 'idle' );
+EOF
 
 # make local db dumps
 set_local_env
