@@ -29,7 +29,7 @@ There are four workflows for running this code:
 ## Workflow mechanics
 
 **clone**:
-NOTE: You will need to run `git-crypt unlock` in the base directory to unencrypt files like .env after you clone the repo.
+NOTE: You will need to run `git-crypt unlock` in the base directory to decrypt files like .env after you clone the repo.
 
 **build**:  
 `docker-compose build`
