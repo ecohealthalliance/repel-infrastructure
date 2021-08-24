@@ -104,9 +104,8 @@ grant_table_permissions <- function(conn){
 # to be combined with the original function in repelpredict
 repel_init_events <- function(#model_object,
   conn,
-  events_new,
-  remove_single_country_disease = TRUE,
-  identify_endemic_events = TRUE){
+  outbreak_reports_events,
+  remove_single_country_disease = TRUE){
 
   current_month <- floor_date(Sys.Date(), unit = "month")
   current_year <- year(current_month)
@@ -117,7 +116,7 @@ repel_init_events <- function(#model_object,
   next_century <- floor_date(current_month + 36500, unit = "month")
 
   #dat <- tbl(conn, "outbreak_reports_events")
-  dat <- events_new
+  dat <- outbreak_reports_events
 
   events <- dat %>%
     collect() %>%
@@ -164,7 +163,7 @@ repel_init_events <- function(#model_object,
           country_iso3c,
           disease,
           month = seq.Date(
-            from = floor_date(min(events$date_of_start_of_the_event, na.rm = TRUE), unit = "months"),
+            from =  ymd("2005-01-01"), # start of record keeping
             to = current_month,
             by = "months")), by = c("country_iso3c", "disease"))
 
@@ -176,13 +175,12 @@ repel_init_events <- function(#model_object,
     mutate_at(.vars = c("outbreak_subsequent_month", "outbreak_start"), ~replace_na(., FALSE))
 
   # identify endemic events
-  if(identify_endemic_events){
     endemic_status_present <- tbl(conn, "nowcast_boost_augment_predict")  %>% # this should have even coverage by country/disease up to latest reporting period
-      collect() %>%
-      mutate(cases = as.integer(predicted_cases)) %>%
+      inner_join(distinct(events, country_iso3c, disease), copy = TRUE,  by = c("disease", "country_iso3c")) %>%
       mutate(cases = coalesce(cases, predicted_cases)) %>%
       filter(cases > 0) %>%
       select(country_iso3c, report_year, report_semester, disease) %>%
+      collect() %>%
       mutate(report_year = as.integer(report_year)) %>%
       mutate(report_semester = as.integer(report_semester))
 
@@ -218,9 +216,6 @@ repel_init_events <- function(#model_object,
     events <- events %>%
       left_join(endemic_status_present, by = c("country_iso3c", "disease", "month")) %>%
       mutate(endemic = replace_na(endemic, FALSE))
-  }else{
-    events$endemic <- NA
-  }
 
   # summarize to id subsequent and endemic
   events <- events %>%
@@ -232,8 +227,6 @@ repel_init_events <- function(#model_object,
     ungroup() %>%
     mutate(outbreak_ongoing = outbreak_start|outbreak_subsequent_month)
 
-  if(all(is.na(events$endemic))) events <- events %>% select(-endemic)
-
   #mutate(endemic = ifelse(outbreak_start, FALSE, endemic))
   # ^ this last mutate covers cases where the outbreak makes it into the semester report. the first month of the outbreak should still count.
   # on the other hand, there are outbreaks that are reported when it really is already endemic, eg rabies, so commenting out for now
@@ -243,6 +236,17 @@ repel_init_events <- function(#model_object,
   disease_taxa_lookup <- vroom::vroom(system.file("lookup", "disease_taxa_lookup.csv", package = "repelpredict"))
   events <- events %>%
     filter(disease %in% unique(disease_taxa_lookup$disease_pre_clean))
+
+    # from inst/network_generate_disease_lookup.R
+    diseases_recode <- vroom::vroom(system.file("lookup", "nowcast_diseases_recode.csv",  package = "repelpredict"), col_types = cols(
+      disease = col_character(),
+      disease_recode = col_character()
+    ))
+    events <- events %>%
+      left_join(diseases_recode, by = "disease") %>%
+      select(-disease) %>%
+      rename(disease = disease_recode)
+    assertthat::assert_that(!any(is.na(unique(events$disease)))) # if this fails, rerun inst/nowcast_generate_disease_lookup.R
 
   return(events)
 }
