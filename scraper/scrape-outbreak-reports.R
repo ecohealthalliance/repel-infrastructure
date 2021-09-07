@@ -84,8 +84,10 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
 
   outbreak_report_tables$outbreak_reports_ingest_status_log <- outbreak_reports_ingest_status_log
 
-  # Determine how new reports differ from cached data  ------------------------------------------------
+  # Run repel_init on transformed data  ------------------------------------------------
   message("Updating cached model predictions")
+
+  conn <- wahis_db_connect(host_location = "reservoir") #TODO delete this line, only for dev
 
   # get model from aws
   model_object <-  repelpredict::network_lme_model(
@@ -94,92 +96,155 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
   )
   aws_network_etag <- aws.s3::head_object(bucket = "repeldb/models", object = "lme_mod_network.rds") %>%
     attr(., "etag")
+  db_network_etag <- tbl(conn, "network_lme_augment_predict") %>%
+    pull(db_network_etag) %>% unique()
 
-  conn <- wahis_db_connect(host_location = "reservoir") #TODO delete this line, only for dev
+  # if there is a new model, combine old with new data and run init, prior to predictions
+  if(aws_network_etag != db_network_etag){
 
-  # process new data
-  events_new <- outbreak_report_tables[["outbreak_reports_events"]]
-  events_new <- read_csv("tmp_events_new.csv") %>% #TODO delete this, only for dev
-    mutate(follow_up_count = as.character(follow_up_count))
+    events_new <- outbreak_report_tables[["outbreak_reports_events"]]
+    events_existing <- tbl(conn, "outbreak_reports_events") %>% collect()
+    events <- bind_rows(events_existing, events_new) %>%
+      filter(!is_aquatic)
 
-  # these are the new country + disease combos
-  events_new_lookup <- events_new %>%
-    distinct(country_iso3c, disease)
+    # these are the country + disease combos
+    events_lookup <- events %>%
+      distinct(country_iso3c, disease)
 
-  # pull dataset for each country/disease combo
-  outbreak_reports_events <- tbl(conn, "outbreak_reports_events") %>%
-    inner_join(events_new_lookup, copy = TRUE, by = c("country_iso3c", "disease")) %>%
-    collect()
+    # clean disease names in lookup
+    events_lookup_clean <- repel_clean_disease_names(model_object, events_lookup)
 
-  # add on new dataset
-  outbreak_reports_events <- bind_rows(outbreak_reports_events, events_new)
+    # pull out unrecognized diseases and remove from events
+    #TODO use non-disease specific model coefficient for prediction (to be implemented in repelpredict).
+    events_unrecognized_disease <- events_lookup_clean %>%
+      filter(is.na(disease)) %>%
+      mutate(reason_for_exclusion = "unrecognized disease")
 
-  # clean disease names in lookup
-  events_new_lookup_clean <- repel_clean_disease_names(model_object, events_new_lookup)
+    events <- events %>%
+      filter(!disease %in% unique(events_unrecognized_disease$disease_name_uncleaned))
 
-  # pull out unrecognized diseases
-  events_new_unrecognized_disease <- events_new_lookup_clean %>%
-    filter(is.na(disease)) #TODO use non-disease specific model coefficient for prediction (to be implemented in repelpredict).
+    if(nrow(events) == 0){
+      events_processed <- NULL
+    }else{
 
-  # finish cleaning disease names, for now dropping unrecognized diseases
-  events_new_lookup_clean <- events_new_lookup_clean %>%
-    drop_na(disease)
+    # process all data with latest events added
+    events_processed <- repel_init(model_object = model_object,
+                                   conn = conn,
+                                   outbreak_reports_events = events,
+                                   remove_single_country_disease = FALSE,
+                                   remove_non_primary_taxa_disease = FALSE)
 
-  # process data with latest events added
-  events_new_processed <- repel_init(model_object = model_object,
-                                     conn = conn,
-                                     outbreak_reports_events = outbreak_reports_events,
-                                     remove_single_country_disease = FALSE) %>%
-    right_join(events_new_lookup_clean, by = c("country_iso3c", "disease", "disease_name_uncleaned")) # only need relevant disease/country combos
+    # identify and remove diseases that are in single country or do not affect primary taxa
+    events_disease_in_single_country <- events_processed %>%
+      filter(disease_in_single_country) %>%
+      distinct(country_iso3c, disease_name_uncleaned, disease) %>%
+      mutate(reason_for_exclusion = "disease in single country")
 
-  # identify disease not recognized b/c of taxa type
-  events_new_unrecognized_disease2 <- events_new_processed %>%
-    filter(is.na(month)) %>%
-    select(country_iso3c, disease, disease_name_uncleaned)
-  events_new_unrecognized_disease <- bind_rows(events_new_unrecognized_disease, events_new_unrecognized_disease2)
+    events_disease_not_primary_taxa <- events_processed %>%
+      filter(!disease_primary_taxa) %>%
+      distinct(country_iso3c, disease_name_uncleaned, disease) %>%
+      mutate(reason_for_exclusion = "disease not in primary taxa")
 
-  events_new_processed <- events_new_processed %>%
-    drop_na(month) %>%
-    select(-disease_name_uncleaned)
+    events_unrecognized_disease <- bind_rows(events_unrecognized_disease, events_disease_in_single_country) %>%
+      bind_rows(events_disease_not_primary_taxa)
 
-  # get existing cache for relevant data
-  network_lme_augment_predict <- tbl(conn, "network_lme_augment_predict") %>%
-    inner_join(events_new_lookup_clean, copy = TRUE, by = c("country_iso3c", "disease")) %>%
-    select(!!colnames(events_new_processed)) %>%
-    collect()
+    events_processed <- events_processed %>%
+      filter(!disease_in_single_country, disease_primary_taxa)
+    }
+  }else{ # if there is not a new model, identify which reports are affected by new data. we only need to run predictions on new data
 
-  # compare new processed data with existing cache
-  updated_events  <- setdiff(events_new_processed, network_lme_augment_predict)
-  # updated_events %>% distinct(country_iso3c, disease)
+    events_new <- outbreak_report_tables[["outbreak_reports_events"]] %>%
+      filter(!is_aquatic)
+    # write_csv(events_new, "tmp_events_new2.csv")
+    events_new <- read_csv("tmp_events_new2.csv") %>% #TODO delete this, only for dev
+      mutate(follow_up_count = as.character(follow_up_count)) %>%
+      filter(!is_aquatic)
+
+    # these are the new country + disease combos
+    events_new_lookup <- events_new %>%
+      distinct(country_iso3c, disease)
+
+    # pull dataset for each country/disease combo
+    outbreak_reports_events <- tbl(conn, "outbreak_reports_events") %>%
+      inner_join(events_new_lookup, copy = TRUE, by = c("country_iso3c", "disease")) %>%
+      collect()
+
+    # add on new dataset
+    outbreak_reports_events <- bind_rows(outbreak_reports_events, events_new)
+
+    # clean disease names in lookup
+    events_new_lookup_clean <- repel_clean_disease_names(model_object, events_new_lookup)
+
+    # pull out unrecognized diseases
+    #TODO use non-disease specific model coefficient for prediction (to be implemented in repelpredict).
+    events_new_unrecognized_disease <- events_new_lookup_clean %>%
+      filter(is.na(disease))
+
+    # finish cleaning disease names, for now dropping unrecognized diseases
+    events_new_lookup_clean <- events_new_lookup_clean %>%
+      drop_na(disease)
+
+    outbreak_reports_events <- outbreak_reports_events %>%
+      filter(!disease %in% unique(events_unrecognized_disease$disease_name_uncleaned))
+
+    #TODO add catch for nrow==0
+
+    # process data with latest events added
+    events_new_processed <- repel_init(model_object = model_object,
+                                       conn = conn,
+                                       outbreak_reports_events = outbreak_reports_events,
+                                       remove_single_country_disease = FALSE) %>%
+      right_join(events_new_lookup_clean, by = c("country_iso3c", "disease", "disease_name_uncleaned")) # only need relevant disease/country combos
+
+    # identify disease not recognized b/c of taxa type
+    events_new_unrecognized_disease2 <- events_new_processed %>%
+      filter(is.na(month)) %>%
+      select(country_iso3c, disease, disease_name_uncleaned)
+    events_new_unrecognized_disease <- bind_rows(events_new_unrecognized_disease, events_new_unrecognized_disease2) %>% distinct()
+
+    events_new_processed <- events_new_processed %>%
+      drop_na(month) %>%
+      select(-disease_name_uncleaned)
+
+    # get existing cache for relevant data
+    network_lme_augment_predict <- tbl(conn, "network_lme_augment_predict") %>%
+      inner_join(events_new_lookup_clean, copy = TRUE, by = c("country_iso3c", "disease")) %>%
+      select(!!colnames(events_new_processed)) %>%
+      collect()
+
+    # compare new processed data with existing cache
+    events_processed  <- setdiff(events_new_processed, network_lme_augment_predict)
+    # events_processed %>% distinct(country_iso3c, disease)
+  }
 
   # Predict on new data  ------------------------------------------------
   # Get outbreak probabilities
-  augmented_updated_events <- repel_augment(model_object = model_object,
-                                            conn = conn,
-                                            newdata = updated_events)
+  augmented_events <- repel_augment(model_object = model_object,
+                                    conn = conn,
+                                    newdata = events_processed)
 
-  predicted_updated_events <- repel_predict(model_object = model_object,
-                                            newdata = augmented_updated_events)
+  predicted_events <- repel_predict(model_object = model_object,
+                                    newdata = augmented_events)
 
-  repel_forecast_updated_events <- repel_forecast(model_object = model_object,
-                                                  conn = conn,
-                                                  newdata = updated_events,
-                                                  use_cache = FALSE)
+  repel_forecast_events <- repel_forecast(model_object = model_object,
+                                          conn = conn,
+                                          newdata = events_processed,
+                                          use_cache = FALSE)
 
-  network_lme_augment_predict_updated_events <- repel_forecast_updated_events[[1]] %>%
-    mutate(predicted_outbreak_probability = repel_forecast_updated_events[[2]]) %>%
+  network_lme_augment_predict_events <- repel_forecast_events[[1]] %>%
+    mutate(predicted_outbreak_probability = repel_forecast_events[[2]]) %>%
     mutate(db_network_etag = aws_network_etag)
-  #^ network_lme_augment_predict_updated_events to be added to database below
+  #^ network_lme_augment_predict_events to be added to database below
 
-  forcasted_predictions <- network_lme_augment_predict_updated_events %>%
+  forcasted_predictions <- network_lme_augment_predict_events %>%
     distinct(country_iso3c, disease, month, predicted_outbreak_probability)
 
   # Get augment with disaggregated country imports
-  augmented_data_disagg_updated_events <- repel_augment(model_object, conn, newdata = updated_events, sum_country_imports = FALSE)
+  augmented_data_disagg_events <- repel_augment(model_object, conn, newdata = events_processed, sum_country_imports = FALSE)
 
-  network_lme_augment_predict_by_origin_updated_events <-  augmented_data_disagg_updated_events %>%
+  network_lme_augment_predict_by_origin_events <-  augmented_data_disagg_events %>%
     left_join(forcasted_predictions, by = c("country_iso3c", "disease", "month"))
-  #^ network_lme_augment_predict_by_origin_updated_events to be added to database below
+  #^ network_lme_augment_predict_by_origin_events to be added to database below
 
   # Get model coefficients (only necessary when there is a new model)
   lme_mod <- model_object$network_model
@@ -230,17 +295,17 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
 
   # Update predictions
   update_sql_table(conn, table = "network_lme_augment_predict",
-                   updates = network_lme_augment_predict_updated_events,
+                   updates = network_lme_augment_predict_events,
                    id_fields = c("country_iso3c", "disease", "month"),
                    fill_col_na = TRUE)
 
 
   # Update predictions
   update_sql_table(conn, table = "network_lme_augment_predict_by_origin",
-                   updates = network_lme_augment_predict_by_origin_updated_events,
+                   updates = network_lme_augment_predict_by_origin_events,
                    id_fields = c("country_iso3c", "country_origin", "disease", "month"),
                    fill_col_na = TRUE)
-  #TODO add model results
+  #TODO add model cache
 
   message("Done updating outbreak reports")
 
