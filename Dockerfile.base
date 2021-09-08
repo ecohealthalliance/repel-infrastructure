@@ -31,6 +31,7 @@ RUN install2.r -s \
   connections \
   curl \
   DBI \
+  dbx \
   DT \
   furrr \
   future \

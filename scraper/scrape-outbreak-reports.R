@@ -259,7 +259,6 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     b = Sys.time()
     message(paste0("Finished getting disaggregated country import augmented data. ", round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " seconds elapsed"))
 
-
     network_lme_augment_predict_by_origin_events <-  augmented_data_disagg_events %>%
       left_join(forcasted_predictions, by = c("country_iso3c", "disease", "month"))
     #^ network_lme_augment_predict_by_origin_events to be added to database below
@@ -290,23 +289,33 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
 
   # update raw data
   outbreak_reports_events <- outbreak_report_tables[["outbreak_reports_events"]]
-  db_update(conn, table_name = "outbreak_reports_events", table_content = outbreak_reports_events, id_fields = "report_id")
+  db_update(conn, table_name = "outbreak_reports_events", table_content = outbreak_reports_events, id_field = "report_id")
 
   outbreak_reports_outbreaks <- outbreak_report_tables[["outbreak_reports_outbreaks"]]
-  db_update(conn, table_name = "outbreak_reports_outbreaks", table_content = outbreak_reports_outbreaks, id_fields = "report_id")
+  outbreak_reports_outbreaks <- outbreak_reports_outbreaks %>%
+    mutate(id = paste0(report_id, outbreak_location_id, species_name)) %>%
+    select(id, everything())
+  db_update(conn, table_name = "outbreak_reports_outbreaks", table_content = outbreak_reports_outbreaks, id_field = "id")
 
-  outbreak_reports_diseases_unmatched <- outbreak_report_tables[["outbreak_reports_diseases_unmatched"]]
-  db_update(conn, table_name = "outbreak_reports_diseases_unmatched", table_content = outbreak_reports_diseases_unmatched, id_fields = "disease")
+  outbreak_reports_diseases_unmatched <- outbreak_report_tables[["outbreak_reports_diseases_unmatched"]] %>%
+    distinct(disease)
+  db_update(conn, table_name = "outbreak_reports_diseases_unmatched", table_content = outbreak_reports_diseases_unmatched, id_field = "disease")
 
   outbreak_reports_ingest_status_log <- outbreak_report_tables[["outbreak_reports_ingest_status_log"]]
-  db_update(conn, table_name = "outbreak_reports_ingest_status_log", table_content = outbreak_reports_ingest_status_log, id_fields = "report_info_id")
+  db_update(conn, table_name = "outbreak_reports_ingest_status_log", table_content = outbreak_reports_ingest_status_log, id_field = "report_info_id")
 
   # Update predictions
   if(!is.null(events_processed)){
-    db_update(conn, table_name = "network_lme_augment_predict", table_content = network_lme_augment_predict_events, id_fields = c("country_iso3c", "disease", "month"))
 
-    # Update predictions
-    db_update(conn, table_name = "network_lme_augment_predict_by_origin", table_content = network_lme_augment_predict_by_origin_events, id_fields = c("country_iso3c", "country_origin", "disease", "month"))
+    network_lme_augment_predict_events <- network_lme_augment_predict_events %>%
+      mutate(id =  paste0(country_iso3c, disease, month)) %>%
+      select(id, everything())
+    db_update(conn, table_name = "network_lme_augment_predict", table_content = network_lme_augment_predict_events, id_field = "id")
+
+    network_lme_augment_predict_by_origin_events <- network_lme_augment_predict_by_origin_events %>%
+      mutate(id =  paste0(country_iso3c, country_origin, disease, month)) %>%
+      select(id, everything())
+    db_update(conn, table_name = "network_lme_augment_predict_by_origin", table_content = network_lme_augment_predict_by_origin_events, id_field = "id")
 
     # Update model results cache
     message("Updating cached model coefficients and scaling values")

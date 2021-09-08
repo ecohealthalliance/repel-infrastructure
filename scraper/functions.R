@@ -38,12 +38,12 @@ wahis_db_connect <- function(host_location = c("reservoir", "local", "remote")){
 }
 
 # This replaces the rows in the database table with the ones in `updates`,
-# matching on `id_fields`. The replacements are just appended on the end.
+# matching on `id_field`. The replacements are just appended on the end.
 # There might be a better way using SQL UPDATE.  It returns the fields that were
 # removed.
 #TODO: This works with characters, but change so it works with other types
 
-update_sql_table <- function(conn, table, updates, id_fields, fill_col_na = FALSE, verbose = TRUE) {
+update_sql_table <- function(conn, table, updates, id_field, fill_col_na = FALSE, verbose = TRUE) {
   sql_table <- tbl(conn, table)
   if(!fill_col_na){
     assert_that(identical(sort(colnames(sql_table)), sort(colnames(updates))))
@@ -53,12 +53,8 @@ update_sql_table <- function(conn, table, updates, id_fields, fill_col_na = FALS
     assert_that(identical(sort(colnames(sql_table)), sort(colnames(updates))))
   }
 
-  criteria <- distinct(select(updates, all_of(id_fields)))
-  selector <- paste0("(", do.call(paste, c(imap(criteria, ~paste0("", .y, " = \'", .x, "\'")), sep = " AND ")), ")", collapse = " OR ")
-  removed <- DBI::dbGetQuery(conn, glue("DELETE FROM {table} WHERE {selector} RETURNING * ;"))
-  dbAppendTable(conn, table, updates)
-  if (verbose) message("Replacing ", nrow(removed), " old records with ", nrow(updates), " new records")
-  return(removed)
+  dbxUpsert(conn,  table, records = updates, where_cols = id_field)
+  return()
 }
 
 # Function to check field names against schema
@@ -103,16 +99,19 @@ grant_table_permissions <- function(conn){
 
 
 # wrapper for update_sql_table to handle nulls and empty tables. also writes table if it doesn't already exist.
-db_update <- function(conn, table_name, table_content, id_fields){
+db_update <- function(conn, table_name, table_content, id_field){
   message(paste("Updating", table_name))
   if(!is.null(table_content)){
     if(nrow(table_content)){
       if(!dbExistsTable(conn, table_name)){
+        # write fresh table to db
         dbWriteTable(conn,  name = table_name, value = table_content)
-
+        # set postgres primary key
+        pk_name <- paste0(table_name, "_pk")
+        pkquery <- DBI::dbGetQuery(conn, glue("ALTER TABLE {table_name} ADD CONSTRAINT {pk_name} PRIMARY KEY ({id_field})"))
       }else{
         update_sql_table(conn,  table = table_name, updates = table_content,
-                         id_fields = id_fields, fill_col_na = TRUE)
+                         id_field = id_field, fill_col_na = TRUE)
       }
     }
   }
