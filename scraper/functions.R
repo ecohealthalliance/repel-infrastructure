@@ -52,6 +52,7 @@ update_sql_table <- function(conn, table, updates, id_fields, fill_col_na = FALS
     updates[,add_cols] <- NA
     assert_that(identical(sort(colnames(sql_table)), sort(colnames(updates))))
   }
+
   criteria <- distinct(select(updates, all_of(id_fields)))
   selector <- paste0("(", do.call(paste, c(imap(criteria, ~paste0("", .y, " = \'", .x, "\'")), sep = " AND ")), ")", collapse = " OR ")
   removed <- DBI::dbGetQuery(conn, glue("DELETE FROM {table} WHERE {selector} RETURNING * ;"))
@@ -98,4 +99,21 @@ sum2 <- function(x) ifelse(all(is.na(x)), NA, sum(x, na.rm = TRUE))
 grant_table_permissions <- function(conn){
   DBI::dbExecute(conn, "grant select on all tables in schema public to repel_reader")
   DBI::dbExecute(conn, "grant select on all tables in schema public to repeluser")
+}
+
+
+# wrapper for update_sql_table to handle nulls and empty tables. also writes table if it doesn't already exist.
+db_update <- function(conn, table_name, table_content, id_fields){
+  message(paste("Updating", table_name))
+  if(!is.null(table_content)){
+    if(nrow(table_content)){
+      if(!dbExistsTable(conn, table_name)){
+        dbWriteTable(conn,  name = table_name, value = table_content)
+
+      }else{
+        update_sql_table(conn,  table = table_name, updates = table_content,
+                         id_fields = id_fields, fill_col_na = TRUE)
+      }
+    }
+  }
 }
