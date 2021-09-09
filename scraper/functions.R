@@ -48,8 +48,13 @@ update_sql_table <- function(conn, table, updates, id_field, fill_col_na = FALSE
   if(!fill_col_na){
     assert_that(identical(sort(colnames(sql_table)), sort(colnames(updates))))
   }else{
-    add_cols <- setdiff(colnames(sql_table), colnames(updates))
-    updates[,add_cols] <- NA
+    add_cols_to_updates <-setdiff(colnames(sql_table), colnames(updates))
+    updates[,add_cols_to_updates] <- NA
+    add_cols_to_existing <- setdiff(colnames(updates), colnames(sql_table))
+    for(col in add_cols_to_existing){
+      dbGetQuery(conn, glue("ALTER TABLE {table} ADD COLUMN {col} TEXT"))
+    }
+    sql_table <- tbl(conn, table)
     assert_that(identical(sort(colnames(sql_table)), sort(colnames(updates))))
   }
 
@@ -99,7 +104,7 @@ grant_table_permissions <- function(conn){
 
 
 # wrapper for update_sql_table to handle nulls and empty tables. also writes table if it doesn't already exist.
-db_update <- function(conn, table_name, table_content, id_field){
+db_update <- function(conn, table_name, table_content, id_field, fill_col_na = FALSE){
   message(paste("Updating", table_name))
   if(!is.null(table_content)){
     if(nrow(table_content)){
@@ -111,7 +116,7 @@ db_update <- function(conn, table_name, table_content, id_field){
         pkquery <- DBI::dbGetQuery(conn, glue("ALTER TABLE {table_name} ADD CONSTRAINT {pk_name} PRIMARY KEY ({id_field})"))
       }else{
         update_sql_table(conn,  table = table_name, updates = table_content,
-                         id_field = id_field, fill_col_na = TRUE)
+                         id_field = id_field, fill_col_na = fill_col_na)
       }
     }
   }
