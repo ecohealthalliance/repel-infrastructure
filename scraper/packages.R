@@ -14,4 +14,5 @@ suppressMessages(suppressWarnings(suppressPackageStartupMessages({
   library(aws.s3)
   library(lubridate)
   library(dbx)
+  library(janitor)
 })))

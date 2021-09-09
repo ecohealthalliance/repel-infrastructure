@@ -37,6 +37,7 @@ RUN install2.r -s \
   future \
   ggiraph \
   here \
+  janitor \
   lubridate \
   memoise \
   ncdf4 \
