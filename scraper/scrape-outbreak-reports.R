@@ -50,8 +50,8 @@ report_resps <- split(reports_to_get, (1:nrow(reports_to_get)-1) %/% 100) %>% # 
     )
   })
 
-write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
-report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
+# write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
+# report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
 
 report_resps <- reduce(report_resps, c)
 assertthat::are_equal(length(report_resps), nrow(reports_to_get))
@@ -83,21 +83,30 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
 
   outbreak_report_tables$outbreak_reports_ingest_status_log <- outbreak_reports_ingest_status_log
 
-
   # Run repel_init on transformed data  ------------------------------------------------
   # get model from aws
   model_object <-  repelpredict::network_lme_model(
     network_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds"),
     network_scaling_values = aws.s3::s3readRDS(bucket = "repeldb/models", object = "network_scaling_values.rds")
   )
+  # get model etag
   aws_network_etag <- aws.s3::head_object(bucket = "repeldb/models", object = "lme_mod_network.rds") %>%
     attr(., "etag")
+  # pull etag of last used model in db cache
   if(dbExistsTable(conn, "network_lme_augment_predict")){
     db_network_etag <- tbl(conn, "network_lme_augment_predict") %>%
       pull(db_network_etag) %>% unique()
   }else{
     db_network_etag <- "dne"
   }
+
+  # pull disease names from model for data check below
+  lme_mod <- model_object$network_model
+  randef <- lme4::ranef(lme_mod)
+  model_disease_names <- randef$disease %>%
+    tibble::rownames_to_column(var = "disease") %>%
+    distinct(disease) %>%
+    pull(disease)
 
   # if there is a new model, combine old with new data and run init, prior to predictions
   if(aws_network_etag != db_network_etag){
@@ -155,6 +164,18 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
 
       events_processed <- events_processed %>%
         filter(!disease_in_single_country, disease_primary_taxa)
+
+      # also remove any other diseases that were not part of model fitting
+      events_disease_not_modeled <- events_processed %>%
+        filter(!disease %in% model_disease_names) %>%
+        distinct(country_iso3c, disease_name_uncleaned, disease) %>%
+        mutate(reason_for_exclusion = "disease not represented in model")
+
+      events_unrecognized_disease <- bind_rows(events_unrecognized_disease, events_disease_not_modeled)
+
+      events_processed <- events_processed %>%
+        filter(disease %in% model_disease_names)
+
     } # events_processed not NULL
   }else{ # if there is not a new model, identify which reports are affected by new data. we only need to run predictions on new data
 
@@ -216,6 +237,17 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
         filter(disease_primary_taxa) %>%
         select(-disease_primary_taxa)
 
+      # also remove any other diseases that were not part of model fitting
+      events_disease_not_modeled <- events_processed %>%
+        filter(!disease %in% model_disease_names) %>%
+        distinct(country_iso3c, disease_name_uncleaned, disease) %>%
+        mutate(reason_for_exclusion = "disease not represented in model")
+
+      events_unrecognized_disease <- bind_rows(events_unrecognized_disease, events_disease_not_modeled)
+
+      events_processed <- events_processed %>%
+        filter(disease %in% model_disease_names)
+
       # get existing cache for relevant data
       network_lme_augment_predict <- tbl(conn, "network_lme_augment_predict") %>%
         inner_join(events_lookup_clean, copy = TRUE, by = c("country_iso3c", "disease")) %>%
@@ -236,11 +268,17 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
   db_update(conn, table_name = "outbreak_reports_events", table_content = outbreak_reports_events, id_field = "report_id", fill_col_na = TRUE)
 
   outbreak_reports_outbreaks <- outbreak_report_tables[["outbreak_reports_outbreaks"]]
-  write_rds(outbreak_reports_outbreaks, "tmp_outbreak_reports_outbreaks.rds") # for checking dupes
+  # write_rds(outbreak_reports_outbreaks, "tmp_outbreak_reports_outbreaks.rds") # for checking dupes
   outbreak_reports_outbreaks <- outbreak_reports_outbreaks %>%
     mutate(id = paste0(report_id, outbreak_location_id, species_name)) %>%
     select(id, everything()) %>%
     distinct()
+  outbreak_reports_outbreaks_dup_ids <- outbreak_reports_outbreaks %>%
+    janitor::get_dupes(id) %>%
+    pull(id) %>%
+    unique()
+  # ^ some wonky stuff happening here
+  outbreak_reports_outbreaks <- outbreak_reports_outbreaks %>% filter(!id %in% outbreak_reports_outbreaks_dup_ids)
   db_update(conn, table_name = "outbreak_reports_outbreaks", table_content = outbreak_reports_outbreaks, id_field = "id",  fill_col_na = TRUE)
 
   outbreak_reports_diseases_unmatched <- outbreak_report_tables[["outbreak_reports_diseases_unmatched"]] %>%
@@ -311,7 +349,7 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     network_lme_scaling_values <- model_object$network_scaling_values
     #^ network_lme_scaling_values to be added to database below
 
-  # Update db
+    # Update db
     message("Updating cached predictions in database")
 
     network_lme_augment_predict_events <- network_lme_augment_predict_events %>%
