@@ -329,9 +329,6 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     #^ network_lme_augment_predict_by_origin_events to be added to database below
 
     # Get model coefficients (only necessary when there is a new model)
-    lme_mod <- model_object$network_model
-
-    randef <- lme4::ranef(lme_mod)
     network_lme_coefficients <- randef$disease %>%
       tibble::rownames_to_column(var = "disease") %>%
       as_tibble() %>%
