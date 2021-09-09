@@ -32,8 +32,7 @@ new_ids <- setdiff(reports$report_info_id, current_report_info_ids)
 
 reports_to_get <- reports %>%
   filter(report_info_id %in% new_ids) %>%
-  mutate(url =  paste0("https://wahis.oie.int/pi/getReport/", report_info_id)) %>%
-  slice(1:200)
+  mutate(url =  paste0("https://wahis.oie.int/pi/getReport/", report_info_id))
 
 # Pulling reports ----------------------------
 message("Pulling ", nrow(reports_to_get), " reports")
@@ -51,8 +50,8 @@ report_resps <- split(reports_to_get, (1:nrow(reports_to_get)-1) %/% 100) %>% # 
     )
   })
 
-# write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
-# report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
+write_rds(report_resps, here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
+report_resps <- read_rds(here::here("scraper", "scraper_files_for_testing/report_resps_outbreak.rds"))
 
 report_resps <- reduce(report_resps, c)
 assertthat::are_equal(length(report_resps), nrow(reports_to_get))
@@ -84,6 +83,7 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
 
   outbreak_report_tables$outbreak_reports_ingest_status_log <- outbreak_reports_ingest_status_log
 
+
   # Run repel_init on transformed data  ------------------------------------------------
   # get model from aws
   model_object <-  repelpredict::network_lme_model(
@@ -104,9 +104,14 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     message("New model detected. Preparing to predict on full dataset.")
 
     events_new <- outbreak_report_tables[["outbreak_reports_events"]]
-    events_existing <- tbl(conn, "outbreak_reports_events") %>% collect()
-    events <- bind_rows(events_existing, events_new) %>%
-      filter(!is_aquatic)
+    if(dbExistsTable(conn, "outbreak_reports_events")){ # table may not be there if this is a fresh run of the scraper (ie populating db from scratch)
+      events_existing <- tbl(conn, "outbreak_reports_events") %>% collect()
+      events <- bind_rows(events_existing, events_new) %>%
+        filter(!is_aquatic)
+    }else{
+      events <- events_new %>%
+        filter(!is_aquatic)
+    }
 
     # these are the country + disease combos
     events_lookup <- events %>%
@@ -223,6 +228,28 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     } # events_processed not NULL
   }
 
+  # Update outbreak reports in database  ------------------------------------------------
+  message("Updating outbreak reports in database") # this is necessary before running predictions because database lookups are needed in augment
+
+  # update raw data
+  outbreak_reports_events <- outbreak_report_tables[["outbreak_reports_events"]]
+  db_update(conn, table_name = "outbreak_reports_events", table_content = outbreak_reports_events, id_field = "report_id", fill_col_na = TRUE)
+
+  outbreak_reports_outbreaks <- outbreak_report_tables[["outbreak_reports_outbreaks"]]
+  write_rds(outbreak_reports_outbreaks, "tmp_outbreak_reports_outbreaks.rds") # for checking dupes
+  outbreak_reports_outbreaks <- outbreak_reports_outbreaks %>%
+    mutate(id = paste0(report_id, outbreak_location_id, species_name)) %>%
+    select(id, everything()) %>%
+    distinct()
+  db_update(conn, table_name = "outbreak_reports_outbreaks", table_content = outbreak_reports_outbreaks, id_field = "id",  fill_col_na = TRUE)
+
+  outbreak_reports_diseases_unmatched <- outbreak_report_tables[["outbreak_reports_diseases_unmatched"]] %>%
+    distinct(disease)
+  db_update(conn, table_name = "outbreak_reports_diseases_unmatched", table_content = outbreak_reports_diseases_unmatched, id_field = "disease")
+
+  outbreak_reports_ingest_status_log <- outbreak_report_tables[["outbreak_reports_ingest_status_log"]]
+  db_update(conn, table_name = "outbreak_reports_ingest_status_log", table_content = outbreak_reports_ingest_status_log, id_field = "report_info_id",  fill_col_na = TRUE)
+
   # Predict on new data  ------------------------------------------------
   # Get outbreak probabilities
   # augmented_events <- repel_augment(model_object = model_object,
@@ -283,29 +310,9 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     # Get scaling values (only necessary when there is a new model)
     network_lme_scaling_values <- model_object$network_scaling_values
     #^ network_lme_scaling_values to be added to database below
-  }
-  # Update database  ------------------------------------------------
-  message("Updating database")
 
-  # update raw data
-  outbreak_reports_events <- outbreak_report_tables[["outbreak_reports_events"]]
-  db_update(conn, table_name = "outbreak_reports_events", table_content = outbreak_reports_events, id_field = "report_id")
-
-  outbreak_reports_outbreaks <- outbreak_report_tables[["outbreak_reports_outbreaks"]]
-  outbreak_reports_outbreaks <- outbreak_reports_outbreaks %>%
-    mutate(id = paste0(report_id, outbreak_location_id, species_name)) %>%
-    select(id, everything())
-  db_update(conn, table_name = "outbreak_reports_outbreaks", table_content = outbreak_reports_outbreaks, id_field = "id")
-
-  outbreak_reports_diseases_unmatched <- outbreak_report_tables[["outbreak_reports_diseases_unmatched"]] %>%
-    distinct(disease)
-  db_update(conn, table_name = "outbreak_reports_diseases_unmatched", table_content = outbreak_reports_diseases_unmatched, id_field = "disease")
-
-  outbreak_reports_ingest_status_log <- outbreak_report_tables[["outbreak_reports_ingest_status_log"]]
-  db_update(conn, table_name = "outbreak_reports_ingest_status_log", table_content = outbreak_reports_ingest_status_log, id_field = "report_info_id")
-
-  # Update predictions
-  if(!is.null(events_processed)){
+  # Update db
+    message("Updating cached predictions in database")
 
     network_lme_augment_predict_events <- network_lme_augment_predict_events %>%
       mutate(id =  paste0(country_iso3c, disease, month)) %>%
