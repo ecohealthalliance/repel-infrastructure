@@ -2,7 +2,7 @@
 
 dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper/", "")
 source(here::here(paste0(dir, "packages.R")))
-source(here::here(paste0(dir, "functions.R")))
+purrr::walk(list.files(here::here(paste0(dir, "functions")), full.names = TRUE), source)
 library(repelpredict)
 
 # Connect to database ----------------------------
@@ -189,7 +189,7 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     events_lookup <- events_new %>%
       distinct(country_iso3c, disease)
 
-    # pull exisiting dataset for each country/disease combo
+    # pull existing dataset for each country/disease combo
     events_existing <- tbl(conn, "outbreak_reports_events") %>%
       inner_join(events_lookup, copy = TRUE, by = c("country_iso3c", "disease")) %>%
       collect()

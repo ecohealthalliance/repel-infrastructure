@@ -2,7 +2,7 @@
 
 dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper", "")
 source(here::here(dir, "packages.R"))
-source(here::here(dir, "functions.R"))
+purrr::walk(list.files(here::here(paste0(dir, "functions")), full.names = TRUE), source)
 
 # Download and transform all ----------------------------------------------
 

@@ -1,7 +1,7 @@
 # This pulls the schema for database tables
 
 source(here::here("packages.R"))
-source(here::here("functions.R"))
+purrr::walk(list.files(here::here(paste0("functions")), full.names = TRUE), source)
 
 # Connect to database ----------------------------
 conn <- wahis_db_connect()

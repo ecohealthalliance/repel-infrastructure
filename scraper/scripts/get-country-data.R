@@ -1,7 +1,7 @@
 # This script downloads and processes country-specifc data
 
 source(here::here("packages.R"))
-source(here::here("functions.R"))
+purrr::walk(list.files(here::here(paste0("functions")), full.names = TRUE), source)
 
 wb <- wahis::get_wb_indicators(indicators_list =
                                  list(gdp_dollars = "NY.GDP.MKTP.CD",
