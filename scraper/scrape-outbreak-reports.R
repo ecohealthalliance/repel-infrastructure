@@ -100,21 +100,17 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     db_network_etag <- "dne"
   }
 
-  # pull disease names from model for data check below
+  # pull random effects from model for data check in preprocess_outbreak_events()
   lme_mod <- model_object$network_model
   randef <- lme4::ranef(lme_mod)
-  model_disease_names <- randef$disease %>%
-    tibble::rownames_to_column(var = "disease") %>%
-    distinct(disease) %>%
-    pull(disease)
 
   # if there is a new model, combine old with new data and run init, prior to predictions
   if(aws_network_etag != db_network_etag){
     message("New model detected. Preparing to predict on full dataset.")
-    events_processed <- preprocess_outbreak_events(conn, events_new = outbreak_report_tables[["outbreak_reports_events"]], process_all = TRUE)
+    events_processed <- preprocess_outbreak_events(conn, events_new = outbreak_report_tables[["outbreak_reports_events"]], randef = randef, process_all = TRUE)
   }else{ # if there is not a new model, identify which reports are affected by new data. we only need to run predictions on new data
     message("Preparing to predict on new data only")
-    events_processed <- preprocess_outbreak_events(conn, events_new = outbreak_report_tables[["outbreak_reports_events"]], process_all = FALSE)
+    events_processed <- preprocess_outbreak_events(conn, events_new = outbreak_report_tables[["outbreak_reports_events"]], randef = randef, process_all = FALSE)
   }
 
   # Update outbreak reports in database  ------------------------------------------------

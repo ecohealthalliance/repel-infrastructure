@@ -1,6 +1,6 @@
 
 # function to apply repelpredict::repel_init to new events outbreak data. option to process full dataset or a subset of data.
-preprocess_outbreak_events <- function(conn, events_new, process_all = FALSE){
+preprocess_outbreak_events <- function(conn, events_new, randef, process_all = FALSE){
 
   if(process_all){ # if processing all data
 
@@ -101,6 +101,11 @@ preprocess_outbreak_events <- function(conn, events_new, process_all = FALSE){
   }
 
   # also remove any other diseases that were not part of model fitting
+  model_disease_names <- randef$disease %>%
+    tibble::rownames_to_column(var = "disease") %>%
+    distinct(disease) %>%
+    pull(disease)
+
   events_disease_not_modeled <- events_processed %>%
     filter(!disease %in% model_disease_names) %>%
     distinct(country_iso3c, disease_name_uncleaned, disease) %>%
