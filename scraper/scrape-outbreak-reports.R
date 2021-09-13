@@ -2,7 +2,7 @@
 
 dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper/", "")
 source(here::here(paste0(dir, "packages.R")))
-purrr::walk(list.files(here::here(paste0(dir, "functions")), full.names = TRUE), source)
+purrr::walk(list.files(here::here(paste0(dir, "R")), full.names = TRUE), source)
 library(repelpredict)
 
 # Connect to database ----------------------------

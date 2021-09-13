@@ -2,7 +2,7 @@
 # First run scripts/pull-aws-downloaded-wahis to download the files
 
 source(here::here("scraper/packages.R"))
-purrr::walk(list.files(here::here(paste0("functions")), full.names = TRUE), source)
+purrr::walk(list.files(here::here(paste0("R")), full.names = TRUE), source)
 library(fs)
 library(future)
 library(furrr)
