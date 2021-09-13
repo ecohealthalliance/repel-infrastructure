@@ -16,7 +16,7 @@ library(DBI)
 
 # connect to database
 source(here::here("scraper/packages.R"))
-purrr::walk(list.files(here::here(paste0(dir, "R")), full.names = TRUE), source)
+purrr::walk(list.files(here::here(paste0(dir, "/R")), full.names = TRUE), source)
 conn <- wahis_db_connect()
 
 # reported but failed 
