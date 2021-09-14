@@ -54,6 +54,7 @@ RUN install2.r -s \
   rvest \
   stringi \
   tidymodels \
+  imputeTS \
   xml2
 
 RUN installGithub.r -u FALSE \

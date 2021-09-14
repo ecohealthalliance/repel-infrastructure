@@ -1,11 +1,13 @@
 # Run six month report scraper once per week on early Saturday morning.
  5 4 * * 6 cd /home/rstudio/repel-infrastructure/scraper && ./scrape-six-month-reports.R
-# Run connect scraper once per week on early Monday morning.
- 5 4 * * 1 cd /home/rstudio/repel-infrastructure/scraper && ./scrape-connect-data.R
 # Run outbreak report scraper daily
  5 0 * * * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-outbreak-reports.R
-# Run network model prediction cache at beginning of month
+# Run network model prediction cache on first day of month
  5 3 1 * * cd /home/rstudio/repel-infrastructure/scraper && ./monthly-network-prediction-updates.R
+# Run connect yearly scraper on second day of month
+ 5 3 2 * * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-connect-yearly-data.R
+# Run connect static scraper January 1 (changes are unlikely)
+ 5 5 1 1 * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-connect-static-data.R
 # Run promed table update nightly
  0 4 * * * cd /home/rstudio/repel-infrastructure/scraper && ./update_promed_posts.py
 # We need a blank line here for it to be a valid cron file

@@ -1,13 +1,13 @@
 #!/usr/bin/env Rscript
 
-dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper/", "")
-source(here::here(paste0(dir, "packages.R")))
-purrr::walk(list.files(here::here(paste0(dir, "/R")), full.names = TRUE), source)
+dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper", "")
+source(here::here(dir, "packages.R"))
+purrr::walk(list.files(here::here(dir, "R"), full.names = TRUE), source)
 library(repelpredict)
 
 # Connect to database ----------------------------
 message("Connect to database")
-hl <- ifelse(dir == "scraper/", "reservoir", "remote")
+hl <- ifelse(dir == "scraper", "reservoir", "remote")
 conn <- wahis_db_connect(host_location = hl)
 
 # Finding unfetched reports in database ----------------------------
