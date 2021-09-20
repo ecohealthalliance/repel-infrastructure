@@ -95,8 +95,8 @@ purrr::walk(db_tables_annual, ~DBI::dbRemoveTable(conn, .))
 `scraper/scrape-connect-reports.R` will scrape, transform, and save non-OIE tables into your local database.
 
 **Push local to remote**:  
-To copy your local database to AWS S3 (backup) and the staging server (kirby), run `./push_local_db_to_S3_and_stage_outside.sh ` _from within the scraper directory_. You will need to specify args host and port, for example:
+To copy your local database to AWS S3 (backup) and the staging server (kirby), run `./push_local_db_to_S3_and_stage_outside.sh ` _from within the scraper directory_. You will need to specify args host, port, and temporary directory (an existing folder in your home directory). For example:
 
 ```
-./push_local_db_to_S3_and_stage_outside.sh prospero.ecohealthalliance.org 22053
+./push_local_db_to_S3_and_stage_outside.sh prospero.ecohealthalliance.org 22053 ~/tmp
 ```
