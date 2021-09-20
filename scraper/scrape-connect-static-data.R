@@ -1,9 +1,8 @@
-# This script downloads and processes connect (non-oie) yearly data
+# This script downloads and processes connect (non-oie) static data
 
 dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper", "")
 source(here::here(dir, "packages.R"))
 purrr::walk(list.files(here::here(dir, "R"), full.names = TRUE), source)
-library(repelpredict)
 dir_downloads <- paste(dir, "data-raw", sep = "/")
 
 # Connect to database ----------------------------
@@ -31,7 +30,8 @@ all_countries <- ggplot2::map_data("world") %>%
 message("Downloading BLI bird migration")
 download_bird_migration(directory = dir_downloads)
 bird <- transform_bird_migration(directory = dir_downloads) %>%
-  right_join(all_countries)
+  right_join(all_countries)  %>%
+  mutate(source = "BLI")
 write_csv(bird, here(dir, "data-intermediate/bli-bird-migration.csv"))
 dbWriteTable(conn,  name = "connect_static_bli_bird_migration", value = bird, overwrite = TRUE)
 
@@ -43,7 +43,8 @@ download_wildlife(token = Sys.getenv("IUCN_REDLIST_KEY"), directory = dir_downlo
 # wildlife_migration <- left_join(all_countries, wildlife_migration)
 # write_csv(wildlife_migration, here(dir, "data-intermediate/iucn-wildlife_migration.csv"))
 wildlife_migration <- read_csv(here(dir, "data-intermediate/iucn-wildlife_migration.csv")) %>%
-  right_join(all_countries)
+  right_join(all_countries)  %>%
+  mutate(source = "IUCN")
 dbWriteTable(conn,  name = "connect_static_iucn_wildlife_migration", value = wildlife_migration, overwrite = TRUE)
 
 # shared borders - assume FALSE for NAs
@@ -64,7 +65,6 @@ country_distance <- get_country_distance() %>%
   rename(gc_dist_meters = gc_dist) # geosphere::distGeo
 write_csv(country_distance, here(dir, "data-intermediate/country-distance.csv"))
 dbWriteTable(conn,  name = "connect_static_country_distance", value = country_distance, overwrite = TRUE)
-
 
 # grant permissions
 grant_table_permissions(conn)
