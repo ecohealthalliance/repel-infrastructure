@@ -6,6 +6,8 @@
  5 3 1 * * cd /home/rstudio/repel-infrastructure/scraper && ./monthly-network-prediction-updates.R
 # Run connect yearly scraper on second day of month
  5 3 2 * * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-connect-yearly-data.R
+# Run country yearly scraper on third day of month
+ 5 3 3 * * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-country-yearly-data.R
 # Run connect static scraper January 1 (changes are unlikely)
  5 5 1 1 * cd /home/rstudio/repel-infrastructure/scraper && ./scrape-connect-static-data.R
 # Run promed table update nightly
