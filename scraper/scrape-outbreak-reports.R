@@ -202,6 +202,12 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     # Update db
     message("Updating cached predictions in database")
 
+    # if we ran the predictions on the full dataset, delete table prior to updating (it will run much faster)
+    if(aws_network_etag != db_network_etag){
+      DBI::dbRemoveTable(conn, name = "network_lme_augment_predict")
+      DBI::dbRemoveTable(conn, name = "network_lme_augment_predict_by_origin")
+    }
+
     network_lme_augment_predict_events <- network_lme_augment_predict_events %>%
       mutate(id =  paste0(country_iso3c, disease, month)) %>%
       select(id, everything())
