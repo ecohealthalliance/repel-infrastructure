@@ -74,8 +74,31 @@ taxa <- taxa %>%
 write_csv(taxa, here(dir, "data-intermediate/fao-country-taxa-population.csv"))
 dbWriteTable(conn,  name = "country_yearly_fao_taxa_population", value = taxa, overwrite = TRUE)
 
+message("Get vet population from annual reports")
+#TODO annual report scraper needs updating
+vets <- tbl(conn, "annual_reports_veterinarians") %>%
+  select(country_iso3c, year = report_year, veterinarian_field, total_count) %>%
+  filter(veterinarian_field %in% c(
+    "animal health and welfare activities",
+    "veterinary public health activities",
+    "laboratories",
+    "private clinical practice",
+    "academic activities and education",
+    "pharmaceutical industry"
+  )) %>%
+  collect() %>%
+  group_by(country_iso3c, year) %>%
+  summarize(veterinarian_count = sum2(suppressWarnings(as.integer(total_count)))) %>% # summarize over different types of vets
+  ungroup()  %>%
+  right_join(all_countries_years, by = c("country_iso3c", "year")) %>%
+  arrange(country_iso3c, year) %>%
+  group_split(country_iso3c) %>%
+  map_dfr(~na_interp(., "veterinarian_count")) %>%
+  mutate(source = "OIE annual reports")
+write_csv(vets, here(dir, "data-intermediate/oie-country-vet-population.csv"))
+dbWriteTable(conn,  name = "country_yearly_oie_vet_population", value = vets, overwrite = TRUE)
+
 # grant permissions
 grant_table_permissions(conn)
 
 dbDisconnect(conn)
-conn <- wahis_db_connect(host_location = hl)
