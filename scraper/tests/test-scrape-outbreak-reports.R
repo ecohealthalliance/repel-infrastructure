@@ -33,11 +33,19 @@ test_scrape_outbreak_reports <- function(dir){
 
   assert_that(!is.null(outbreak_report_tables$outbreak_reports_outbreaks))
 
+  aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds", key = "notkey", secret = "notsecret")
+
   # make sure there is a model object for predictions
+  env_file <- stringr::str_remove(here::here(".env"), "scraper/")
+  base::readRenviron(env_file)
+
   model_object <-  repelpredict::network_lme_model(
-    network_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds"),
-    network_scaling_values = aws.s3::s3readRDS(bucket = "repeldb/models", object = "network_scaling_values.rds")
+    network_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds",
+                                      key = Sys.getenv("AWS_ACCESS_KEY_ID"), secret = Sys.getenv("AWS_SECRET_ACCESS_KEY")),
+    network_scaling_values = aws.s3::s3readRDS(bucket = "repeldb/models", object = "network_scaling_values.rds",
+                                               key = Sys.getenv("AWS_ACCESS_KEY_ID"), secret = Sys.getenv("AWS_SECRET_ACCESS_KEY"))
   )
+
   assert_that(class(model_object$network_model) == "glmerMod")
   lme_mod <- model_object$network_model
   randef <- lme4::ranef(lme_mod)
