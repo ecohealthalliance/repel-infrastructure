@@ -36,9 +36,6 @@ test_scrape_outbreak_reports <- function(dir){
   aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds", key = "notkey", secret = "notsecret")
 
   # make sure there is a model object for predictions
-  env_file <- stringr::str_remove(here::here(".env"), "scraper/")
-  base::readRenviron(env_file)
-
   model_object <-  repelpredict::network_lme_model(
     network_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds",
                                       key = Sys.getenv("AWS_ACCESS_KEY_ID"), secret = Sys.getenv("AWS_SECRET_ACCESS_KEY")),
