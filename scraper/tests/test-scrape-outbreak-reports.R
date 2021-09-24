@@ -1,10 +1,9 @@
 
-test_scrape_outbreak_reports <- function(){
+test_scrape_outbreak_reports <- function(dir){
 
   # scrape report list
   reports <- scrape_outbreak_report_list()
   assert_that(nrow(reports) > 20700)
-  assert_that(ncol(reports) == 17)
 
   # API response
   reports_to_test <- reports %>%
@@ -26,12 +25,28 @@ test_scrape_outbreak_reports <- function(){
   assert_that(class(report_resps) == "map_curl")
 
   # transform
-  outbreak_tables <- transform_outbreak_reports(outbreak_reports = report_resps, report_list = reports)
-  assert_that(class(outbreak_tables) == "list")
+  outbreak_report_tables <- transform_outbreak_reports(outbreak_reports = report_resps, report_list = reports)
+  assert_that(class(outbreak_report_tables) == "list")
 
-  assert_that(!is.null(outbreak_tables$outbreak_reports_events))
-  assert_that(nrow(outbreak_tables$outbreak_reports_events) == length(report_resps))
+  assert_that(!is.null(outbreak_report_tables$outbreak_reports_events))
+  assert_that(nrow(outbreak_report_tables$outbreak_reports_events) == length(report_resps))
 
-  assert_that(!is.null(outbreak_tables$outbreak_reports_outbreaks))
+  assert_that(!is.null(outbreak_report_tables$outbreak_reports_outbreaks))
+
+  # make sure there is a model object for predictions
+  model_object <-  repelpredict::network_lme_model(
+    network_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds"),
+    network_scaling_values = aws.s3::s3readRDS(bucket = "repeldb/models", object = "network_scaling_values.rds")
+  )
+  assert_that(class(model_object$network_model) == "glmerMod")
+  lme_mod <- model_object$network_model
+  randef <- lme4::ranef(lme_mod)
+
+  # make sure db connection exists
+  hl <- ifelse(dir == "scraper", "reservoir", "remote")
+  conn <- wahis_db_connect(host_location = hl)
+  assert_that(class(conn) == "PqConnection")
+  dbDisconnect(conn)
+
 
 }
