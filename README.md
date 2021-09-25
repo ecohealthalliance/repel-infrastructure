@@ -43,7 +43,8 @@ OR
 
 ## Deployment - Staging Server
 
-1. Use script push_db_local_to_aws_and_dev_outside.sh to push your local database to the staging server and to the staging S3 bucket.
+1. Run script push_db_local_to_aws_and_dev_outside.sh _from within the scraper directory_ to push your local database to the staging server and to the staging S3 bucket. You will need to specify arguments for host, port, and temporary directory (an existing folder in your home directory). For example: `./push_local_db_to_S3_and_stage_outside.sh prospero.ecohealthalliance.org 22053 ~/tmp`
+
 1. Update staging branch with changes in your development branch:
    1. Commit all changes to your dev branch
    1. Change to staging branch: `git checkout staging`
@@ -55,8 +56,10 @@ A GitHub Action will then automatically deploy the updated staging branch to the
 
 ## Deployment - Production Server
 
-Only 'staged' code should be pushed to the production server.
+Only 'staged' code should be pushed to the production server.  
+
 1. Follow the steps above to deploy code to the staging server
+
 1. Merge staging branch into the production branch:
    1. Change to production branch: `git checkout production`
    1. Merge staging into production: `git merge staging`
@@ -74,29 +77,26 @@ If there are any issues with the automatic deploy to either the staging or produ
 * staging-shutdown-containers
 * staging-deploy-containers
 
-
 ## PostGIS database setup
 
 From http://fuzzytolerance.info/blog/2018/12/04/Postgres-PostGIS-in-Docker-for-production/
 
-## Manually updating database
+## Load backup database
+To delete your local database and pull the backup from AWS, run script pull_db_aws.sh _from within the scraper directory_
 
-First launch local postgres (**bring up local workflow** above)
+## Scrapers
+There are multiple scripts running on cron schedules to pull in and process data.  
 
-**OIE tables**:  
-`scraper/scrape-annual-reports.R` and `scraper/scrape-outbreak-reports.R` ingest, transform, and save new OIE reports to your local database. These scripts can also be used to initiate database tables from scratch. To do so, first manually delete all relevant tables from your local database, for example:
+- __scrape-outbreak-reports.R__ processes outbreak reports from the OIE API and produces network (travelcast) model predictions. It produces and updates all `outbreak_reports_*` and `network_lme_*` tables in the database (see the `repeldata` package for table descriptions). Runs daily. 
 
-```
-db_tables <- DBI::dbListTables(conn)
-db_tables_annual <- db_tables[grepl("annual_reports_", db_tables)]
-purrr::walk(db_tables_annual, ~DBI::dbRemoveTable(conn, .))
-```
-**Connect tables**:  
-`scraper/scrape-connect-reports.R` will scrape, transform, and save non-OIE tables into your local database.
+   The network model depends on the assumption that diseases are ongoing if they haven't been reported as resolved within the previous year; therefore, we update model predictions each month to carry assumptions to current month. __monthly-network-prediction-updates.R__ runs on a monthly basis to provide these updates.
 
-**Push local to remote**:  
-To copy your local database to AWS S3 (backup) and the staging server (kirby), run `./push_local_db_to_S3_and_stage_outside.sh ` _from within the scraper directory_. You will need to specify args host, port, and temporary directory (an existing folder in your home directory). For example:
+- __scrape-connect-static-data.R__ downloads and processes non-oie connect (bilateral country) data that is not time-dependent. It produces all `connect_static_*` tables (bird migration, wildlife migration, shared country borders, country distance). Runs yearly.
 
-```
-./push_local_db_to_S3_and_stage_outside.sh prospero.ecohealthalliance.org 22053 ~/tmp
-```
+- __scrape-connect-yearly-data.R__ downloads and processes non-oie connect (bilateral country) data that is time-variable. It produces all `connect_yearly_*` tables (human migration, tourism, livestock trade, agricultural product trade). Runs monthly.
+
+- __scrape-country-yearly-data.R__ downloads and processes country-specific data (non-connect) data that is time-variable. It produces all `country_yearly_*` tables (GDP, human population, taxa population, veterinarian counts). Runs monthly. 
+
+- __scrape-six-month-reports.R__ processes six-month reports from the OIE API. [NEEDS TO BE UPDATED TO PRODUCE NOWCAST PREDICTIONS, FOLLOWING GENERAL APPROACH OF SCRAPE-OUTBREAK]. It produces and updates all `six_month_reports_*` tables in the database (see the `repeldata` package for table descriptions). Runs weekly. 
+
+- __scrape-annual-reports.R__ [NEEDS TO BE UPDATED TO USE OIE API IF/WHEN AVAILABLE]

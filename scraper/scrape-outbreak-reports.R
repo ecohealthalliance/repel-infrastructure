@@ -226,9 +226,11 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
   message("Done updating database")
 
   # Schema lookup -----------------------------------------------------------
+  # SCHEMA IS NOT UP TO DATE
   # field_check(conn, "outbreak_reports_")
 
   # Generate QA report ------------------------------------------------------
+  # QA REPORTS ARE NOT UP TO DATE
   # assert_that(dbExistsTable(conn, "outbreak_reports_events"))
   # assert_that(dbExistsTable(conn, "outbreak_reports_ingest_status_log"))
   # assert_that(dbExistsTable(conn, "outbreak_reports_outbreaks"))
