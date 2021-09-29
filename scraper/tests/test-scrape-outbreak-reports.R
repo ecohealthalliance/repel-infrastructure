@@ -43,14 +43,5 @@ test_scrape_outbreak_reports <- function(dir){
   )
 
   assert_that(class(model_object$network_model) == "glmerMod")
-  lme_mod <- model_object$network_model
-  randef <- lme4::ranef(lme_mod)
-
-  # make sure db connection exists
-  hl <- ifelse(dir == "scraper", "reservoir", "remote")
-  conn <- wahis_db_connect(host_location = hl)
-  assert_that(class(conn) == "PqConnection")
-  dbDisconnect(conn)
-
 
 }
