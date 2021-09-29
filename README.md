@@ -100,3 +100,4 @@ There are multiple scripts running on cron schedules to pull in and process data
 - __scrape-six-month-reports.R__ processes six-month reports from the OIE API. [NEEDS TO BE UPDATED TO PRODUCE NOWCAST PREDICTIONS, FOLLOWING GENERAL APPROACH OF SCRAPE-OUTBREAK]. It produces and updates all `six_month_reports_*` tables in the database (see the `repeldata` package for table descriptions). Runs weekly. 
 
 - __scrape-annual-reports.R__ [NEEDS TO BE UPDATED TO USE OIE API IF/WHEN AVAILABLE]
+
