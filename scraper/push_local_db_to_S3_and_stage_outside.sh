@@ -2,10 +2,16 @@
 # copy local repel database to dev and AWS
 # to be run from within scraper directory
 
-if [[ "$#" -ne 2 ]]
+DB_SAVE_DIR=/tmp
+
+if [ $# -eq 3 ]
 then
-  echo "Error: two input parameters are required"
-  echo "Usage: $0 <host> <port>"
+  DB_SAVE_DIR=$3
+elif [ $# -ne 2 ]
+then
+  echo "Error: input parameters host and port are required"
+  echo "  tmp_dir is optional and defaults to /tmp"
+  echo "Usage: $0 <host> <port> <tmp_dir>"
   exit 1
 fi
 args=("$@")
@@ -51,10 +57,10 @@ dropdb --if-exists test_create_db
 
 # make local db dumps
 set_local_env
-pg_dump repel > /tmp/repel_backup_local.dmp
-pg_dumpall > /tmp/all_pg_local.dmp
+pg_dump repel > ${args[2]}/repel_backup_local.dmp
+pg_dumpall > ${args[2]}/all_pg_local.dmp
 
-filesize_repel=$(stat -c%s "/tmp/repel_backup_local.dmp")
+filesize_repel=$(stat -c%s "${args[2]}/repel_backup_local.dmp")
 if (( filesize_repel < 100000)); then
   echo "Error: repel backup file size is too small!"
   exit 1
@@ -65,7 +71,7 @@ fi
 set_stage_env
 dropdb --if-exists repeltmp
 createdb repeltmp || { echo "Error: failed to create repel database!" && exit 1; }
-psql repeltmp < /tmp/repel_backup_local.dmp || { echo "Error: failed to restore repel database from backup!" && exit 1; }
+psql repeltmp < ${args[2]}/repel_backup_local.dmp || { echo "Error: failed to restore repel database from backup!" && exit 1; }
 psql <<EOF
 \connect postgres;
 drop database repel;
@@ -80,13 +86,13 @@ fi
 
 # archive dump and push to AWS
 
-XZ_DUMP_FILE=/tmp/all_pg_local.dmp.xz
+XZ_DUMP_FILE=${args[2]}/all_pg_local.dmp.xz
 if [ -f "$XZ_DUMP_FILE" ]
 then
   rm $XZ_DUMP_FILE
 fi
-xz /tmp/all_pg_local.dmp
-aws s3 cp /tmp/all_pg_local.dmp.xz s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz
+xz ${args[2]}/all_pg_local.dmp
+aws s3 cp ${args[2]}/all_pg_local.dmp.xz s3://${AWS_BUCKET}/dumps/${PGDUMP_FILENAME}.xz
 
 # remove existing csv files from AWS then copy local ones
 aws s3 rm s3://${AWS_BUCKET}/csv --recursive
@@ -110,5 +116,5 @@ sem --wait
 
 # clean up
 
-rm /tmp/repel_backup_local.dmp*
-rm /tmp/all_pg_local.dmp*
+rm ${args[2]}/repel_backup_local.dmp*
+rm ${args[2]}/all_pg_local.dmp*

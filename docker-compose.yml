@@ -46,6 +46,8 @@ services:
       context: './scraper'
       args:
         - GITHUB_PAT=${GITHUB_PAT}
+        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+        - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     env_file: .env
     environment:
       - WORKFLOW=local

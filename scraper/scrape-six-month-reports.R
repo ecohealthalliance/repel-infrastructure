@@ -2,11 +2,12 @@
 
 dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper/", "")
 source(here::here(paste0(dir, "packages.R")))
-source(here::here(paste0(dir, "functions.R")))
+purrr::walk(list.files(here::here(paste0(dir, "/R")), full.names = TRUE), source)
 
 # Connect to database ----------------------------
 message("Connect to database")
-conn <- wahis_db_connect()
+conn <- wahis_db_connect(host_location = "remote")
+#conn <- wahis_db_connect(host_location = "reservoir")
 
 # Finding unfetched reports in database ----------------------------
 message("Finding unfetched reports in database")
@@ -95,6 +96,9 @@ if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if t
   })
 
   message("Done updating six month reports.")
+
+  # add prediction caching
+  # fot this model, it's possible to predict on a subset of data
 }
 
 # grant permissions

@@ -1,7 +1,7 @@
 # This script downloads and processes country-specifc data
 
 source(here::here("scraper", "packages.R"))
-source(here::here("scraper", "functions.R"))
+purrr::walk(list.files(here::here(paste0("R")), full.names = TRUE), source)
 library(rpostgis)
 library(furrr)
 library(fs)

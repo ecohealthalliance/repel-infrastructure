@@ -31,11 +31,14 @@ RUN install2.r -s \
   connections \
   curl \
   DBI \
+  dbx \
   DT \
   furrr \
   future \
   ggiraph \
   here \
+  janitor \
+  lubridate \
   memoise \
   ncdf4 \
   patchwork \
@@ -51,6 +54,7 @@ RUN install2.r -s \
   rvest \
   stringi \
   tidymodels \
+  imputeTS \
   xml2
 
 RUN installGithub.r -u FALSE \

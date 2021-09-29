@@ -1,11 +1,12 @@
 #!/usr/bin/env Rscript
 
-dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper/", "")
-source(here::here(paste0(dir, "packages.R")))
-source(here::here(paste0(dir, "tests/test-scrape-outbreak-reports.R")))
-source(here::here(paste0(dir, "tests/test-scrape-six-month-reports.R")))
+dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper", "")
+source(here::here(dir, "packages.R"))
+purrr::walk(list.files(here::here(dir, "R"), full.names = TRUE), source)
+source(here::here(dir, "tests/test-scrape-outbreak-reports.R"))
+source(here::here(dir, "tests/test-scrape-six-month-reports.R"))
 
-x <- try(test_scrape_outbreak_reports())
+x <- try(test_scrape_outbreak_reports(dir))
 if (inherits(x, "try-error")) {
   stop("Outbreak scraper test failed with error:\n", x)
 } else {

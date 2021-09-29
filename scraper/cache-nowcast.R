@@ -2,7 +2,7 @@
 
 dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper/", "")
 source(here::here(paste0(dir, "packages.R")))
-source(here::here(paste0(dir, "functions.R")))
+purrr::walk(list.files(here::here(paste0(dir, "/R")), full.names = TRUE), source)
 library(repelpredict)
 
 oie_diseases <- repelpredict:::get_oie_high_importance_diseases()
