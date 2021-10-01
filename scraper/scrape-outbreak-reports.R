@@ -11,7 +11,7 @@ hl <- ifelse(dir == "scraper", "reservoir", "remote")
 conn <- wahis_db_connect(host_location = hl)
 
 # Finding unfetched reports in database ----------------------------
-message("Finding unfetched reports in database")
+message("Finding unfetched outbreak reports in database")
 
 # Update db with latest outbreak reports list
 reports <- scrape_outbreak_report_list()
