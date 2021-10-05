@@ -14,10 +14,10 @@ conn <- wahis_db_connect(host_location = hl)
 message("Finding unfetched outbreak reports in database")
 
 # Update db with latest outbreak reports list
-reports <- scrape_outbreak_report_list()
-
-# report_info_id is the id that is inserted into the API url
+# report_info_id can be appended to "https://wahis.oie.int/pi/getReport/" to access the report API,
+# and to "https://wahis.oie.int/#/report-info?reportId=" to see the formatted outbreak report.
 # this field is renamed to url_report_id in outbreak_reports_events
+reports <- scrape_outbreak_report_list()
 
 if(dbExistsTable(conn, "outbreak_reports_ingest_status_log")){
   current_report_info_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
@@ -143,13 +143,6 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
 
   # Predict on new data  ------------------------------------------------
   # Get outbreak probabilities
-  # augmented_events <- repel_augment(model_object = model_object,
-  #                                   conn = conn,
-  #                                   newdata = events_processed)
-  #
-  # predicted_events <- repel_predict(model_object = model_object,
-  #                                   newdata = augmented_events)
-
   if(is.null(events_processed)){
     message("New reports do not affect predictions. Skipping augment/predict.")
   }else{
@@ -157,8 +150,7 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     a = Sys.time()
     repel_forecast_events <- repel_forecast(model_object = model_object,
                                             conn = conn,
-                                            newdata = events_processed,
-                                            use_cache = FALSE)
+                                            newdata = events_processed)
     b = Sys.time()
     message(paste0("Finished running augment and predict. ", round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " seconds elapsed"))
 
