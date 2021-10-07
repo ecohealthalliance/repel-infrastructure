@@ -17,5 +17,8 @@ then
   exec /init
 else
   chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-outbreak-reports.R
+  /home/rstudio/repel-infrastructure/scraper/scrape-outbreak-reports.R >> /var/log/shared/scraper.log 2>&1 || true
+  chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-six-month-reports.R
+  /home/rstudio/repel-infrastructure/scraper/scrape-six-month-reports.R >> /var/log/shared/scraper.log 2>&1 || true
   exec supercronic /home/rstudio/repel-infrastructure/scraper/scrape-schedule.cron >> /var/log/shared/scraper.log 2>&1
 fi
