@@ -33,7 +33,12 @@ RUN chgrp staff /var/www/reports
 RUN chmod g+w /var/www/reports
 
 RUN chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-outbreak-reports.R
-RUN chmod +x /home/rstudio/repel-infrastructure/scraper/cache-nowcast.R
+RUN chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-six-month-reports.R
+RUN chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-annual-reports.R
+RUN chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-connect-static-data.R
+RUN chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-connect-yearly-data.R
+RUN chmod +x /home/rstudio/repel-infrastructure/scraper/scrape-country-yearly-data.R
+RUN chmod +x /home/rstudio/repel-infrastructure/scraper/monthly-network-prediction-updates.R
 RUN chmod +x /home/rstudio/repel-infrastructure/scraper/push_local_db_to_S3_and_stage_outside.sh
 
 RUN chmod +x /home/rstudio/repel-infrastructure/scraper/test-scraper.R \

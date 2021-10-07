@@ -11,13 +11,13 @@ hl <- ifelse(dir == "scraper", "reservoir", "remote")
 conn <- wahis_db_connect(host_location = hl)
 
 # Finding unfetched reports in database ----------------------------
-message("Finding unfetched reports in database")
+message("Finding unfetched outbreak reports in database")
 
 # Update db with latest outbreak reports list
-reports <- scrape_outbreak_report_list()
-
-# report_info_id is the id that is inserted into the API url
+# report_info_id can be appended to "https://wahis.oie.int/pi/getReport/" to access the report API,
+# and to "https://wahis.oie.int/#/report-info?reportId=" to see the formatted outbreak report.
 # this field is renamed to url_report_id in outbreak_reports_events
+reports <- scrape_outbreak_report_list()
 
 if(dbExistsTable(conn, "outbreak_reports_ingest_status_log")){
   current_report_info_ids <- dbReadTable(conn, "outbreak_reports_ingest_status_log") %>%
@@ -107,10 +107,14 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
   # if there is a new model, combine old with new data and run init, prior to predictions
   if(aws_network_etag != db_network_etag){
     message("New model detected. Preparing to predict on full dataset.")
-    events_processed <- preprocess_outbreak_events(conn, events_new = outbreak_report_tables[["outbreak_reports_events"]], randef = randef, process_all = TRUE)
+    events_processed <- preprocess_outbreak_events(model_object, conn,
+                                                   events_new = outbreak_report_tables[["outbreak_reports_events"]],
+                                                   randef = randef, process_all = TRUE)
   }else{ # if there is not a new model, identify which reports are affected by new data. we only need to run predictions on new data
     message("Preparing to predict on new data only")
-    events_processed <- preprocess_outbreak_events(conn, events_new = outbreak_report_tables[["outbreak_reports_events"]], randef = randef, process_all = FALSE)
+    events_processed <- preprocess_outbreak_events(model_object, conn,
+                                                   events_new = outbreak_report_tables[["outbreak_reports_events"]],
+                                                   randef = randef, process_all = FALSE)
   }
 
   # Update outbreak reports in database  ------------------------------------------------
@@ -143,13 +147,6 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
 
   # Predict on new data  ------------------------------------------------
   # Get outbreak probabilities
-  # augmented_events <- repel_augment(model_object = model_object,
-  #                                   conn = conn,
-  #                                   newdata = events_processed)
-  #
-  # predicted_events <- repel_predict(model_object = model_object,
-  #                                   newdata = augmented_events)
-
   if(is.null(events_processed)){
     message("New reports do not affect predictions. Skipping augment/predict.")
   }else{
@@ -157,8 +154,7 @@ if(any(!unique(outbreak_reports_ingest_status_log$ingest_error))){ # check if th
     a = Sys.time()
     repel_forecast_events <- repel_forecast(model_object = model_object,
                                             conn = conn,
-                                            newdata = events_processed,
-                                            use_cache = FALSE)
+                                            newdata = events_processed)
     b = Sys.time()
     message(paste0("Finished running augment and predict. ", round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " seconds elapsed"))
 

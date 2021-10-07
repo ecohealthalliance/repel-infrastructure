@@ -1,6 +1,6 @@
 
 # function to apply repelpredict::repel_init to new events outbreak data. option to process full dataset or a subset of data.
-preprocess_outbreak_events <- function(conn, events_new, randef, process_all = FALSE){
+preprocess_outbreak_events <- function(model_object, conn, events_new, randef, process_all = FALSE){
 
   if(process_all){ # if processing all data
 
