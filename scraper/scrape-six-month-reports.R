@@ -33,8 +33,7 @@ new_ids <- setdiff(reports$report_id, current_report_ids)
 
 reports_to_get <- reports %>%
   filter(report_id %in% new_ids) %>%
-  mutate(url =  paste0("https://wahis.oie.int/smr/pi/report/", report_id, "?format=preview")) %>%
-  slice(sample(nrow(.), size = 100))
+  mutate(url =  paste0("https://wahis.oie.int/smr/pi/report/", report_id, "?format=preview"))
 # write_rds(reports_to_get, here::here("scraper", "scraper_files_for_testing/reports_to_get_six_month.rds"))
 # reports_to_get <- read_rds(here::here("scraper", "scraper_files_for_testing/reports_to_get_six_month.rds"))
 
@@ -66,7 +65,7 @@ six_month_reports_ingest_status_log <- imap_dfr(report_resps, function(x, y){
     !is.null(x$message) && str_detect(x$message, "Endpoint request timed out")
   reports_to_get[which(names(report_resps) == y), ] %>% mutate(ingest_error = ingest_error)
 })
-
+db_update(conn, table_name = "six_month_reports_ingest_status_log", table_content = six_month_reports_ingest_status_log, id_field = "report_id",  fill_col_na = TRUE)
 
 if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if there are any non-error responses
 
@@ -78,26 +77,29 @@ if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if t
   six_month_report_tables <- transpose(six_month_report_tables) %>%
     map(function(x) reduce(x, bind_rows))
 
-  six_month_report_tables$six_month_reports_summary <- six_month_report_tables$six_month_reports_summary %>%
+  message("Updating six month reports in database")
+  six_month_reports_summary <- six_month_report_tables[["six_month_reports_summary"]]
+  six_month_reports_summary <- six_month_reports_summary %>%
     mutate(id = paste0(country_iso3c, report_year, report_semester, disease, disease_population, taxa, serotype, control_measures)) %>%
     select(id, everything())
-  assert_that(n_distinct(six_month_report_tables$six_month_reports_summary$id) == nrow(six_month_report_tables$six_month_reports_summary))
+  assert_that(n_distinct(six_month_reports_summary$id) == nrow(six_month_reports_summary))
+  db_update(conn, table_name = "six_month_reports_summary", table_content = six_month_reports_summary, id_field = "id", fill_col_na = TRUE)
 
-  six_month_report_tables$six_month_reports_detail <-  six_month_report_tables$six_month_reports_detail %>%
+  six_month_reports_detail <- six_month_report_tables[["six_month_reports_detail"]]
+  six_month_reports_detail <-  six_month_reports_detail %>%
     mutate(id = paste0(country_iso3c, report_year, report_semester, disease, disease_population, taxa, serotype, adm, period)) %>%
     select(id, everything())
-  #test = get_dupes(six_month_reports_detail, id)
-  assert_that(n_distinct( six_month_report_tables$six_month_reports_summary$id) == nrow(six_month_report_tables$six_month_reports_summary))
+  assert_that(n_distinct(six_month_reports_detail$id) == nrow(six_month_reports_detail))
+  db_update(conn, table_name = "six_month_reports_detail", table_content = six_month_reports_detail, id_field = "id", fill_col_na = TRUE)
 
-  six_month_report_tables$six_month_reports_diseases_unmatched <- six_month_report_tables$six_month_reports_diseases_unmatched %>% unique()
+  six_month_reports_diseases_unmatched <- six_month_report_tables$six_month_reports_diseases_unmatched %>%
+    distinct(disease)
+  db_update(conn, table_name = "six_month_reports_diseases_unmatched", table_content = six_month_reports_diseases_unmatched, id_field = "disease")
 
-  six_month_report_tables$six_month_reports_ingest_status_log <- six_month_reports_ingest_status_log
-
-  # write_rds(six_month_report_tables, here::here("scraper", "scraper_files_for_testing/six_month_report_tables.rds"))
-  # six_month_report_tables <- read_rds(here::here("scraper", "scraper_files_for_testing/six_month_report_tables.rds"))
+  message("Finished updating six month reports in database")
 
   # Run repel_init on transformed data  ------------------------------------------------
-  # get model from aws
+  message("Pull model object from AWS")
   model_object <-  nowcast_boost_model(
     disease_status_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "boost_mod_disease_status.rds"),
     cases_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "boost_mod_cases.rds")
@@ -118,40 +120,31 @@ if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if t
     db_disease_status_etag <- db_cases_etag <- "dne"
   }
 
-  # for now, running only full dataset - expanded to all combinations of country, disease, taxa etc (this is not done within repel_init, which is why we cannot rely on directly reading data from conn)
-  message("Preparing to predict on full dataset.")
-  six_month_processed <- preprocess_six_month_reports(model_object, conn,
-                                                      six_months_new = six_month_report_tables[["six_month_reports_summary"]],
-                                                      process_all = TRUE)
-
-  # write_rds(six_month_processed, here::here("scraper", "scraper_files_for_testing/six_month_processed.rds"))
-  # six_month_processed <- read_rds(here::here("scraper", "scraper_files_for_testing/six_month_processed.rds"))
-
   # Predict on new data  ------------------------------------------------
-  message(paste("Running augment and predict on", nrow(six_month_processed), "rows of data"))
+  # for now, running only full dataset - expanded to all combinations of country, disease, taxa etc
+  message("Running augment and predict on six_month_reports_summary")
   a = Sys.time()
-  six_month_processed_augment <- repel_augment(model_object = model_object,
-                                               conn = conn,
-                                               subset = NULL,
-                                               six_month_processed = six_month_processed) %>%
+  six_month_augment <- repel_augment(model_object = model_object,
+                                     conn = conn,
+                                     subset = NULL) %>%
     arrange(country_iso3c, disease, taxa, report_year, report_semester)
-
   six_month_processed_predict <- repel_predict(model_object = model_object,
-                                               newdata = six_month_processed_augment)
-
+                                               newdata = six_month_augment)
   b = Sys.time()
   message(paste0("Finished running augment and predict. ", round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " seconds elapsed"))
 
   message("Caching model predictions in the database")
 
-  nowcast_boost_augment_predict <- six_month_processed_augment %>%
+  nowcast_boost_augment_predict <- six_month_augment %>%
     mutate(predicted_cases = six_month_processed_predict) %>%
     mutate(db_disease_status_etag = aws_disease_status_etag,  db_cases_etag = aws_cases_etag) %>%
     mutate(id = paste0(country_iso3c, report_year, report_semester, disease, disease_population, taxa)) %>%
     select(id, everything())
   assert_that(n_distinct(nowcast_boost_augment_predict$id) == nrow(nowcast_boost_augment_predict))
   # for now, delete exisiting table before saving due to some column name issues (too long) and because we are only running predictions on full dataset
-  dbRemoveTable(conn, "nowcast_boost_augment_predict")
+  if(dbExistsTable(conn, "nowcast_boost_augment_predict")){
+    dbRemoveTable(conn, "nowcast_boost_augment_predict")
+  }
   db_update(conn, table_name = "nowcast_boost_augment_predict", table_content = nowcast_boost_augment_predict, id_field = "id",  fill_col_na = TRUE)
 
   # summarize OIE diseases over taxa, population - for Shiny app
@@ -178,25 +171,10 @@ if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if t
     select(id, everything())
   assert_that(n_distinct(nowcast_boost_predict_oie_diseases$id) == nrow(nowcast_boost_predict_oie_diseases))
   # for now, delete exisiting table before saving due to some column name issues (too long) and because we are only running predictions on full dataset
-  dbRemoveTable(conn, "nowcast_boost_predict_oie_diseases")
+  if(dbExistsTable(conn, "nowcast_boost_predict_oie_diseases")){
+    dbRemoveTable(conn, "nowcast_boost_predict_oie_diseases")
+  }
   db_update(conn, table_name = "nowcast_boost_predict_oie_diseases", table_content = nowcast_boost_predict_oie_diseases, id_field = "id",  fill_col_na = TRUE)
-
-  # Update six month reports in database  ------------------------------------------------
-  message("Updating six month reports in database")
-
-  # update raw data
-  six_month_reports_summary <- six_month_report_tables[["six_month_reports_summary"]]
-  db_update(conn, table_name = "six_month_reports_summary", table_content = six_month_reports_summary, id_field = "id", fill_col_na = TRUE)
-
-  six_month_reports_detail <- six_month_report_tables[["six_month_reports_detail"]]
-  db_update(conn, table_name = "six_month_reports_detail", table_content = six_month_reports_detail, id_field = "id", fill_col_na = TRUE)
-
-  six_month_reports_diseases_unmatched <- six_month_report_tables[["six_month_reports_diseases_unmatched"]] %>%
-    distinct(disease)
-  db_update(conn, table_name = "six_month_reports_diseases_unmatched", table_content = six_month_reports_diseases_unmatched, id_field = "disease")
-
-  six_month_reports_ingest_status_log <- six_month_report_tables[["six_month_reports_ingest_status_log"]]
-  db_update(conn, table_name = "six_month_reports_ingest_status_log", table_content = six_month_reports_ingest_status_log, id_field = "report_id",  fill_col_na = TRUE)
 
 }
 
