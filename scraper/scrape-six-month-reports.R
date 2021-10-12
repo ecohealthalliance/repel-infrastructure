@@ -82,6 +82,16 @@ if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if t
   six_month_reports_summary <- six_month_reports_summary %>%
     mutate(id = paste0(country_iso3c, report_year, report_semester, disease, disease_population, taxa, serotype, control_measures)) %>%
     select(id, everything())
+  # Switzerland has two reports for 2020 sem 1 and for 2020 sem 2 - the information is identical
+  report_id_dupes <- six_month_reports_summary %>%
+    distinct(country_iso3c, report_year, report_semester, report_id) %>%
+    group_by(country_iso3c, report_year, report_semester) %>%
+    mutate(report_id_dupe = row_number()) %>%
+    ungroup() %>%
+    filter(report_id_dupe > 1)
+  message(paste("Removing duplicate reports_id:", paste(report_id_dupes$report_id, collapse = "; ")))
+  six_month_reports_summary <- six_month_reports_summary %>%
+    filter(!report_id %in% report_id_dupes$report_id)
   assert_that(n_distinct(six_month_reports_summary$id) == nrow(six_month_reports_summary))
   db_update(conn, table_name = "six_month_reports_summary", table_content = six_month_reports_summary, id_field = "id", fill_col_na = TRUE)
 
@@ -89,6 +99,20 @@ if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if t
   six_month_reports_detail <-  six_month_reports_detail %>%
     mutate(id = paste0(country_iso3c, report_year, report_semester, disease, disease_population, taxa, serotype, adm, period)) %>%
     select(id, everything())
+  report_id_dupes <- six_month_reports_detail %>%
+    distinct(country_iso3c, report_year, report_semester, report_id) %>%
+    group_by(country_iso3c, report_year, report_semester) %>%
+    mutate(report_id_dupe = row_number()) %>%
+    ungroup() %>%
+    filter(report_id_dupe > 1)
+  message(paste("Removing duplicate reports_id:", paste(report_id_dupes$report_id, collapse = "; ")))
+  six_month_reports_detail <- six_month_reports_detail %>%
+    filter(!report_id %in% report_id_dupes$report_id)
+  # now removing dupes within reports
+  six_month_reports_detail <- six_month_reports_detail %>%
+    group_by(id) %>%
+    slice(1) %>%
+    ungroup()
   assert_that(n_distinct(six_month_reports_detail$id) == nrow(six_month_reports_detail))
   db_update(conn, table_name = "six_month_reports_detail", table_content = six_month_reports_detail, id_field = "id", fill_col_na = TRUE)
 
@@ -134,14 +158,13 @@ if(any(!unique(six_month_reports_ingest_status_log$ingest_error))){ # check if t
   message(paste0("Finished running augment and predict. ", round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " seconds elapsed"))
 
   message("Caching model predictions in the database")
-
   nowcast_boost_augment_predict <- six_month_augment %>%
     mutate(predicted_cases = six_month_processed_predict) %>%
     mutate(db_disease_status_etag = aws_disease_status_etag,  db_cases_etag = aws_cases_etag) %>%
     mutate(id = paste0(country_iso3c, report_year, report_semester, disease, disease_population, taxa)) %>%
     select(id, everything())
   assert_that(n_distinct(nowcast_boost_augment_predict$id) == nrow(nowcast_boost_augment_predict))
-  # for now, delete exisiting table before saving due to some column name issues (too long) and because we are only running predictions on full dataset
+  # for now, delete existing table before saving due to some column name issues (too long) and because we are only running predictions on full dataset
   if(dbExistsTable(conn, "nowcast_boost_augment_predict")){
     dbRemoveTable(conn, "nowcast_boost_augment_predict")
   }
