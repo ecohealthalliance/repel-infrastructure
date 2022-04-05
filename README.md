@@ -97,7 +97,7 @@ There are multiple scripts running on cron schedules to pull in and process data
 
 - __scrape-country-yearly-data.R__ downloads and processes country-specific data (non-connect) data that is time-variable. It produces all `country_yearly_*` tables (GDP, human population, taxa population, veterinarian counts). Runs monthly. 
 
-- __scrape-six-month-reports.R__ processes six-month reports from the OIE API. [NEEDS TO BE UPDATED TO PRODUCE NOWCAST PREDICTIONS, FOLLOWING GENERAL APPROACH OF SCRAPE-OUTBREAK]. It produces and updates all `six_month_reports_*` tables in the database (see the `repeldata` package for table descriptions). Runs weekly. 
+- __scrape-six-month-reports.R__ processes six-month reports from the OIE API. It produces and updates all `six_month_reports_*` tables in the database (see the `repeldata` package for table descriptions). Runs weekly. 
 
 - __scrape-annual-reports.R__ [NEEDS TO BE UPDATED TO USE OIE API IF/WHEN AVAILABLE]
 
