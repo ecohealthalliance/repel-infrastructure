@@ -1,15 +1,12 @@
-#!/usr/bin/env Rscript
-
-dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper", "")
-source(here::here(dir, "packages.R"))
-purrr::walk(list.files(here::here(dir, "R"), full.names = TRUE), source)
+source(here::here("scraper", "packages.R"))
 library(repelpredict)
-library(DBI)
+purrr::walk(list.files(here::here("scraper", "R"), full.names = TRUE), source)
 
+# Connect to read-only database on kirby
 conn <- repeldata::repel_remote_conn()
 dbListTables(conn)
 
-# Get Model from AWS ----------------------------
+# Get Model from AWS
 model_object <-  repelpredict::network_lme_model(
   network_model = aws.s3::s3readRDS(bucket = "repeldb/models", object = "lme_mod_network.rds"),
   network_scaling_values = aws.s3::s3readRDS(bucket = "repeldb/models", object = "network_scaling_values.rds")
@@ -20,26 +17,33 @@ lme_mod <- model_object$network_model
 randef <- lme4::ranef(lme_mod)
 
 # Get outbreak data from the database
+# This data was preprocessed from WAHIS extracts from old API
+# This will be some formatting differences, but this table is akin to the current `wahis_epi_events` table
+# https://www.dolthub.com/repositories/ecohealthalliance/wahisdb/data/main/wahis_epi_events
+# It contains high-level event information. For our current purposes, case counts and location coordinates are not needed
 outbreak_reports_events <- tbl(conn, "outbreak_reports_events") |>
-  # filter for disease/country
+  filter(country_iso3c == "ZAF", disease == "rift valley fever") |>
   collect()
 
-# Preprocess this data
+# Covert this data into format needed to make model predictions
 events_processed <- preprocess_outbreak_events(model_object,
                                                conn,
                                                events_new = outbreak_reports_events,
                                                randef = randef,
                                                process_all = FALSE)
 
-
+# Generate predictions
+# this returns the outbreak probability and the augmented data used to make predictions
 repel_forecast_events <- repel_forecast(model_object = model_object,
                                         conn = conn,
                                         newdata = events_processed)
 
-network_lme_augment_predict_events <- repel_forecast_events[[1]] %>%
+
+network_lme_augment_predict_events <- repel_forecast_events[[1]] |>
   mutate(predicted_outbreak_probability = repel_forecast_events[[2]])
 
-forcasted_predictions <- network_lme_augment_predict_events %>%
-  distinct(country_iso3c, disease, month, predicted_outbreak_probability)
+# just the predictions by month
+forcasted_predictions <- network_lme_augment_predict_events |>
+  select(country_iso3c, disease, month, predicted_outbreak_probability)
 
 
