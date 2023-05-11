@@ -46,4 +46,13 @@ network_lme_augment_predict_events <- repel_forecast_events[[1]] |>
 forcasted_predictions <- network_lme_augment_predict_events |>
   select(country_iso3c, disease, month, predicted_outbreak_probability)
 
+# Get augment with disaggregated country imports (this can take a while on the full dataset, but is fast for a few predictions)
+message("Getting disaggregated country import augmented data")
+a = Sys.time()
+augmented_data_disagg_events <- repel_augment(model_object, conn, newdata = events_processed, sum_country_imports = FALSE)
+b = Sys.time()
+message(paste0("Finished getting disaggregated country import augmented data. ", round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " seconds elapsed"))
 
+# Combine disaggregated imports with the forecasts
+network_lme_augment_predict_by_origin_events <-  augmented_data_disagg_events %>%
+  left_join(forcasted_predictions, by = c("country_iso3c", "disease", "month"))
