@@ -4,13 +4,10 @@ dir <- ifelse(basename(getwd())=="repel-infrastructure", "scraper", "")
 source(here::here(dir, "packages.R"))
 purrr::walk(list.files(here::here(dir, "R"), full.names = TRUE), source)
 library(repelpredict)
+library(DBI)
 
-#TODO add ernest to git-crypt
-
-# Connect to database ----------------------------
-message("Connect to database")
-hl <- ifelse(dir == "scraper", "reservoir", "remote")
-conn <- wahis_db_connect(host_location = hl)
+conn <- repeldata::repel_remote_conn()
+dbListTables(conn)
 
 # Get Model from AWS ----------------------------
 model_object <-  repelpredict::network_lme_model(
