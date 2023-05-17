@@ -2,6 +2,9 @@ source(here::here("scraper", "packages.R"))
 library(repelpredict)
 purrr::walk(list.files(here::here("scraper", "R"), full.names = TRUE), source)
 
+
+# Generate model predictions for actual outbreaks -------------------------
+
 # Connect to read-only database on kirby
 conn <- repeldata::repel_remote_conn()
 dbListTables(conn)
@@ -24,6 +27,7 @@ randef <- lme4::ranef(lme_mod)
 outbreak_reports_events <- tbl(conn, "outbreak_reports_events") |>
   filter(country_iso3c == "ZAF", disease == "rift valley fever") |>
   collect()
+
 
 # Covert this data into format needed to make model predictions
 events_processed <- preprocess_outbreak_events(model_object,
@@ -53,3 +57,9 @@ augmented_data_disagg_events <- repel_augment(model_object, conn, newdata = even
 b = Sys.time()
 message(paste0("Finished getting disaggregated country import augmented data. ", round(as.numeric(difftime(time1 = b, time2 = a, units = "secs")), 3), " seconds elapsed"))
 
+# How to get predictions for any disease in country?  ---------------------
+
+# repel_init to get global vet disease status
+# filter for country/diseases/years of interest
+# repel_forecast to augment and predict
+# if we need to know what countries contributed to risk estimates, repel_augment with sum_country_imports = FALSE
