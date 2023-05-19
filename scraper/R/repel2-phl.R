@@ -102,7 +102,7 @@ phl_forcasted_predictions |>
   theme_bw()
 
 # found some tables and functions that are very useful!! ---------------------------------------------------
-# TODO lets understand how these are all generated
+# lets understand how these are all generated
 
 ##  all PHL diseases
 phl_predicts <- tbl(conn, "network_lme_augment_predict") |>
@@ -111,6 +111,23 @@ phl_predicts <- tbl(conn, "network_lme_augment_predict") |>
 # network_lme_augment_predict is generated from "outbreak_report_events" (which is raw wahis data) -> repel_init() -> repel_forecast()
 # it contains all possible combinations of country, disease, month
 # we had regularly updated and cached this table in the database to facilitate easy queries (see monthly-network-prediction-updates.R)
+
+# example code (note this takes a long time to run)
+# NOTE this currently fails, I think the wrapping of repel_init with preprocess_outbreak_events is necessary to deal with some edge cases in the data
+# TODO example to follow
+all_data <- repel_init(model_object = model_object,
+                       conn = conn,
+                       outbreak_reports_events = NULL,
+                       remove_single_country_disease = FALSE,
+                       remove_non_primary_taxa_disease = FALSE)
+forecasted_data <- repel_forecast(
+  model_object = model_object, conn = conn, newdata = all_data
+)
+
+preprocess_outbreak_events(conn,
+                           events_new = NULL, # when NULL, just runs on outbreak_reports_events (only works when process_all = TRUE)
+                           randef = randef,
+                           process_all = TRUE)
 
 ## all PHL diseases by month disaggregated
 phl_predicts_disagg <- tbl(conn, "network_lme_augment_predict_by_origin") |>
