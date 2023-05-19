@@ -31,14 +31,12 @@ randef <- lme4::ranef(lme_mod)
 ## Get outbreak data from the database ----
 ## This data was preprocessed from WAHIS extracts from old API
 ## Subset the data to Philippines (PHL)
-# TODO this is for diseases that have occurred in PHL, what if we walk to look at all diseases?
 phl_outbreak_reports_events <- tbl(conn, "outbreak_reports_events") |>
   filter(country_iso3c == "PHL") |>
   collect()
 
 
 ## Covert this data into format needed to make model predictions ----
-## TODO why does it filter to these specific dates?
 phl_events_processed <- preprocess_outbreak_events(
   model_object, conn, events_new = phl_outbreak_reports_events, randef = randef,
   process_all = FALSE
@@ -104,15 +102,24 @@ phl_forcasted_predictions |>
   theme_bw()
 
 # found some tables and functions that are very useful!! ---------------------------------------------------
-# all PHL diseases
+# TODO lets understand how these are all generated
+
+##  all PHL diseases
 phl_predicts <- tbl(conn, "network_lme_augment_predict") |>
   filter(country_iso3c == "PHL") |>
   collect()
+# network_lme_augment_predict is generated from "outbreak_report_events" (which is raw wahis data) -> repel_init() -> repel_forecast()
+# it contains all possible combinations of country, disease, month
+# we had regularly updated and cached this table in the database to facilitate easy queries (see monthly-network-prediction-updates.R)
 
-# all PHL diseases by month disaggregated
+## all PHL diseases by month disaggregated
 phl_predicts_disagg <- tbl(conn, "network_lme_augment_predict_by_origin") |>
   filter(country_iso3c == "PHL") |>
   collect()
+# network_lme_augment_predict_by_origin is generated from "outbreak_report_events" -> repel_init() -> repel_augment(sum_country_imports = FALSE)
+# this provides all the disaggregated imports of trade, livestock, and wildlife migration by source country
+# it also has the predictions from network_lme_augment_predict added on for reference
+# we had regularly updated and cached this table in the database to facilitate easy queries (see monthly-network-prediction-updates.R)
 
 # function get_network_variable_importance for priority diseases
 origin_contribution_import_risk <- repelpredict::get_network_origin_contribution_import_risk(conn, country_iso3c = "PHL",  month = "2021-05-01")
