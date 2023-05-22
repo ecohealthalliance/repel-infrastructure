@@ -112,9 +112,8 @@ phl_predicts <- tbl(conn, "network_lme_augment_predict") |>
 # it contains all possible combinations of country, disease, month
 # we had regularly updated and cached this table in the database to facilitate easy queries (see monthly-network-prediction-updates.R)
 
-# example code (note this takes a long time to run)
-# NOTE this currently fails, I think the wrapping of repel_init with preprocess_outbreak_events is necessary to deal with some edge cases in the data
-# TODO example to follow
+# example code (this takes a long time to run)
+# NOTE this currently fails on one of the function tests, I think the wrapping of repel_init with preprocess_outbreak_events is necessary to deal with some edge cases in the data
 all_data <- repel_init(model_object = model_object,
                        conn = conn,
                        outbreak_reports_events = NULL,
@@ -124,10 +123,15 @@ forecasted_data <- repel_forecast(
   model_object = model_object, conn = conn, newdata = all_data
 )
 
-preprocess_outbreak_events(conn,
-                           events_new = NULL, # when NULL, just runs on outbreak_reports_events (only works when process_all = TRUE)
-                           randef = randef,
-                           process_all = TRUE)
+# ok this works
+all_data <- preprocess_outbreak_events(model_object = model_object,
+                                       conn,
+                                       events_new = NULL, # when NULL, just runs on outbreak_reports_events (only works when process_all = TRUE)
+                                       randef = randef,
+                                       process_all = TRUE)
+forecasted_data <- repel_forecast(
+  model_object = model_object, conn = conn, newdata = all_data
+)
 
 ## all PHL diseases by month disaggregated
 phl_predicts_disagg <- tbl(conn, "network_lme_augment_predict_by_origin") |>
