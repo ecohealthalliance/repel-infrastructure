@@ -8,3 +8,9 @@ for(tb in tbls_to_backup){
   tmp <- dbReadTable(conn, tb)
   arrow::write_parquet(tmp, glue::glue("repel1_database_backup/{tb}.gz.parquet"))
 }
+
+containerTemplateUtils::aws_s3_upload(path = "repel1_database_backup",
+              bucket =  "project-dtra-ml-main" ,
+              key = "repel2/",
+              prefix = "repel2/",
+              check = TRUE)
