@@ -12,5 +12,4 @@ for(tb in tbls_to_backup){
 containerTemplateUtils::aws_s3_upload(path = "repel1_database_backup",
               bucket =  "project-dtra-ml-main" ,
               key = "repel2/",
-              prefix = "repel2/",
               check = TRUE)
